@@ -100,16 +100,16 @@ Forge 是一套**以文档为中心的 AI 辅助开发框架**。核心理念：
 
 | 文档 | 内容 |
 |------|------|
-| [forge-user-guide.md](forge-user-guide.md) | **Forge 使用指南** — 架构图、14 个 Skill 详解、5 种工作流、关键机制、FAQ |
-| [external-tools-analysis.md](external-tools-analysis.md) | **外部工具分析** — Superpowers/gstack/CKM/独立 Skill 的完整能力拆解与融合映射 |
-| [architecture.md](architecture.md) | 架构设计 — 上下文工程、分层架构、状态管理、并行执行 |
-| [skills-reference.md](skills-reference.md) | 技能参考手册 — 每个 Skill 的完整机制、阶段、门控、产出 |
-| [workflow-guide.md](workflow-guide.md) | 使用指南 — 场景选择、最佳实践、常见问题 |
-| [superpowers-comparison.md](superpowers-comparison.md) | Superpowers 对照 — 融合对比与完成状态 |
-| [design-skill-fusion-methodology.md](design-skill-fusion-methodology.md) | 设计 Skill 融合方法论 — 整合思路、迭代流程 |
-| [design-skill-audit-report.md](design-skill-audit-report.md) | 设计 Skill 审计报告 — 能力评估 |
-| [forge-deliver-analysis.md](forge-deliver-analysis.md) | forge-deliver 重写分析 — v1 vs v2 对比、逐 Phase 差异、重写映射表 |
-| [glossary.md](glossary.md) | 术语词典 — 关键概念中英对照 |
+| [forge-user-guide.md](docs/forge-user-guide.md) | **Forge 使用指南** — 架构图、14 个 Skill 详解、5 种工作流、关键机制、FAQ |
+| [external-tools-analysis.md](docs/external-tools-analysis.md) | **外部工具分析** — Superpowers/gstack/CKM/独立 Skill 的完整能力拆解与融合映射 |
+| [architecture.md](docs/architecture.md) | 架构设计 — 上下文工程、分层架构、状态管理、并行执行 |
+| [skills-reference.md](docs/skills-reference.md) | 技能参考手册 — 每个 Skill 的完整机制、阶段、门控、产出 |
+| [workflow-guide.md](docs/workflow-guide.md) | 使用指南 — 场景选择、最佳实践、常见问题 |
+| [superpowers-comparison.md](docs/superpowers-comparison.md) | Superpowers 对照 — 融合对比与完成状态 |
+| [design-skill-fusion-methodology.md](docs/design-skill-fusion-methodology.md) | 设计 Skill 融合方法论 — 整合思路、迭代流程 |
+| [design-skill-audit-report.md](docs/design-skill-audit-report.md) | 设计 Skill 审计报告 — 能力评估 |
+| [forge-deliver-analysis.md](docs/forge-deliver-analysis.md) | forge-deliver 重写分析 — v1 vs v2 对比、逐 Phase 差异、重写映射表 |
+| [glossary.md](docs/glossary.md) | 术语词典 — 关键概念中英对照 |
 
 ---
 
@@ -181,3 +181,55 @@ Forge 体系融合了以下框架的精华：
 | **ckm-design-system** | 三层 Token 架构 |
 | **ckm-ui-styling** | shadcn/ui 组件选型、无障碍模式 |
 | **plan-design-review** | 0-10 维度评分 + 满分标准展示 |
+
+---
+
+## 安装
+
+```bash
+# 1. Clone 仓库
+git clone git@github.com:yike-gunshi/forge-cookbook.git
+
+# 2. 运行安装脚本（创建 symlink 到 ~/.claude/skills/）
+cd forge-cookbook
+./install.sh
+
+# 3. 新开 Claude Code 会话即可使用
+```
+
+卸载：
+```bash
+./install.sh --uninstall
+```
+
+---
+
+## 仓库结构
+
+```
+forge-cookbook/
+├── README.md                    ← 你在这里
+├── SKILL.md                     ← forge 总入口（/forge 命令）
+├── install.sh                   ← 一键安装/卸载脚本
+├── skills/                      ← 所有子 Skill（14 个）
+│   ├── forge-brainstorm/        ←   头脑风暴
+│   ├── forge-prd/               ←   PRD 管理
+│   ├── forge-dev/               ←   开发调度器
+│   ├── forge-design/            ←   设计规划（含 data/ + scripts/）
+│   ├── forge-design-impl/       ←   设计实现
+│   ├── forge-eng/               ←   工程实现（含 references/）
+│   ├── forge-qa/                ←   QA 验收
+│   ├── forge-bugfix/            ←   Bug 调查修复
+│   ├── forge-review/            ←   PR 审查
+│   ├── forge-ship/              ←   发布
+│   ├── forge-deliver/           ←   端到端编排
+│   ├── forge-doc-release/       ←   发布后文档更新
+│   └── forge-fupan/             ←   复盘
+├── docs/                        ← 文档（10 篇）
+│   ├── forge-user-guide.md      ←   使用指南
+│   ├── external-tools-analysis.md ←  外部工具分析
+│   ├── architecture.md          ←   架构设计
+│   ├── skills-reference.md      ←   技能参考手册
+│   └── ...
+└── assets/                      ← 架构图、流程图（SVG）
+```
