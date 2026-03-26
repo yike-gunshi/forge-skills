@@ -90,7 +90,7 @@ Forge 是一套**以文档为中心的 AI 辅助开发框架**。核心理念：
 | Skill | 命令 | 职责 |
 |-------|------|------|
 | forge-bugfix | `/forge-bugfix` | 系统性 Bug 调查与修复（六阶段根因分析） |
-| forge-deliver | `/forge-deliver` | 端到端交付流水线（从想法到上线，9 个 Phase） |
+| forge-deliver | `/forge-deliver` | 端到端交付纯编排层（8 Phase，调用 forge-* 子 Skill，支持 --auto/--resume） |
 | forge-doc-release | `/forge-doc-release` | 发布后文档同步 |
 | forge-fupan | `/forge-fupan` | 协作复盘与知识沉淀 |
 
@@ -108,6 +108,7 @@ Forge 是一套**以文档为中心的 AI 辅助开发框架**。核心理念：
 | [superpowers-comparison.md](superpowers-comparison.md) | Superpowers 对照 — 融合对比与完成状态 |
 | [design-skill-fusion-methodology.md](design-skill-fusion-methodology.md) | 设计 Skill 融合方法论 — 整合思路、迭代流程 |
 | [design-skill-audit-report.md](design-skill-audit-report.md) | 设计 Skill 审计报告 — 能力评估 |
+| [forge-deliver-analysis.md](forge-deliver-analysis.md) | forge-deliver 重写分析 — v1 vs v2 对比、逐 Phase 差异、重写映射表 |
 | [glossary.md](glossary.md) | 术语词典 — 关键概念中英对照 |
 
 ---
@@ -140,7 +141,9 @@ Forge 是一套**以文档为中心的 AI 辅助开发框架**。核心理念：
 
 **场景 E：全自动交付**
 ```
-/forge-deliver     → 端到端，9 个 Phase 全自动
+/forge-deliver     → 端到端编排（8 Phase，调用所有 forge-* 子 Skill）
+/forge-deliver --auto   → 前置沟通后全自动
+/forge-deliver --resume → 从检查点恢复
 ```
 
 **场景 F：写文章/做 demo**
