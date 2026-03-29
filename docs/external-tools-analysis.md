@@ -180,10 +180,10 @@ CKM（Creative Knowledge Management）是一套品牌和设计资产管理工具
 
 ### 3.1 设计类（3 个）
 
-| Skill | 核心能力 | 融合去向 |
-|-------|---------|---------|
-| **ckm-design** | 品牌 · Logo（55 种风格）· CIP（50+ 交付物）· Banner（22 种风格）· 图标（15 种）· 社交图片 | 归档。Forge 聚焦产品 UI，不做品牌资产 |
-| **ckm-ui-styling** | shadcn/ui 组件库（基于 Radix UI + Tailwind）· 6 类组件 · 主题 · 暗色模式 · 无障碍 | forge-design（组件选型参考 + 无障碍清单） |
+| Skill                 | 核心能力                                                                      | 融合去向                            |
+| --------------------- | ------------------------------------------------------------------------- | ------------------------------- |
+| **ckm-design**        | 品牌 · Logo（55 种风格）· CIP（50+ 交付物）· Banner（22 种风格）· 图标（15 种）· 社交图片           | 归档。Forge 聚焦产品 UI，不做品牌资产         |
+| **ckm-ui-styling**    | shadcn/ui 组件库（基于 Radix UI + Tailwind）· 6 类组件 · 主题 · 暗色模式 · 无障碍            | forge-design（组件选型参考 + 无障碍清单）    |
 | **ckm-design-system** | 三层 Token 架构：Primitive → Semantic → Component · CSS 变量 · 间距/排版比例尺 · 组件状态定义 | forge-design（Token 体系 + 组件状态规范） |
 
 ### 3.2 其他（3 个）

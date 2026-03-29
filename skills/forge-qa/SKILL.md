@@ -1,12 +1,12 @@
 ---
 name: forge-qa
-version: 2.0.0
+version: 3.0.0
 description: |
-  QA 验收与测试报告。纯验收模式：测试+报告，不修代码。发现的问题回 forge-eng 修复。
-  管理项目的 QA.md 和 QA-CHANGELOG，基于 PRD + ENGINEERING.md 产出测试计划并执行。
-  支持三种测试引擎：gstack/browse（无头浏览器截图+交互）、Playwright（自定义 E2E 脚本）、
-  纯代码（无浏览器时的静态分析）。端到端用户流程测试、跨模块集成测试、视觉回归+响应式、
-  性能指标采集、验收标准逐项核对。
+  QA 验收与测试报告 v3.0。纯验收模式：测试+报告，不修代码。
+  三层架构：test-spec 生成（文档→验收清单）→ 10 维度 Playwright 断言引擎 → 智能分析（根因定位）。
+  核心改进：从"截图工具"升级为"断言引擎"，每个测试必须有 pass/fail，不允许 catch 吞错误。
+  支持三种测试引擎：gstack/browse（截图+交互）、Playwright（7 维度 E2E 断言）、纯代码（静态分析）。
+  集成 User Gate（用户验收关卡）+ FEEDBACK.md（用户反馈闭环）。
   触发方式：用户说"测试"、"QA"、"forge-qa"、forge-dev 调度器调用。
 allowed-tools:
   - Bash
@@ -22,50 +22,87 @@ allowed-tools:
 
 **纯验收模式：测试 + 报告，不修代码。** 发现的问题生成修复清单，回 `/forge-eng` 修复。
 
-管理项目的 QA.md，基于 PRD + ENGINEERING.md 产出测试计划并执行。
-三种测试引擎：**gstack/browse**（截图+浏览器交互）、**Playwright**（自定义 E2E 脚本）、**纯代码**（静态分析）。
+## 三层架构
+
+```
+┌─────────────────────────────────────────────────┐
+│  Layer 1: 测试规格生成（文档 → test-spec.json）     │
+│  输入: PRD / DESIGN.md / git diff / 会话上下文       │
+├─────────────────────────────────────────────────┤
+│  Layer 2: 10 维度 Playwright 断言引擎               │
+│  控制台|数据驱动|网络|视觉|交互|响应式|可访问|SSE|URL|懒加载│
+├─────────────────────────────────────────────────┤
+│  Layer 3: 智能分析（失败归因 + 根因定位）            │
+│  console → 源码 → git diff 交叉引用                │
+└─────────────────────────────────────────────────┘
+```
 
 ## 铁律
 
 1. **只测不修** — forge-qa 不修改任何业务代码。发现 bug 记录到报告，由 forge-eng 修复。
-2. **验收标准前置** — 测试计划必须对照 PRD 验收标准，逐项覆盖。
-3. **证据先于结论** — 每个测试结果必须有截图、输出、或日志作为证据。
+2. **不生成 test-spec 就不执行测试** — 先从文档提取验收项，结构化后再执行。
+3. **每个测试必须有 pass/fail** — 不允许 `.catch(() => {})` 吞错误，不允许"只截图不断言"。
+4. **断言必须验证功能正确性，不能只验证元素存在** — `visible` 和 `count_gte` 是前置条件，不是验收断言。每个测试用例必须至少包含一个验证**数据值/文本内容/状态变化**的深层断言（`contains_text`、`has_attribute`、`css_value`、`matches_regex`、自定义 `evaluate`）。详见下方"断言深度规则"。
+5. **证据先于结论** — 每个测试结果必须有截图、输出、或日志作为证据。
+6. **控制台零容忍** — 任何 `pageerror` 或 `console.error` 自动 FAIL。
 
 ## 定位说明
-
-forge-eng v2 已嵌入 TDD（单元测试）和 Verification Gate（原子验证），forge-qa 聚焦在 forge-eng 做不到的事：
 
 | forge-eng 负责 | forge-qa 负责 |
 |----------------|--------------|
 | 单元测试（TDD 红绿重构） | **端到端用户流程测试** |
 | 原子 commit 验证（exit code） | **跨模块集成测试** |
-| 任务级验证 | **视觉回归 + 响应式** |
-| — | **性能指标采集** |
+| 任务级验证 | **7 维度断言（视觉+响应式+可访问性+网络+数据驱动）** |
 | — | **验收标准逐项核对** |
+| — | **User Gate（用户验收关卡）** |
 
-## 流程总览
+## 完整流程
 
 ```
-读取 PRD + ENGINEERING.md + 定位 QA.md
-  ├── 已有 → 读取现状 → 测试诊断 → 计划确认 → 更新文档 → 执行测试 → 生成报告
-  └── 无   → 分析项目 → 多轮确认 → 创建文档 → 执行测试 → 生成报告
+第0步 上下文探测
+  ├── 0.1 Worktree 检测
+  ├── 0.2 文档链定位（PRD/DESIGN/ENGINEERING/FEEDBACK）
+  ├── 0.3 变更范围分析（git diff）
+  ├── 0.4 选择器审计（铁律：不盲猜选择器）
+  └── 0.5 测试级别确认
+  │
+第1步 建立健康基准
+  │
+  ├── 已有 QA.md → 第2步 理解现状
+  └── 无 QA.md   → 第2步(替代) 从零创建
+  │
+第2.5步 生成 test-spec（铁律：不生成就不执行）
+  │
+第3步 测试计划确认（用户审查 test-spec 摘要）
+  │
+第4步 更新 QA 文档
+  │
+第5步 10 维度测试执行
+  ├── Phase 1: 控制台[console] + 网络[network]
+  ├── Phase 2: 交互[functional] + 数据驱动[data-driven] + SSE[streaming] + URL状态[url-state] + 懒加载[async-content]
+  ├── Phase 3: 视觉[visual] + 响应式[responsive]
+  └── Phase 4: 可访问性[accessibility]
+  │
+第6步 智能分析 + Bug 报告
+  │
+第7步 User Gate（用户验收 — 不可跳过）
+  │
+  ├── accept → forge-ship
+  └── reject → FEEDBACK.md → forge-eng → forge-qa (回归) → User Gate
 ```
 
 全程中文。关键测试策略需用户确认后再执行。
 
-## 报告产出后的出口建议
+## 报告产出后的出口
 
 ```
-QA 验收完成。建议下一步：
+QA 验收完成。下一步：
 
-[如果发现问题]
-A) /forge-eng — 将修复清单作为新任务，回到工程实现
-B) 暂不修复 — 记录为已知问题，继续发布流程
+[全部通过 + 用户验收通过]
+→ /forge-ship 或 /forge-review
 
-[如果全部通过]
-A) /forge-review — PR 审查
-B) /forge-ship — 直接发布
-C) /forge-fupan — 先复盘
+[有 FAIL 或用户 reject]
+→ 生成修复清单 + FEEDBACK.md → /forge-eng 修复 → /forge-qa 回归
 ```
 
 ---
@@ -77,7 +114,16 @@ _BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
 _ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
 echo "当前分支: $_BRANCH"
 
-# === 测试引擎 1: gstack/browse（无头浏览器）===
+# === Worktree 检测 ===
+_IN_WORKTREE="no"
+_WORKTREE_ROOT=""
+git worktree list 2>/dev/null | while read line; do
+  echo "  worktree: $line"
+done
+[ "$(git rev-parse --git-common-dir 2>/dev/null)" != "$(git rev-parse --git-dir 2>/dev/null)" ] && _IN_WORKTREE="yes" && _WORKTREE_ROOT="$_ROOT"
+echo "在 Worktree 中: $_IN_WORKTREE"
+
+# === 测试引擎 1: gstack/browse ===
 B=""
 [ -n "$_ROOT" ] && [ -x "$_ROOT/.claude/skills/gstack/browse/dist/browse" ] && B="$_ROOT/.claude/skills/gstack/browse/dist/browse"
 [ -z "$B" ] && [ -x "$HOME/.claude/skills/gstack/browse/dist/browse" ] && B="$HOME/.claude/skills/gstack/browse/dist/browse"
@@ -85,39 +131,33 @@ B=""
 
 # === 测试引擎 2: Playwright ===
 PW=""
-python3 -c "from playwright.sync_api import sync_playwright" 2>/dev/null && PW="available"
-[ -n "$PW" ] && echo "Playwright: 可用" || echo "Playwright: 不可用"
+command -v npx >/dev/null 2>&1 && npx playwright --version >/dev/null 2>&1 && PW="npx"
+[ -z "$PW" ] && python3 -c "from playwright.sync_api import sync_playwright" 2>/dev/null && PW="python"
+[ -n "$PW" ] && echo "Playwright: 可用 ($PW)" || echo "Playwright: 不可用"
 
-# Playwright 辅助脚本
-PW_SERVER=""
-[ -f "$HOME/.claude/skills/webapp-testing/scripts/with_server.py" ] && PW_SERVER="$HOME/.claude/skills/webapp-testing/scripts/with_server.py"
-[ -n "$PW_SERVER" ] && echo "Playwright with_server: $PW_SERVER" || echo "Playwright with_server: 不可用"
+# === qa-runner.mjs 检测 ===
+QA_RUNNER=""
+[ -f "$HOME/.claude/skills/forge-qa/scripts/qa-runner.mjs" ] && QA_RUNNER="$HOME/.claude/skills/forge-qa/scripts/qa-runner.mjs"
+[ -n "$QA_RUNNER" ] && echo "qa-runner: $QA_RUNNER" || echo "qa-runner: 不可用"
 
 # === 框架检测 ===
-[ -f "$_ROOT/package.json" ] && grep -q '"next"' "$_ROOT/package.json" 2>/dev/null && echo "框架: Next.js"
-[ -f "$_ROOT/Gemfile" ] && grep -q "rails" "$_ROOT/Gemfile" 2>/dev/null && echo "框架: Rails"
-[ -f "$_ROOT/package.json" ] && grep -q '"vue"' "$_ROOT/package.json" 2>/dev/null && echo "框架: Vue"
 [ -f "$_ROOT/package.json" ] && grep -q '"react"' "$_ROOT/package.json" 2>/dev/null && echo "框架: React"
+[ -f "$_ROOT/package.json" ] && grep -q '"vue"' "$_ROOT/package.json" 2>/dev/null && echo "框架: Vue"
+[ -f "$_ROOT/package.json" ] && grep -q '"next"' "$_ROOT/package.json" 2>/dev/null && echo "框架: Next.js"
 [ -f "$_ROOT/requirements.txt" ] || [ -f "$_ROOT/pyproject.toml" ] && echo "运行时: Python"
-[ -f "$_ROOT/go.mod" ] && echo "运行时: Go"
 [ -f "$_ROOT/package.json" ] && echo "运行时: Node.js"
-[ -f "$_ROOT/Gemfile" ] && echo "运行时: Ruby"
 
-# === 已有测试框架检测 ===
-ls "$_ROOT"/jest.config.* "$_ROOT"/vitest.config.* "$_ROOT"/playwright.config.* "$_ROOT"/.rspec "$_ROOT"/pytest.ini 2>/dev/null
-ls -d "$_ROOT"/test/ "$_ROOT"/tests/ "$_ROOT"/spec/ "$_ROOT"/__tests__/ "$_ROOT"/cypress/ "$_ROOT"/e2e/ 2>/dev/null
+# === 本地服务探测 ===
+echo "本地服务:"
+for port in 3000 3456 4000 5173 8080 8081; do
+  curl -s -o /dev/null -w "%{http_code}" "http://localhost:$port" 2>/dev/null | grep -qE "200|301|302|304" && echo "  http://localhost:$port ✓"
+done
 
 # === 报告目录 ===
 REPORT_DIR="$_ROOT/.gstack/qa-reports"
 mkdir -p "$REPORT_DIR/screenshots" 2>/dev/null
 echo "报告目录: $REPORT_DIR"
 ```
-
-**引擎可用性说明**：
-- **两个引擎都可用**（最佳）：gstack/browse 用于交互式截图测试，Playwright 用于复杂 E2E 流程脚本
-- **仅 gstack/browse**：可完成所有截图和交互测试
-- **仅 Playwright**：可完成截图、E2E 测试，但无 snapshot 标注功能
-- **都不可用**：以纯代码模式继续（跳过截图步骤），建议用户安装 gstack（`/gstack` 技能）
 
 ---
 
@@ -131,99 +171,149 @@ echo "报告目录: $REPORT_DIR"
 
 ---
 
-## 第0步：确定测试级别、模式和定位文档
+## 第0步：上下文探测与环境准备
 
-### 测试级别
+### 0.1 Worktree 检测（铁律：在正确的分支上测试）
 
-如果用户未指定，通过 AskUserQuestion 确认：
+按优先级检测工作环境：
 
-- A) **快速** — 只测严重和高优先级问题（约5-10分钟）
-- B) **标准** — 快速 + 中等优先级问题（约15-30分钟）
-- C) **详尽** — 标准 + 低优先级和外观问题（约30-60分钟）
+1. **forge-dev 调度传入**：如果 Agent prompt 中包含 `worktree_path`，直接 `cd` 进入
+2. **当前目录检测**：前置脚本已检测 `_IN_WORKTREE`，如果是则直接使用
+3. **扫描已有 worktree**：`git worktree list` 查找最近的 `eng/*` 分支
+4. **当前分支为 feature 分支**：如果当前在 `eng/*` 或非 `main` 分支，可以直接测试
+5. **询问用户**：如果当前在 main 且无 worktree，通过 AskUserQuestion 询问
 
-推荐：上线前用标准级别，功能开发中用快速级别。
+确认后输出：
+```
+🔧 测试环境：
+  Worktree: /path/to/.worktrees/feature-slug (或 "当前目录")
+  Branch:   eng/feature-slug-2026-03-28
+  Base:     main
+```
 
-### 测试模式
+### 0.2 文档链定位
 
-根据上下文自动选择：
+按搜索模式定位所有参考文档，forge-dev 传入的路径优先级最高：
+
+```bash
+# PRD
+for f in docs/PRD.md PRD.md docs/*PRD*; do [ -f "$f" ] && echo "PRD: $f" && break; done
+
+# DESIGN
+for f in DESIGN.md docs/DESIGN.md docs/DESIGN-BLUEPRINT.md; do [ -f "$f" ] && echo "DESIGN: $f" && break; done
+
+# ENGINEERING
+for f in docs/ENGINEERING.md ENGINEERING.md; do [ -f "$f" ] && echo "ENGINEERING: $f" && break; done
+
+# FEEDBACK（历史用户反馈，回归测试用）
+for f in FEEDBACK.md docs/FEEDBACK.md; do [ -f "$f" ] && echo "FEEDBACK: $f" && break; done
+
+# QA
+for f in docs/QA.md QA.md; do [ -f "$f" ] && echo "QA: $f" && break; done
+
+# .features/status
+ls .features/*/status.md 2>/dev/null | head -5
+```
+
+**文档版本校验**：读取文档后提取版本号，与 `.features/status.md` 中记录的 PRD 版本对比。不一致则警告。
+
+**降级模式**：如果找不到 PRD/DESIGN → 降级为"无文档模式"（只做 console + 响应式 + 可访问性基础测试）。
+
+### 0.3 变更范围分析
+
+```bash
+# 基准分支
+BASE=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null || echo "main")
+
+# 变更文件列表
+git diff $BASE...HEAD --name-only 2>/dev/null
+git diff $BASE...HEAD --stat 2>/dev/null
+
+# 变更摘要
+git log $BASE..HEAD --oneline 2>/dev/null
+```
+
+变更文件 → 推断影响范围 → 决定测试重点（Diff-aware 模式）。
+
+### 0.4 选择器审计（铁律：不盲猜选择器）
+
+**在生成 test-spec 前，必须扫描代码确认可用选择器。** 不同项目的 DOM 结构完全不同，不能假设任何 `data-testid` 或 ARIA 属性存在。
+
+```bash
+# 扫描项目中可用的选择器锚点
+echo "=== data-testid ==="
+grep -r 'data-testid' src/ --include='*.tsx' --include='*.jsx' --include='*.vue' --include='*.html' -l 2>/dev/null | head -10
+
+echo "=== data-* 属性 ==="
+grep -roh 'data-[a-z_-]*=' src/ --include='*.tsx' --include='*.jsx' --include='*.vue' -h 2>/dev/null | sort -u | head -20
+
+echo "=== ARIA 属性 ==="
+grep -roh 'role="[^"]*"\|aria-[a-z]*=' src/ --include='*.tsx' --include='*.jsx' --include='*.vue' -h 2>/dev/null | sort -u | head -20
+
+echo "=== 语义化 HTML ==="
+grep -roh '<\(nav\|main\|aside\|header\|footer\|section\|article\|dialog\)[> ]' src/ --include='*.tsx' --include='*.jsx' --include='*.vue' -h 2>/dev/null | sort | uniq -c | sort -rn | head -10
+```
+
+**根据扫描结果决定选择器策略：**
+
+| 项目状态 | 选择器策略 | test-spec 中使用 |
+|---------|-----------|----------------|
+| 有丰富 `data-testid` | 直接使用 testid | `[data-testid='feed-section']` |
+| 有 `data-*` 属性但非 testid | 使用已有 data 属性 | `[data-platform='twitter']`, `[data-item-id]` |
+| 有 ARIA 属性 | 使用 role + aria | `[role='tab']`, `[aria-selected='true']` |
+| 有语义化 HTML | 使用语义标签 | `main`, `nav`, `dialog` |
+| 以上都没有 | **文本 + CSS 组合** | `button:has-text("搜索")`, `.card-container > .card:nth-child(1)` |
+
+**选择器优先级（从稳定到脆弱）：**
+
+```
+1. getByRole('tab', { name: '推荐' })    ← 最稳定，语义化
+2. [data-testid='feed-section']           ← 专为测试设计
+3. [data-platform='twitter']              ← 业务语义属性
+4. [role='dialog']                        ← ARIA 属性
+5. button:has-text("搜索")                ← 可见文本
+6. main > section:first-child             ← 结构选择器
+7. .bg-card.rounded-lg                    ← CSS class（最脆弱）
+```
+
+**如果项目零 data-testid：**
+- **不要在 test-spec 中编造 `data-testid`**——这会导致所有测试因选择器找不到而假性 FAIL
+- 使用上述优先级中实际存在的选择器
+- 在 QA 报告的"改进建议"中标注：建议 forge-eng 在关键交互元素上补充 `data-testid`
+
+**输出选择器映射表**（供 test-spec 生成时引用）：
+
+```
+🔍 选择器审计结果：
+  data-testid: 0 个（项目未使用 testid）
+  data-* 属性: data-platform, data-item-id, data-section
+  ARIA: role="dialog" (1处), role="button" (3处)
+  语义标签: main, nav, section, header
+
+  推荐策略：data-* 属性 + 文本选择器 + 语义标签组合
+
+  关键元素映射：
+  ├── 信息卡片: [data-platform] 或 .cursor-pointer:has(h3)
+  ├── 详情面板: [role="dialog"] 或 [class*="detail"]
+  ├── Tab 导航: button:has-text("推荐") 等
+  └── 搜索框: input[type="search"] 或 input[placeholder*="搜索"]
+```
+
+### 0.5 测试级别与模式
+
+**测试级别**（如用户未指定，通过 AskUserQuestion 确认）：
+
+- A) **快速** — 只测 P0 核心流程（约5-10分钟）→ Phase 1+2
+- B) **标准** — 快速 + P1 视觉/响应式（约15-30分钟）→ Phase 1+2+3
+- C) **详尽** — 标准 + P2-P3 可访问性和边界（约30-60分钟）→ Phase 1+2+3+4
+
+**测试模式**（自动选择）：
 
 | 模式 | 触发条件 | 行为 |
 |------|---------|------|
-| **Diff-aware** | 在 feature 分支且未指定 URL | 分析分支 diff，定位受影响页面，自动检测本地应用端口 |
-| **Full** | 指定了 URL | 系统性遍历所有可达页面 |
-| **Quick** | 用户指定 `--quick` | 首页 + Top 5 导航目标的冒烟测试 |
-| **Regression** | 存在 baseline.json | 对比上次测试结果，输出增量报告 |
-
-### Diff-aware 模式（feature 分支自动触发）
-
-```bash
-# 1. 分析分支变更
-git diff main...HEAD --name-only
-git log main..HEAD --oneline
-
-# 2. 从变更文件推断受影响的页面/路由
-#    - 路由/控制器文件 → 对应的 URL 路径
-#    - 视图/组件文件 → 渲染它们的页面
-#    - Model/Service 文件 → 引用它们的控制器
-#    - CSS/样式文件 → 包含这些样式的页面
-#    - API 端点 → 直接用 $B js "await fetch('/api/...')" 测试
-
-# 3. 检测本地运行的应用
-for port in 3456 3000 4000 5173 8080 8000; do
-  curl -s -o /dev/null -w "%{http_code}" "http://localhost:$port" 2>/dev/null | grep -q "200\|301\|302" && echo "发现应用: http://localhost:$port" && break
-done
-```
-
-如果分支 diff 无法推断出明确的页面/路由，**不要跳过浏览器测试**——回退到 Quick 模式：访问首页，跟随 Top 5 导航目标，检查控制台错误。
-
-### 检测基础分支
-
-```bash
-gh pr view --json baseRefName -q .baseRefName 2>/dev/null || \
-gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || \
-echo "main"
-```
-
-### 读取测试计划
-
-```bash
-_SLUG=$(basename $(git rev-parse --show-toplevel 2>/dev/null) 2>/dev/null || echo "project")
-_BRANCH=$(git branch --show-current 2>/dev/null)
-ls ~/.cn-dev/projects/$_SLUG/*$_BRANCH*test-plan*.md 2>/dev/null || \
-ls ~/.gstack/projects/$_SLUG/*test-plan*.md 2>/dev/null || \
-echo "未找到测试计划文件"
-```
-
-如果找到测试计划文件（由 `/forge-eng` 或 `/cn-plan-eng` 产出），读取它——它比 git diff 启发式方法更准确，优先使用。
-
-### 定位项目文档
-
-1. 定位 PRD：搜索 `{项目目录}/docs/PRD.md`
-2. 定位 ENGINEERING.md：搜索 `{项目目录}/docs/ENGINEERING.md`
-3. 定位 QA.md：
-   ```
-   搜索模式：
-   - {项目目录}/docs/QA.md
-   - {项目目录}/docs/*qa*（不区分大小写）
-   - {项目目录}/docs/*测试*
-   - {项目目录}/**/QA*.md
-   ```
-4. 定位 QA CHANGELOG：模式匹配 `*qa*changelog*`
-5. 分支判断：有 → 迭代模式；无 → 创建模式
-
-### 检查工作区状态
-
-```bash
-git status --porcelain
-```
-
-如果工作区有未提交变更，通过 AskUserQuestion 询问：
-- A) 提交变更 — 先 commit 当前改动，再开始 QA
-- B) 暂存变更 — stash，QA 完成后 pop
-- C) 直接开始 — 忽略未提交变更（不推荐，fix commit 会混杂）
-- D) 中止 — 手动清理后再跑
-
-推荐 A，因为 QA 需要原子 commit 每个 fix。
+| **Diff-aware** | 在 feature 分支且有 base diff | 从 diff 推断影响范围，聚焦测试 |
+| **Full** | 指定了 URL 或用户要求 | 系统性遍历所有页面 |
+| **Regression** | 存在 FEEDBACK.md 或历史 QA 报告 | 优先测试历史反馈项 + 变更回归 |
 
 ---
 
@@ -242,485 +332,605 @@ git status --porcelain
 | 内容 | 5% | 文案、数据展示是否正确 |
 | 无障碍 | 15% | 键盘导航、对比度、语义化 |
 
-**测试前截图**（如果浏览器引擎可用）：
-
-使用 gstack/browse：
-```bash
-$B goto <URL>
-$B screenshot $REPORT_DIR/screenshots/baseline.png
-$B console --errors
-$B perf
-```
-
-或使用 Playwright（如果 gstack/browse 不可用）：
-```python
-from playwright.sync_api import sync_playwright
-with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True)
-    page = browser.new_page()
-    page.goto('<URL>')
-    page.wait_for_load_state('networkidle')
-    page.screenshot(path='/tmp/qa-baseline.png', full_page=True)
-    errors = []
-    page.on('console', lambda msg: errors.append(msg.text) if msg.type == 'error' else None)
-    page.reload()
-    page.wait_for_load_state('networkidle')
-    print(f"Console errors: {len(errors)}")
-    for e in errors: print(f"  - {e}")
-    browser.close()
-```
+使用 gstack/browse 或 Playwright 截取基准截图和控制台状态。
 
 ---
 
-## 第2步：理解现状（迭代模式）
+## 第2步：理解现状
 
+### 迭代模式（已有 QA.md）
 1. 读取 PRD 最新迭代摘要，提取验收标准
-2. 读取 ENGINEERING.md（如有），提取测试矩阵和实现清单
-3. 读取完整 QA.md
-4. 读取 QA CHANGELOG（如有），做热点分析：
-   - 哪些模块反复出现 Bug？
-   - 上一轮测试遗留了哪些问题？
-5. 检查 TODOS.md（如存在），记录已知 Bug
-6. 向用户总结当前测试状态，确认理解是否正确
+2. 读取 ENGINEERING.md，提取 API 契约和测试矩阵
+3. 读取 DESIGN.md，提取视觉硬规则（字号、颜色、间距）
+4. 读取 FEEDBACK.md（如有），提取历史用户反馈 → 纳入回归基线
+5. 读取 QA.md + QA CHANGELOG，做热点分析
+6. 向用户总结当前状态
+
+### 从零创建模式（无 QA.md）
+1. 分析项目测试现状（检查 tests/、覆盖率、CI 配置）
+2. 与用户多轮确认（测试策略、范围、验收标准）
+3. 产出 QA.md 初稿（参考 [references/qa-template.md](references/qa-template.md)）
 
 ---
 
-## 第2步（替代）：从零创建 QA.md
+## 第2.5步：生成 test-spec（铁律：不生成就不执行）
 
-1. **分析项目测试现状**：
-   - 检查现有测试文件（pytest/jest/mocha 等）
-   - 检查测试覆盖率
-   - 分析 PRD 中的验收标准
-   - 分析 ENGINEERING.md 中的测试矩阵
+### 输入 → 输出映射
 
-2. **与用户多轮确认**：
-   - 第1轮：测试策略 — 浏览器测试 vs 纯代码测试 vs 混合
-   - 第2轮：测试范围 — 核心功能 vs 全量覆盖
-   - 第3轮：验收标准 — 确认每个功能点的验收条件
-   - 第4轮：已知问题 — 当前存在的 Bug 或薄弱环节
+| 输入源 | 提取内容 | 转化为 |
+|--------|---------|-------|
+| PRD 验收标准 | "用户点击卡片，弹出详情面板" | `functional` 断言 |
+| DESIGN.md 规则 | "最小字号 12px"、"4px 间距网格" | `visual` CSS 断言 |
+| ENGINEERING.md API | "GET /api/feed → { items: [...] }" | `network` 断言 |
+| git diff | "修改了 DetailPanel.tsx" | `regression` 聚焦断言 |
+| 会话上下文 | "刚实现了频道切换功能" | `functional` 断言 |
+| FEEDBACK.md | 历史用户反馈 | `regression` 回归断言 |
 
-3. **产出 QA.md 初稿**（参考 [references/qa-template.md](references/qa-template.md)）
-4. **新建 QA CHANGELOG**
-5. 确认后写入文件
+### test-spec.json 结构
+
+**重要：选择器必须来自 Step 0.4 的审计结果，不能编造不存在的 `data-testid`。** 下面的示例用 `$SELECTOR_*` 占位符表示"根据审计结果填充实际选择器"。
+
+```json
+{
+  "metadata": {
+    "source": "PRD.md v10.1 + DESIGN.md v2",
+    "branch": "eng/feature-slug-2026-03-28",
+    "generated_at": "2026-03-28T10:00:00Z",
+    "scope": "full | diff-aware | regression",
+    "app_url": "http://localhost:8080",
+    "selector_strategy": "data-* + text + semantic"
+  },
+  "selector_map": {
+    "_comment": "Step 0.4 审计产出，所有 case 引用此映射",
+    "feed_section": "main > section:first-child",
+    "info_card": ".cursor-pointer:has(h3)",
+    "detail_panel": "[role='dialog']",
+    "tab_nav": "nav button",
+    "search_input": "input[placeholder*='搜索']"
+  },
+  "suites": [
+    {
+      "id": "feed-display",
+      "name": "信息流展示",
+      "source_ref": "PRD.md#v10.0-信息流",
+      "priority": "P0",
+      "cases": [
+        {
+          "id": "feed-001",
+          "description": "首页加载后展示信息卡片",
+          "dimension": "functional",
+          "steps": [
+            { "action": "navigate", "url": "/" },
+            { "action": "wait", "selector": "main > section:first-child", "timeout": 8000 }
+          ],
+          "assertions": [
+            { "type": "visible", "selector": "main > section:first-child" },
+            { "type": "count_gte", "selector": ".cursor-pointer:has(h3)", "min": 1 },
+            { "type": "contains_text", "selector": "main", "texts": ["$EXPECTED_SECTION_TITLE"] },
+            { "type": "no_console_errors" }
+          ]
+        },
+        {
+          "id": "feed-002",
+          "description": "卡片点击→详情面板，验证内容完整性（数据驱动）",
+          "dimension": "data-driven",
+          "data_driven": {
+            "selector": ".cursor-pointer:has(h3)",
+            "sample_size": 15,
+            "strategy": "stratified"
+          },
+          "steps": [
+            { "action": "click", "selector": "$item" },
+            { "action": "wait", "selector": "[role='dialog']", "timeout": 5000 }
+          ],
+          "assertions": [
+            { "type": "visible", "selector": "[role='dialog']" },
+            { "type": "evaluate", "description": "详情面板有标题且文本长度 > 0",
+              "script": "const panel = document.querySelector('[role=\"dialog\"]'); const title = panel?.querySelector('h2, h3'); if (!title || title.textContent.trim().length === 0) throw new Error('详情面板标题为空')" },
+            { "type": "evaluate", "description": "详情面板有实质内容（不只是骨架屏）",
+              "script": "const panel = document.querySelector('[role=\"dialog\"]'); const textLen = panel?.innerText?.trim().length || 0; if (textLen < 50) throw new Error(`面板内容过短: ${textLen} 字符`)" },
+            { "type": "no_console_errors" }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+**选择器规则**（参考 Step 0.4 审计 + Playwright 最佳实践）：
+- 只使用审计中确认存在的选择器，**绝不编造不存在的 `data-testid`**
+- 优先级：`role/aria` > `data-*` 属性 > 语义标签 > 可见文本 > CSS class 组合
+- 如果项目缺乏稳定选择器，在 QA 报告的"改进建议"中提出，交由 forge-eng 补充
+
+### 断言深度规则（铁律 4 的展开）
+
+**核心原则："it renders" ≠ "it works correctly"。**
+
+每个 test case 的 assertions 数组必须包含至少一个**深层断言**。`visible` 和 `count_gte` 只能作为前置条件（确认元素在 DOM 中），不能作为验收断言。
+
+#### ❌ 反面示例（浅断言 — 只验证"存在"不验证"正确"）
+
+```json
+{
+  "id": "starred-001",
+  "description": "收藏页展示收藏的卡片",
+  "assertions": [
+    { "type": "visible", "selector": "section.starred-view" },
+    { "type": "count_gte", "selector": ".cursor-pointer:has(h3)", "min": 1 }
+  ]
+}
+```
+问题：只验证了"收藏页有卡片"，没验证卡片**确实是收藏的**、内容**确实渲染了**。
+
+#### ✅ 正面示例（深层断言 — 验证数据正确性和功能完整性）
+
+```json
+{
+  "id": "starred-001",
+  "description": "收藏页展示收藏的卡片",
+  "assertions": [
+    { "type": "visible", "selector": "section.starred-view" },
+    { "type": "count_gte", "selector": ".cursor-pointer:has(h3)", "min": 1 },
+    { "type": "evaluate", "description": "每张卡片有标题且标题非空",
+      "script": "const cards = document.querySelectorAll('.cursor-pointer:has(h3)'); cards.forEach((c, i) => { const title = c.querySelector('h3'); if (!title || title.textContent.trim().length === 0) throw new Error(`第 ${i+1} 张卡片标题为空`) })" },
+    { "type": "evaluate", "description": "收藏页卡片数量与页面显示的统计数一致",
+      "script": "const displayed = document.querySelectorAll('.cursor-pointer:has(h3)').length; const header = document.querySelector('h2, [class*=\"header\"]')?.textContent || ''; const match = header.match(/(\\d+)/); if (match && displayed !== parseInt(match[1])) throw new Error(`显示 ${displayed} 张但标题显示 ${match[1]}`)" }
+  ]
+}
+```
+
+#### 更多断言深度检查表（生成 test-spec 时逐条对照）
+
+| 测试场景 | 浅断言（❌ 不够） | 深层断言（✅ 必须） |
+|---------|-----------------|-------------------|
+| 详情/弹窗 | `panel.isVisible()` | `panel.innerText.length > 50` + 包含标题/关键区块 |
+| 列表/收藏 | `cards.count() > 0` | 每张卡片有标题且非空，数量与页头统计一致 |
+| Tab/频道切换 | `section.isVisible()` | 切换后内容区文本变化（不是切前的旧内容） |
+| SSE/流式生成 | `button.isVisible()` | 触发 → 中间态可观测 → 完成后结果持久化（reload 仍在） |
+| 搜索/过滤 | `results.isVisible()` | 结果包含关键词，数量合理，空结果有空状态提示 |
+| 模态框/对话框 | `dialog.isVisible()` | 有标题 + 正文文本长度 > 0 + Escape 可关闭 |
+| 表单提交 | `form.isVisible()` | 填充 → 提交 → 反馈出现（toast/跳转/数据变化） |
+| URL/深度链接 | `page.loaded()` | 直接访问带参数的 URL → 视图状态与参数一致 |
+| 懒加载内容 | `skeleton.gone()` | 等待加载完成 → 内容非空 → 数量/值与预期一致 |
+
+#### 自检规则
+
+生成 test-spec 后，**自动扫描**所有 case：
+- 如果某个 case 的 assertions 只有 `visible`/`count_gte`/`hidden` 类型 → **标记为 ⚠️ 浅断言**，必须补充深层断言
+- 如果某个 case 没有任何 `contains_text`/`evaluate`/`has_attribute`/`css_value`/`matches_regex` → **拒绝执行**，回到 test-spec 生成步骤补充
+
+### test-spec 不是手写的
+
+test-spec 由 Claude 基于文档理解自动生成，但它是**结构化的、可审查的**。生成后必须输出摘要供用户确认。
 
 ---
 
-## 第2.5步：测试框架引导（如检测到无测试框架）
+## 第3步：测试计划确认
 
-**如果前置脚本未检测到测试框架且项目有代码**：
+生成 test-spec 后，输出验收清单摘要：
 
-1. 检测项目运行时：Node.js/Python/Ruby/Go/Rust
-2. 通过 AskUserQuestion 推荐测试框架：
+```
+📋 测试计划摘要（基于 PRD v10.1 + DESIGN.md v2）
 
-| 运行时 | 推荐 | 备选 |
-|--------|------|------|
-| Node.js | vitest + @testing-library | jest + @testing-library |
-| Next.js | vitest + @testing-library/react + playwright | jest + cypress |
-| Python | pytest + pytest-cov | unittest |
-| Ruby/Rails | minitest + capybara | rspec + factory_bot |
-| Go | stdlib testing + testify | stdlib only |
+  P0 核心流程（必测）：
+  ├── feed-001: 首页信息流加载 [functional]
+  ├── feed-002: 卡片→详情面板 [data-driven × 20]
+  ├── feed-003: 频道切换 [functional]
+  └── feed-004: 搜索功能 [functional]
 
-3. 选项：A) 安装推荐框架  B) 安装备选  C) 跳过
-4. 如果用户选择安装：安装包、创建配置、写一个示例测试、运行验证、commit
+  P1 视觉规则（DESIGN.md）：
+  ├── visual-001: 字号≥12px [visual]
+  ├── visual-002: 平台配色 [visual]
+  └── visual-003: 响应式三断点 [responsive]
 
-**如果已有测试框架**：读取 2-3 个已有测试文件，学习命名惯例、导入风格、断言模式，供后续回归测试生成使用。
+  P2 API 契约（ENGINEERING.md）：
+  ├── api-001: /api/feed 响应结构 [network]
+  └── api-002: /api/actions 响应结构 [network]
 
----
+  P3 深度测试：
+  ├── console-001: 零 JS 错误 [console]
+  └── a11y-001: WCAG 2.0 AA [accessibility]
 
-## 第3步：测试计划与确认
+  FEEDBACK 回归（历史用户反馈）：
+  └── UF-001: 行动点区块布局 [regression]
 
-### 需要用户确认的关键测试决策
+  共 14 个测试用例，预计 5-10 分钟。
+  确认执行？[Y/n]
+```
 
-通过 AskUserQuestion 确认：
-
-1. **测试级别**：
-   - A) 快速 — 只测严重和高优先级（5-10 分钟）
-   - B) 标准 — 快速 + 中等优先级（15-30 分钟）
-   - C) 详尽 — 标准 + 低优先级和外观（30-60 分钟）
-
-2. **测试范围**：列出本次变更需要测试的功能点和验收标准
-
-3. **回归范围**：列出可能受影响的现有功能
-
-### 不需要用户确认的内容
-
-- 具体测试用例的实现方式
-- 测试数据的构造
-- Bug 修复的具体代码
+用户可以：
+- 确认执行
+- 要求增减测试项
+- 要求调整优先级
 
 ---
 
 ## 第4步：更新 QA 文档
 
-### A. 更新 QA CHANGELOG
-
-追加本次变更记录：时间、测试范围、发现的 Bug、修复状态。
-
-### B. 更新 QA.md
-
-1. 更新版本号、日期
-2. 更新迭代摘要区
-3. 更新测试矩阵（新增测试场景）
-4. 更新验收清单
-5. 更新已知问题列表（移除已修复的、新增发现的）
+1. 更新/创建 QA.md（参考 [references/qa-template.md](references/qa-template.md)）
+2. 更新 QA CHANGELOG
+3. 将 test-spec.json 保存到报告目录
 
 ---
 
-## 第5步：系统性测试执行
+## 第5步：7 维度测试执行
 
-### 5.0 认证处理（如需登录态）
+**使用 qa-runner.mjs 框架。** 详细代码模板参考 [references/test-dimensions.md](references/test-dimensions.md)。
 
-**如果用户指定了认证方式：**
+### 测试脚本编写规范
 
-使用 gstack/browse：
-```bash
-# 导入 cookies
-$B cookie-import cookies.json
-$B goto <target-url>
+**必须使用 qa-runner.mjs 框架**，不从零写脚本：
 
-# 或表单登录
-$B goto <login-url>
-$B snapshot -i                    # 找到登录表单
-$B fill @e3 "user@example.com"
-$B fill @e4 "[REDACTED]"         # 绝不在报告中包含真实密码
-$B click @e5                      # 提交
-$B snapshot -D                    # 验证登录成功
+```javascript
+import { TestCollector, attachMonitors, snap, snapElement, createPage, pickStratified, writeResults } from '$QA_RUNNER';
+
+const collector = new TestCollector();
+const { browser, page } = await createPage();
+attachMonitors(page, collector);
+
+// ... 测试逻辑（使用 collector.pass/fail/skip）...
+
+collector.printSummary();
+writeResults(collector);
+await browser.close();
+process.exit(collector.summary().failed > 0 ? 1 : 0);
 ```
 
-使用 Playwright：
-```python
-page.goto('<login-url>')
-page.wait_for_load_state('networkidle')
-page.fill('input[name="email"]', 'user@example.com')
-page.fill('input[name="password"]', '[REDACTED]')
-page.click('button[type="submit"]')
-page.wait_for_load_state('networkidle')
-page.screenshot(path='/tmp/qa-login-result.png')
+**`$QA_RUNNER` 替换为前置脚本检测到的路径。**
+
+### 执行分阶段（快速失败）
+
+```
+Phase 1 冒烟（所有级别都执行）
+  ├── 控制台零容忍 [console]：page.on('pageerror') + page.on('console error')
+  ├── 首页加载：导航 → 等待 → 断言核心元素可见
+  └── API/网络基础 [network]：检查 /api/* 状态码 < 400
+  → 如果 Phase 1 全 FAIL → 停止测试（环境问题），报告并退出
+
+Phase 2 核心功能（快速+标准+详尽）
+  ├── 交互完整性 [functional]：Tab 切换、按钮点击、模态框开关
+  ├── 数据驱动遍历 [data-driven]：采样 N 个元素，逐一验证
+  ├── SSE/流式生成 [streaming]：全链路（触发→中间态→完成→持久化），有 SSE 时启用
+  ├── URL 状态 [url-state]：正反向验证（操作→URL + URL→视图恢复），有路由状态时启用
+  └── 懒加载/异步 [async-content]：加载态→内容验证→分页/进度，有异步加载时启用
+  → 覆盖 P0 用例
+
+Phase 3 视觉+响应式（标准+详尽）
+  ├── 视觉规则断言 [visual]：CSS 属性验证（字号、颜色、间距）
+  └── 响应式断点 [responsive]：375/768/1440 三个视口
+  → 覆盖 P1 用例
+
+Phase 4 深度（仅详尽级别）
+  ├── 可访问性 [accessibility]：axe-core WCAG 2.0 AA
+  └── 边界条件：空数据、超长文本、网络异常
+  → 覆盖 P2-P3 用例
 ```
 
-**如果需要导入浏览器 cookies**：提示用户使用 `/setup-browser-cookies`。
-**如果需要 2FA/验证码**：暂停并要求用户提供验证码。
+### 7 维度概述
 
-### 5.1 自动化测试
+#### 维度 1: 控制台零容忍 [console]
 
-```bash
-# 运行项目已有的测试
-npm test 2>/dev/null || python -m pytest 2>/dev/null || go test ./... 2>/dev/null || echo "无自动化测试框架"
+`attachMonitors()` 自动挂载。每个导航/交互后通过 `collector.checkConsoleErrors()` 检查。
+任何 `pageerror` = 自动 FAIL，包含错误文本和 stack trace。
+
+**能发现**：React 渲染崩溃、未捕获异常、404 资源
+**不能发现**：被 try-catch 包裹的静默错误
+
+#### 维度 2: 数据驱动遍历 [data-driven]
+
+不测 1 个元素，采样 N 个。使用 `pickStratified()` 分层采样（首尾 + 均匀分布）。
+每个元素独立 pass/fail，统计崩溃率并推算总体影响。
+
+**能发现**：27% 卡片因数据类型不一致崩溃（当前完全测不到的）
+**不能发现**：需要特定数据组合才触发的 bug
+
+#### 维度 3: 网络契约验证 [network]
+
+`attachMonitors()` 自动收集 `/api/*` 响应。断言：状态码 < 400 + 响应结构匹配。
+如果 ENGINEERING.md 定义了 API schema，验证响应 JSON 结构。
+
+**能发现**：API 404、响应结构变更、后端未启动
+**不能发现**：语义正确但数据错误的响应
+
+#### 维度 4: 视觉规则断言 [visual]
+
+从 DESIGN.md 提取硬规则 → CSS 断言。使用 `page.evaluate(el => getComputedStyle(el))`。
+检查项：字号 ≥ 12px、间距遵循 4px 网格、平台配色正确。
+
+**能发现**：字号不达标、间距违规、颜色错误
+**不能发现**："看起来不对但 CSS 值合规"的美学问题
+
+#### 维度 5: 交互完整性 [functional]
+
+每个可交互元素：操作 → 状态变化断言 → 可逆性验证。
+Tab: `click → aria-selected === true → panel visible`
+模态框: `click → modal visible → Escape → modal gone`
+
+**能发现**：Tab 崩溃、按钮无响应、模态框不可关闭
+**不能发现**：交互流畅度、动画是否自然
+
+#### 维度 6: 响应式断点 [responsive]
+
+三个断点：mobile(375×812) / tablet(768×1024) / desktop(1440×900)。
+每个断点检查：无水平溢出 + 触控目标 ≥ 44px + 截图留证。
+
+#### 维度 7: 可访问性 [accessibility]
+
+axe-core WCAG 2.0 AA 扫描 + 键盘导航验证（Tab 遍历 + Enter 激活 + Escape 关闭）。
+
+#### 维度 8: SSE / 流式生成全链路 [streaming]
+
+**适用条件**：项目包含 SSE 端点、WebSocket、流式 AI 生成等实时特性。通过 Step 0.4 扫描 `EventSource`、`fetch.*stream`、`WebSocket` 判断是否启用。
+
+测试全生命周期，不只是"按钮存在"：
+
+```
+触发入口（按钮/表单）→ 中间态（loading/thinking/progress）→ 数据流（逐步到达）→ 完成态 → 持久化验证（reload 后数据仍在）
 ```
 
-### 5.2 浏览器测试 — gstack/browse 引擎
+关键断言：
+- 触发后：中间态 UI 出现（spinner/进度条/thinking 动画），按钮变为不可操作
+- 流式期间：内容区逐步增长（`textContent.length` 单调递增）
+- 完成后：loading 消失，最终内容完整渲染
+- 取消/中断：如果有取消按钮，点击后回到 idle 态，无残留
+- **持久化**：刷新页面后，生成的内容仍然存在（最关键的深层断言）
+- 错误恢复：模拟网络中断（`page.route` 拦截 → abort），UI 显示错误态而非卡死
 
-#### 5.2.1 全局导航探索
+#### 维度 9: URL 状态 / 深度链接 [url-state]
+
+**适用条件**：项目使用 hash 路由（`#view=xxx`）、query 参数（`?tab=xxx`）、或 SPA 路由（`/page/xxx`）管理视图状态。通过 Step 0.4 扫描 `useHash`、`useRouter`、`history.pushState`、`window.location.hash` 判断是否启用。
+
+测试双向一致性：
+
+```
+操作 → URL 变化        （正向：UI 操作驱动 URL 更新）
+URL → 视图恢复         （反向：直接访问 URL 恢复完整状态）
+```
+
+关键断言：
+- **正向**：点击 Tab/频道/卡片 → `page.url()` 包含对应参数
+- **反向**：直接 `page.goto(url_with_params)` → 视图状态正确恢复（Tab 选中、内容加载）
+- **深度链接**：带完整参数的 URL（如 `#l1=recommend&d=item-123`）→ 详情面板自动打开，内容正确
+- **浏览器前进/后退**：`page.goBack()` / `page.goForward()` → 视图正确切换
+- **边界**：无效参数的 URL（如 `#d=nonexistent-id`）→ 优雅降级，不白屏
+
+#### 维度 10: 懒加载 / 异步内容 [async-content]
+
+**适用条件**：项目包含分页加载、无限滚动、骨架屏、点击后异步获取详情等模式。几乎所有现代 SPA 都适用。
+
+测试加载全生命周期：
+
+```
+触发加载 → 加载态（skeleton/spinner）→ 内容到达 → 加载态消失 → 内容正确
+```
+
+关键断言：
+- **等待策略**：不用 `waitForTimeout` 硬等，使用 `waitForResponse` 或 `waitForSelector` 等具体条件
+- **骨架屏消失**：如果有 skeleton，等待 `.skeleton` 消失再断言内容
+- **内容非空**：加载完成后，内容区 `textContent.length > 0`（不只是 skeleton 被替换为空 div）
+- **分页/进度**：如果有进度提示（"加载中 500/10740"），验证进度文本格式正确，全部加载完成后进度消失
+- **滚动加载**：`page.mouse.wheel` 或 `scrollIntoView` 触发加载 → 新内容出现 → 总量增加
+- **加载失败**：`page.route` 拦截 API 返回 500 → 显示错误提示而非无限 loading
+
+**通用等待模式**（替代 `waitForTimeout`）：
+
+```javascript
+// ❌ 硬等（不可靠，慢）
+await page.waitForTimeout(3000);
+
+// ✅ 等 API 响应（精确）
+await page.waitForResponse(resp => resp.url().includes('/api/feed') && resp.status() === 200);
+
+// ✅ 等骨架屏消失（语义化）
+await page.waitForSelector('.skeleton', { state: 'hidden', timeout: 10000 });
+
+// ✅ 等内容出现（直接）
+await page.waitForSelector('main .cursor-pointer:has(h3)', { timeout: 10000 });
+
+// ✅ 等网络空闲（兜底）
+await page.waitForLoadState('networkidle');
+```
+
+### gstack/browse 引擎（快速探索和截图标注）
+
+当 gstack/browse 可用时，可作为 Playwright 的补充：
 
 ```bash
 $B goto <URL>
-$B snapshot -i -a                # 标注所有可交互元素
-$B links                         # 导航结构地图
-$B console --errors              # JS 错误
-$B network                       # 失败的请求
-$B perf                          # LCP、CLS 等性能指标
-$B screenshot $REPORT_DIR/screenshots/initial.png
+$B snapshot -i -a     # 标注所有可交互元素
+$B console --errors   # 控制台错误
+$B network            # 网络请求
+$B perf               # LCP、CLS 性能
+$B screenshot $REPORT_DIR/screenshots/overview.png
+$B responsive         # 三视口截图
 ```
 
-**截图后必须用 Read 工具读取截图文件展示给用户。**
+**两个引擎协同**：
+- gstack/browse：快速探索、截图标注、性能指标
+- Playwright + qa-runner：结构化断言、数据驱动、网络拦截
 
-#### 5.2.2 框架特定检查
+### 纯代码测试（无浏览器引擎时）
 
-**Next.js**：
-- 检查 hydration 错误（`Hydration failed`, `Text content did not match`）
-- 监控 `_next/data` 请求是否有 404
-- 测试客户端导航（点击链接，不只是 goto）
-- 检查 CLS（动态内容页面）
-
-**Rails**：
-- 检查 N+1 查询警告
-- 验证 CSRF token
-- 测试 Turbo/Stimulus 集成
-
-**SPA（React/Vue/Angular）**：
-- 使用 `snapshot -i` 导航（`links` 命令可能漏掉客户端路由）
-- 检查 stale state（导航离开再回来，数据是否刷新？）
-- 测试浏览器前进/后退
-
-#### 5.2.3 页面加载测试
-
-```bash
-$B goto <URL>
-$B text                    # 页面有内容吗？
-$B console --errors        # 有 JS 错误吗？
-$B network                 # 有失败的请求吗？
-$B screenshot $REPORT_DIR/screenshots/page-load.png
-```
-
-**Bug 判断标准（严重）**：
-- 页面白屏或 500 错误
-- JS 报错导致功能不可用
-- 关键资源加载失败（API、图片、脚本）
-
-#### 5.2.4 核心功能测试
-
-基于测试计划或 git diff 识别的核心用户流程，逐一测试：
-
-```bash
-# 1. 看所有可交互元素
-$B snapshot -i
-
-# 2. 逐步走完流程
-$B fill @e3 "测试输入"
-$B click @e5
-
-# 3. 验证结果
-$B snapshot -D              # 查看前后变化
-$B is visible ".success"    # 断言成功状态
-
-# 4. 截图留证
-$B screenshot $REPORT_DIR/screenshots/flow-result.png
-```
-
-#### 5.2.5 表单和输入测试
-
-对每个表单：
-```bash
-# 空提交——验证报错是否出现
-$B click @submit
-$B snapshot -D
-$B is visible ".error-message"
-
-# 边界输入测试
-$B fill @e3 ""              # 空值
-$B fill @e3 "a"             # 最短
-$B fill @e3 "$(python3 -c 'print("a"*1000)')"  # 超长
-
-# 成功路径
-$B fill @e3 "有效输入"
-$B click @submit
-$B snapshot -D
-```
-
-#### 5.2.6 错误状态测试
-
-- 模拟网络错误（如果可以）
-- 测试权限不足的访问
-- 测试无效 URL/ID
-- 验证错误消息是否清晰（不是"出错了"这种无用提示）
-
-#### 5.2.7 响应式布局测试（标准+详尽级别）
-
-```bash
-$B viewport 375x812    # iPhone SE
-$B screenshot $REPORT_DIR/screenshots/mobile.png
-$B viewport 768x1024   # iPad
-$B screenshot $REPORT_DIR/screenshots/tablet.png
-$B viewport 1440x900   # 桌面
-$B screenshot $REPORT_DIR/screenshots/desktop.png
-```
-
-或使用 `$B responsive` 命令一次性生成三个视口的截图。
-
-#### 5.2.8 性能指标采集
-
-```bash
-$B perf                    # Core Web Vitals: LCP, CLS, FCP
-$B js "performance.getEntriesByType('resource').filter(e => e.duration > 1000).map(e => ({name: e.name, duration: Math.round(e.duration)}))"
-```
-
-### 5.3 浏览器测试 — Playwright 引擎
-
-当需要**更复杂的 E2E 流程**（多步骤表单、文件上传、跨页面状态、前后端联动验证）时使用 Playwright。
-
-#### 5.3.1 基本 Playwright 脚本模式
-
-```python
-from playwright.sync_api import sync_playwright
-
-with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True)
-    page = browser.new_page()
-
-    # 采集控制台错误
-    console_errors = []
-    page.on('console', lambda msg: console_errors.append(msg.text) if msg.type == 'error' else None)
-
-    page.goto('http://localhost:3456')
-    page.wait_for_load_state('networkidle')  # 关键：等待 JS 执行完成
-
-    # 截图
-    page.screenshot(path='/tmp/qa-page.png', full_page=True)
-
-    # DOM 检查
-    buttons = page.locator('button').all()
-    print(f"找到 {len(buttons)} 个按钮")
-
-    # 交互测试
-    page.fill('input[name="search"]', '测试关键词')
-    page.click('button[type="submit"]')
-    page.wait_for_load_state('networkidle')
-    page.screenshot(path='/tmp/qa-search-result.png', full_page=True)
-
-    # 输出错误
-    if console_errors:
-        print(f"发现 {len(console_errors)} 个控制台错误:")
-        for err in console_errors:
-            print(f"  - {err}")
-
-    browser.close()
-```
-
-#### 5.3.2 前后端联动测试（Playwright 专长）
-
-Playwright 特别适合测试**前端发送请求 → 后端处理 → 前端展示结果**的完整链路：
-
-```python
-from playwright.sync_api import sync_playwright
-
-with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True)
-    page = browser.new_page()
-
-    # 拦截网络请求，验证 API 调用
-    api_calls = []
-    page.on('request', lambda req: api_calls.append({
-        'url': req.url, 'method': req.method
-    }) if '/api/' in req.url else None)
-
-    api_responses = []
-    page.on('response', lambda res: api_responses.append({
-        'url': res.url, 'status': res.status
-    }) if '/api/' in res.url else None)
-
-    page.goto('http://localhost:3456')
-    page.wait_for_load_state('networkidle')
-
-    # 执行操作并验证 API 请求和响应
-    page.click('button.submit-action')
-    page.wait_for_load_state('networkidle')
-
-    # 验证前后端联动
-    print(f"API 调用: {len(api_calls)}")
-    for call in api_calls:
-        print(f"  {call['method']} {call['url']}")
-    for resp in api_responses:
-        print(f"  响应: {resp['status']} {resp['url']}")
-
-    # 截图验证最终状态
-    page.screenshot(path='/tmp/qa-api-flow.png', full_page=True)
-
-    browser.close()
-```
-
-#### 5.3.3 多服务器启动（前后端分离项目）
-
-使用 webapp-testing 的 `with_server.py` 辅助脚本：
-
-```bash
-# 单服务器
-python $PW_SERVER --server "npm run dev" --port 5173 -- python /tmp/qa-test.py
-
-# 前后端分离
-python $PW_SERVER \
-  --server "cd backend && python server.py" --port 3000 \
-  --server "cd frontend && npm run dev" --port 5173 \
-  -- python /tmp/qa-test.py
-```
-
-#### 5.3.4 Playwright 多视口响应式测试
-
-```python
-from playwright.sync_api import sync_playwright
-
-viewports = [
-    {'name': 'mobile', 'width': 375, 'height': 812},
-    {'name': 'tablet', 'width': 768, 'height': 1024},
-    {'name': 'desktop', 'width': 1440, 'height': 900},
-]
-
-with sync_playwright() as p:
-    browser = p.chromium.launch(headless=True)
-    for vp in viewports:
-        page = browser.new_page(viewport={'width': vp['width'], 'height': vp['height']})
-        page.goto('http://localhost:3456')
-        page.wait_for_load_state('networkidle')
-        page.screenshot(path=f'/tmp/qa-{vp["name"]}.png', full_page=True)
-        page.close()
-    browser.close()
-```
-
-### 5.4 纯代码测试（无浏览器引擎时）
-
-- 逐文件读取实现代码，检查边界情况处理
+- 逐文件读取实现代码，检查边界情况
 - 验证错误处理完整性
-- 检查测试覆盖率
-- 验证数据库操作的安全性
-- 检查 API 端点的输入验证
-
-### 5.5 引擎选择决策树
-
-```
-测试任务 → 需要截图/视觉验证？
-  ├── 是 → gstack/browse 可用？
-  │     ├── 是 → 用 gstack/browse（快速，带标注）
-  │     │     └── 需要复杂 E2E 流程？→ 是 → 同时用 Playwright 补充
-  │     └── 否 → Playwright 可用？
-  │           ├── 是 → 用 Playwright（截图+完整 E2E）
-  │           └── 否 → 纯代码模式
-  └── 否 → 纯代码测试（单元测试、静态分析）
-```
-
-**两个引擎协同使用的场景**：
-- gstack/browse：快速探索页面、截图、snapshot 标注、简单交互
-- Playwright：复杂多步骤流程、网络请求拦截验证、文件上传、跨域测试、前后端联动断言
+- 检查 API 输入验证
+- 运行项目已有的测试框架（`npm test` / `pytest` 等）
 
 ---
 
-## 第6步：Bug 整理与报告（只记录，不修复）
+## 第6步：智能分析 + Bug 报告
+
+### 分析流程
+
+对每个 FAIL 的测试用例：
+
+1. **错误分类**
+   - Console Error → 提取 stack trace → 定位源文件:行号
+   - 元素不存在 → 检查选择器 → 检查组件是否渲染
+   - 网络错误 → 检查后端日志 → 检查 API 路由
+   - 视觉偏差 → 检查 CSS 来源 → 对比 DESIGN.md 规则
+
+2. **交叉验证**
+   - 将 console error 中的文件路径 → 对应到 git diff 中的变更文件
+   - 在 diff 中 → 标记 `[本次引入]`
+   - 不在 diff 中 → 标记 `[已有问题]`
+
+3. **影响范围估算**
+   - data-driven 测试：5/20 崩溃 → 推算 25% 数据受影响
+   - 功能测试：特定 tab 崩溃 → 标记该 tab 下所有功能受影响
 
 ### Bug 登记格式
 
-```
-## Bug #N [严重度]
-**现象**：用户看到了什么
-**步骤**：
-1. 访问 /xxx
-2. 点击 xxx
-3. 预期：xxx
-4. 实际：xxx
-**截图**：[路径]
-**根因分析**：[文件:行号 — 一句话说明可能的原因]
-**建议修复方向**：[简要描述修复思路，供 forge-eng 参考]
+```markdown
+### BUG-001 [严重度] 标题
+
+**现象：** 用户看到了什么
+**影响：** 影响范围（如"25% 的卡片无法打开详情"）
+**证据：**
+  - Console: "错误信息原文"
+  - Stack: `文件:行号`
+  - 截图: qa_screenshots/XX_name.png
+**根因定位：**
+  - 文件: `src/components/DetailPanel.tsx:360`
+  - 原因: 一句话说明
+**本次引入：** 是/否（基于 git diff 交叉引用）
+**修复建议：** 简要描述修复思路
 ```
 
-### Bug 分类
+### 严重度分类
 
 | 严重度 | 定义 | 处理 |
 |--------|------|------|
-| 严重 | 核心功能完全不可用 | 报告 → 回 forge-eng 修复 |
-| 高 | 功能可用但结果错误 | 报告 → 回 forge-eng 修复 |
-| 中 | 功能可用但体验差 | 报告 → 视优先级决定 |
-| 低 | 外观/措辞问题 | 报告 → 可延后处理 |
+| 严重 | 核心功能崩溃/不可用 | 必须修复 |
+| 高 | 功能可用但结果错误 | 必须修复 |
+| 中 | 功能可用但体验差 | 建议修复 |
+| 低 | 外观/措辞/细节问题 | 可延后 |
 
 ### 修复清单产出
 
-所有 Bug 登记完成后，生成一份结构化修复清单，供 `/forge-eng` 使用：
-
 ```markdown
-# 修复清单（由 forge-qa 生成）
+# 修复清单（forge-qa 生成）
 
 ## 必须修复（严重 + 高）
-- [ ] Bug #1: {现象} — {文件:行号} — {建议修复方向}
-- [ ] Bug #2: ...
+- [ ] BUG-001: {现象} — {文件:行号} — {修复方向}
+- [ ] BUG-002: ...
 
 ## 建议修复（中）
-- [ ] Bug #3: ...
+- [ ] BUG-003: ...
 
 ## 可延后（低）
-- [ ] Bug #5: ...
+- [ ] BUG-005: ...
 ```
-
-**铁律：forge-qa 不修改任何业务代码，不做 git commit（测试代码除外）。**
 
 ---
 
-## 第8步：健康评分与上线就绪
+## 第7步：User Gate（用户验收关卡）
+
+**铁律：不可跳过。** QA 自动化测试无法覆盖设计意图偏差、功能遗漏等只有用户能判断的问题。
+
+### 输出与等待
+
+QA 报告生成后，输出以下内容并等待用户操作：
+
+```
+╔══════════════════════════════════════════╗
+║           QA 报告已生成                   ║
+╠══════════════════════════════════════════╣
+║  通过: 10  失败: 3  跳过: 1              ║
+║  健康评分: 72/100                        ║
+║  报告: .gstack/qa-reports/qa-report-*.md ║
+╠══════════════════════════════════════════╣
+║  请验收后选择：                            ║
+║  A) 验收通过 → 进入发布流程                ║
+║  B) 验收不通过 → 填写反馈，回 forge-eng     ║
+║  C) 我需要先自己体验一下                    ║
+╚══════════════════════════════════════════╝
+```
+
+### 用户操作
+
+**A) 验收通过（accept）**
+- 更新 `.features/status.md` qa 行为 `[✅ 已完成]`
+- 建议下一步：`/forge-review` 或 `/forge-ship`
+
+**B) 验收不通过（reject）**
+- 引导用户描述问题（可以直接在会话中描述）
+- Claude 自动提取为 FEEDBACK.md 格式
+- 合并 qa-report 中未修复的 BUG + 用户 FEEDBACK
+- 生成统一修复清单 → `/forge-eng`
+
+**C) 用户自行体验**
+- 暂停，等待用户回来反馈
+- 用户可以随时在会话中描述问题
+
+### FEEDBACK.md 结构
+
+```markdown
+# User Feedback — {feature-name}
+
+## 元数据
+- 日期: YYYY-MM-DD
+- QA 报告参考: qa-report-YYYY-MM-DD.md
+- 分支: eng/feature-name-YYYY-MM-DD
+
+## 反馈项
+
+### UF-001 [Design Intent] 标题
+**期望：** 用户期望的行为
+**现状：** 实际看到的行为
+**参考：** DESIGN.md#section 或 PRD.md#version
+**截图：** feedback_screenshots/001.png（可选）
+
+### UF-002 [Missing] 标题
+**期望：** PRD 中描述的功能
+**现状：** 功能缺失或未实现
+**参考：** PRD.md#section
+```
+
+**反馈类型：**
+- `[Design Intent]` — 设计意图偏差（QA 测不到的，只有用户能判断）
+- `[Missing]` — 功能缺失（PRD 有但没实现）
+- `[Regression]` — 回归问题（之前好的现在坏了）
+- `[Polish]` — 打磨细节（能用但不够好）
+
+### FEEDBACK.md 的流转
+
+| 谁 | 怎么用 |
+|----|-------|
+| **forge-eng** | 读取 → 作为 fix list，和 qa-report BUG 一起修 |
+| **forge-qa（下一轮）** | 读取 → 纳入 test-spec 回归项，确保不再漏测 |
+| **forge-qa（长期）** | 历史 FEEDBACK 累积为项目回归测试基线 |
+| **用户** | 只写"发现了什么 + 期望什么"，不需要定位根因 |
+
+### 反馈闭环流程
+
+```
+QA 报告 → User Gate → reject
+                        │
+                        ↓
+                  FEEDBACK.md（用户反馈）
+                        │
+                        ↓
+                  合并修复清单 = qa-report BUG + FEEDBACK
+                        │
+                        ↓
+                  forge-eng（修复）
+                        │
+                        ↓
+                  forge-qa（回归）
+                    ├── test-spec 自动包含 FEEDBACK 项
+                    └── 只测变更 + FEEDBACK 涉及范围
+                        │
+                        ↓
+                  User Gate（再次验收）
+                        │
+                        └── ... 直到 accept
+```
+
+---
+
+## 第8步：健康评分与报告
 
 ### 健康评分计算
 
@@ -728,54 +938,24 @@ with sync_playwright() as p:
 |------|------|---------|
 | 控制台错误 | 15% | 0 错误→100, 1-3→70, 4-10→40, 10+→10 |
 | 链接完整性 | 10% | 每个死链 -15，最低 0 |
-| 视觉呈现 | 10% | 每个严重 -25, 高 -15, 中 -8, 低 -3 |
-| 核心功能 | 20% | 同上扣分规则 |
-| 用户体验 | 15% | 同上扣分规则 |
-| 性能 | 10% | 同上扣分规则 |
-| 内容 | 5% | 同上扣分规则 |
-| 无障碍 | 15% | 同上扣分规则 |
-
-`score = Σ (category_score × weight)`
-
-### 上线就绪判断
-
-- ✅ 可以上线：无严重/高 Bug，验收标准全部通过
-- ⚠️ 需关注：有中等 Bug，核心功能不受影响 → 建议回 `/forge-eng` 修复后再测
-- ❌ 不建议上线：有严重/高优先级 Bug → 必须回 `/forge-eng` 修复
-
----
-
-## 第9步：确认与总结
+| 核心功能 | 20% | 每个严重 -25, 高 -15, 中 -8, 低 -3 |
+| 视觉呈现 | 10% | 同上 |
+| 用户体验 | 15% | 同上 |
+| 性能 | 10% | 同上 |
+| 内容 | 5% | 同上 |
+| 无障碍 | 15% | 同上 |
 
 ### 报告输出
 
 **输出到项目目录**：`$REPORT_DIR/qa-report-{YYYY-MM-DD}.md`
 
-**输出结构**：
 ```
 .gstack/qa-reports/
-├── qa-report-{YYYY-MM-DD}.md      # 结构化报告
-├── screenshots/
-│   ├── baseline.png                # 测试前基准截图
-│   ├── initial.png                 # 首页标注截图
-│   ├── issue-001-step-1.png        # Bug 证据截图
-│   ├── issue-001-after.png         # 修复后截图
-│   ├── mobile.png                  # 响应式截图
-│   ├── tablet.png
-│   ├── desktop.png
-│   └── ...
-└── baseline.json                   # 回归模式基准数据
-```
-
-**保存 baseline.json**（供下次回归对比）：
-```json
-{
-  "date": "YYYY-MM-DD",
-  "url": "<target>",
-  "healthScore": 85,
-  "issues": [{ "id": "BUG-001", "title": "...", "severity": "...", "status": "fixed" }],
-  "categoryScores": { "console": 100, "links": 85, "visual": 90, "functional": 80 }
-}
+├── qa-report-{YYYY-MM-DD}.md      # 结构化报告（人类可读）
+├── test-results.json               # 结构化结果（机器可读，qa-runner 产出）
+├── test-spec.json                  # 测试规格（用于回归）
+├── screenshots/                    # 截图证据
+└── baseline.json                   # 回归基准数据
 ```
 
 ### 终端报告
@@ -784,117 +964,56 @@ with sync_playwright() as p:
 +============================================================+
 |                     QA 交付完成                              |
 +============================================================+
-| 项目：[项目名]                                               |
-| 版本：vX.Y                                                  |
+| 项目：[项目名]      分支：[分支名]                            |
 | 测试级别：快速 / 标准 / 详尽                                   |
-| 测试模式：Diff-aware / Full / Quick / Regression             |
-| 测试引擎：gstack/browse + Playwright / 纯代码                |
+| 测试引擎：qa-runner + gstack/browse                          |
 +------------------------------------------------------------+
-| 健康评分                                                     |
-|   测试前：XX/100                                             |
-|   测试后：XX/100                                             |
-|   改善：+XX 分                                               |
+| 测试结果                                                     |
+|   总计: XX  通过: XX  失败: XX  跳过: XX                      |
+|   通过率: XX%  控制台错误: XX  网络错误: XX                    |
 +------------------------------------------------------------+
-| Bug 统计                                                     |
-|   严重：X 个（已修复 X）                                       |
-|   高：X 个（已修复 X）                                         |
-|   中：X 个（已修复 X）                                         |
-|   低：X 个（已修复 X）                                         |
+| 健康评分：XX/100                                             |
+| 上线就绪：✅ 可以上线 / ⚠️ 需关注 / ❌ 不建议                  |
 +------------------------------------------------------------+
-| 回归测试                                                     |
-|   新增：X 个回归测试                                           |
-|   自动化测试：全部通过 / X 个失败                               |
-+------------------------------------------------------------+
-| 上线就绪：可以上线 / 需关注 / 不建议上线                        |
-| 原因：                                                       |
-+------------------------------------------------------------+
-| 文件：                                                       |
-|   QA.md          — [已更新/已创建]                            |
-|   QA-CHANGELOG   — [已追加/已创建]                            |
-|   报告           — .gstack/qa-reports/qa-report-*.md         |
-|   截图           — .gstack/qa-reports/screenshots/           |
+| 等待用户验收（User Gate）...                                   |
 +============================================================+
 ```
 
-### TODOS.md 更新
-
-如果项目有 `TODOS.md`：
-- 新增的 deferred Bug → 添加为 TODO，含严重度和复现步骤
-- 已修复的 Bug 如果在 TODOS.md 中 → 标注 "Fixed by /forge-qa on {branch}, {date}"
-
 ---
 
-## Feature 状态管理（.features/ 架构）
+## Feature 状态管理
 
-### 核心原则
+### 启动时
+- 读取 `.features/{feature-id}/status.md`，确认 eng 行为 `[✅ 已完成]`
+- 将 qa 行更新为 `[🔄 进行中]`
 
-**领域文档（QA.md）只存内容，不存运行状态。** 运行状态写入 `.features/{feature-id}/status.md`，按 feature 隔离，支持多会话并行。
+### 执行中
+- 更新 QA Items 表，每个测试项独立状态
 
-### 状态标记协议
-
-| 标记 | 含义 |
-|------|------|
-| `[待处理]` | 已规划，未开始 |
-| `[进行中]` | 当前正在执行 |
-| `[已完成]` | 执行完成 |
-| `[失败]` | 执行失败，需干预 |
-| `[暂停]` | 等待用户确认或外部依赖 |
-
-### 状态读写位置
-
-**Pipeline 表**：`.features/{feature-id}/status.md` 的 `qa` 行。
-**QA Items 表**：在 status.md 中维护独立的测试项和 Bug 跟踪表。
-
-**不写入**：QA.md。领域文档只存测试计划和验收标准。
-
-### 操作规则
-
-1. **启动时（第0步）**：
-   - 读取 `.features/{feature-id}/status.md`，确认前序依赖已完成（eng 行为 `[已完成]`）
-   - 将 Pipeline 表中 `qa` 行更新为 `[进行中]`，填入 skill=`forge-qa`、started 时间
-   - 更新 `_registry.md` 中该 feature 的 skill 和 heartbeat
-
-2. **测试执行阶段**（第5步）：在 status.md 中追加 QA Items 表：
-   ```markdown
-   ## QA Items
-   | item-id | name | status | severity | commit | note |
-   |---------|------|--------|----------|--------|------|
-   | TEST-01 | 页面加载 | [已完成] | — | — | 通过 |
-   | TEST-02 | 核心功能 | [进行中] | — | — | — |
-   | BUG-01 | 去重误判 | [待处理] | critical | — | — |
-   ```
-
-3. **每个 Bug 修复并 commit 后**：Bug 行状态改为 `[已完成]`，commit 列填 hash，更新 heartbeat
-
-4. **回归测试**（第7步）：更新 note 字段标注回归通过/失败
-
-5. **全部完成后**：Pipeline 表中 `qa` 行状态改为 `[已完成]`，记录 completed 时间和健康评分，更新 heartbeat
-
-### 跨 Agent 协作
-
-- forge-dev 调度器通过 status.md 感知 QA 进度（Pipeline 表 + QA Items 表），无需读取 QA.md 头部
-- 如果 `.features/{feature-id}/status.md` 中 prd 行状态为 `[进行中]`，说明需求可能在变更中，forge-qa 应提示用户
-- 多个会话可以同时在不同 feature 上执行 forge-qa，互不干扰
+### 完成时
+- 通过：qa 行 `[✅ 已完成]`，note: `{passed}/{total} PASS, {score}/100`
+- 未通过：qa 行 `[❌ 失败]`，note: `{failed} FAIL, 需修复后重测`
+- 更新 `_registry.md` heartbeat
 
 ---
 
 ## 重要规则
 
 1. **像真实用户一样测试** — 点所有可点的，填所有表单，测试所有状态。
-2. **每个修复原子提交** — 不批量修复，不批量提交。一个 Bug，一个 commit。
-3. **截图留证** — 修复前后都截图。每个 Bug 至少一张截图。截图后用 Read 工具展示给用户。
-4. **不要只测 Happy Path** — 错误、边界、空状态同样重要。空提交、超长输入、网络错误、无权限——都要测。
-5. **控制台是第一现场** — 每次交互后检查控制台错误。视觉上没问题不代表没有 JS 错误。
-6. **前后端联动是重点** — 不只看前端渲染，要验证 API 调用是否正确、响应是否合理、数据是否一致。
+2. **截图留证** — 每个测试步骤至少一张截图。用 `snapElement()` 紧凑裁剪，不用 fullPage。截图后用 Read 工具展示给用户。
+3. **不要只测 Happy Path** — 边界、空状态、超长输入、网络错误都要测。
+4. **控制台是第一现场** — 每次交互后检查控制台。视觉上没问题不代表没有 JS 错误。
+5. **数据驱动是核心** — 不只测一条数据。用 `pickStratified()` 采样多条。
+6. **前后端联动是重点** — 验证 API 调用是否正确、响应是否合理。
 7. **深度优于广度** — 5-10 个证据充分的 Bug > 20 个模糊描述。
-8. **自我调节** — 遵循 WTF 启发式。拿不准就停下来问。
-9. **绝不拒绝使用浏览器** — 用户调用 /forge-qa 就是要浏览器测试。即使 diff 看起来没有 UI 变更，后端变更也会影响应用行为——始终打开浏览器测试。
-10. **Playwright 是补充，不是替代** — gstack/browse 可用时优先用它（速度快、有标注），Playwright 用于复杂 E2E 流程和前后端联动断言。
+8. **自我调节** — 拿不准就停下来问。
+9. **绝不拒绝使用浏览器** — 后端变更也会影响应用行为，始终打开浏览器测试。
+10. **User Gate 不可跳过** — 自动化测不到设计意图偏差，必须等用户验收。
 
 ---
 
 ## 资源
 
 - **QA 文档模板**：[references/qa-template.md](references/qa-template.md)
-- **webapp-testing 脚本**：`~/.claude/skills/webapp-testing/scripts/with_server.py`
-- **gstack/browse 命令参考**：`~/.claude/skills/gstack/browse/SKILL.md`
+- **10 维度代码模板**：[references/test-dimensions.md](references/test-dimensions.md)
+- **通用测试引擎**：[scripts/qa-runner.mjs](scripts/qa-runner.mjs)
