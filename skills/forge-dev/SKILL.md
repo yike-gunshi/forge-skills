@@ -89,6 +89,8 @@ ls "$_ROOT"/docs/brainstorm-*.md 2>/dev/null && echo "发现思考文档（docs/
 - 每个 Agent 调用只执行一个子 skill
 - 不要在主上下文中重复子 skill 的工作
 - 子 agent 完成后，读取其产出文档确认结果，而非依赖其返回的文本
+- **传递 Feature Spec**：如果 PRD 中有 Feature Spec，SHALL 将其路径和关键内容（行为场景 + 验收检查表）传递给 forge-eng 和 forge-qa 子 agent
+- **forge-eng 行为约束**：告知 forge-eng 子 agent 每完成一个功能点后，SHALL 自验对应的 Given/When/Then 场景，确认 PASS 后再继续下一个功能点
 
 ---
 
@@ -217,9 +219,9 @@ git apply .do-dev/checkpoints/[phase]-done.patch      # 恢复到指定阶段
 ├── 有 PRD → 正常进入第0步
 ├── 无 PRD，有思考文档 →
 │     AskUserQuestion:
-│       "发现思考文档 [{文件名}]，但没有正式 PRD。建议：
-│        A) /forge-prd — 将思考转化为正式 PRD，再继续开发调度
-│        B) 轻量模式 — 跳过 PRD，直接基于思考文档进入开发
+│       "发现思考文档 [{文件名}]，但没有正式 PRD 和 Feature Spec。建议：
+│        A) /forge-prd — 将思考转化为正式 PRD + Feature Spec（推荐）
+│        B) 轻量模式 — 跳过 PRD，直接基于思考文档进入开发（⚠️ 无验收锚点）
 │        C) /forge-brainstorm — 思考还不够充分，继续讨论"
 ├── 无 PRD，无思考文档 →
 │     AskUserQuestion:
@@ -232,7 +234,7 @@ git apply .do-dev/checkpoints/[phase]-done.patch      # 恢复到指定阶段
 
 ---
 
-## 第0步：读取 PRD 输出
+## 第0步：读取 PRD 输出 + Feature Spec 检查
 
 1. 根据用户指定的项目目录，定位 PRD 文件：
    ```
@@ -247,9 +249,23 @@ git apply .do-dev/checkpoints/[phase]-done.patch      # 恢复到指定阶段
    - 迭代交付说明（前端/后端/设计/验收标准）
    - 受影响文件
 
-3. 搜索并读取 CHANGELOG（如有），了解本次变更的完整决策上下文
+3. **⚠️ Feature Spec 检查**：
+   在 PRD 中搜索 `## Feature Spec` 章节。
+   - **找到 Feature Spec** → 读取并提取行为场景（Given/When/Then）和验收检查表，作为开发的行为契约
+   - **未找到 Feature Spec** → 通过 AskUserQuestion 警告：
+     ```
+     ⚠️ PRD 中没有 Feature Spec（含 Given/When/Then 验收场景）。
+     没有 Feature Spec 意味着开发缺乏精确的行为锚点，可能导致实现偏离需求。
+     
+     A) 先运行 /forge-prd 生成 Feature Spec（推荐）
+     B) 继续开发，但接受验收标准不够精确的风险
+     ```
+   - 用户选 A → 退出 forge-dev，引导用户运行 /forge-prd
+   - 用户选 B → 继续，但在交付报告中标注「⚠️ 无 Feature Spec，验收标准可能不精确」
 
-4. **项目类型判断**：
+4. 搜索并读取 CHANGELOG（如有），了解本次变更的完整决策上下文
+
+5. **项目类型判断**：
    根据需求内容和现有代码判断类型：
    - **frontend** — 涉及 UI、页面、组件、样式
    - **backend** — 涉及 API、数据库、服务端逻辑、CLI 工具

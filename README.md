@@ -11,10 +11,14 @@ Forge 是一套**以文档为中心的 AI 辅助开发框架**。核心理念：
 | 问题 | 传统做法 | Forge |
 |------|---------|-------|
 | 讨论不足，直接开干 | 口头一说就写代码 | forge-brainstorm 先行 → 多轮讨论 → 方案确认 |
+| 需求模糊，验收靠人肉 | PRD 写了但没有精确验收标准 | Feature Spec（Given/When/Then 行为场景 + 验收检查表）→ 用户确认后才开发 |
 | 设计粗糙，改了又改 | 简单想法直接写 | forge-design 自闭环（竞品+美学+99条UX规则+门控） |
+| QA 测不出问题 | 只测"元素存在"不测"符合设计" | QA 基于 Feature Spec 验收检查表逐项断言（含 CSS 值）+ 举一反三 |
 | QA 反复修 bug | 写完测、测完改、改完又测 | TDD 嵌入 forge-eng + forge-qa 纯验收 |
 | 多会话冲突 | 手动协调分支 | Worktree 会话级隔离 |
 | AI 长会话质量劣化 | 一个会话干到底 | 上下文工程：调度器精简，子任务独立上下文 |
+| 新会话不知道项目状态 | 手动交代上下文 | CLAUDE.md 自动加载规范驱动规则 + 状态感知 |
+| 反馈后 AI 不举一反三 | 报了 3 个 bug，只修 3 个 | 举一反三机制：搜索相似模式 + 类似风险清单 |
 | 不知道下一步 | 记住所有 skill 名字 | /forge 总入口，检查状态推荐下一步 |
 | 知识不沉淀 | 做完就忘 | forge-fupan 复盘闭环 → 方法论迭代 |
 
@@ -32,7 +36,7 @@ Forge 是一套**以文档为中心的 AI 辅助开发框架**。核心理念：
          │ 可选
          ▼
   ┌──────────┐
-  │ forge-prd│  产品诊断 → PRD + CHANGELOG
+  │ forge-prd│  产品诊断 → PRD + Feature Spec + CHANGELOG
   └────┬─────┘
        │ PRD 迭代摘要
        ▼
@@ -76,12 +80,12 @@ Forge 是一套**以文档为中心的 AI 辅助开发框架**。核心理念：
 | 阶段 | Skill | 命令 | 职责 | 产出文档 |
 |------|-------|------|------|---------|
 | **讨论** | forge-brainstorm | `/forge-brainstorm` | 头脑风暴（4模式·6阶段·反谄媚·对抗性审查） | 思考文档 |
-| **需求** | forge-prd | `/forge-prd` | 产品诊断、需求审查、PRD 迭代 | PRD.md + PRD-CHANGELOG |
+| **需求** | forge-prd | `/forge-prd` | 产品诊断、需求审查、PRD 迭代、Feature Spec 生成 | PRD.md（含 Feature Spec）+ PRD-CHANGELOG |
 | **调度** | forge-dev | `/forge-dev` | 开发调度器，感知 brainstorm，半自动编排子技能 | CONTEXT.md + RESEARCH.md |
 | **设计规划** | forge-design | `/forge-design` | 全栈设计规划（自闭环：竞品+美学+Token+UX规则+评分） | DESIGN.md + DESIGN-CHANGELOG |
 | **设计实现** | forge-design-impl | `/forge-design-impl` | 设计转代码（反AI模板+shadcn/ui+Token驱动+原子提交） | 样式/布局代码 |
 | **工程** | forge-eng | `/forge-eng` | 工程实现（Worktree+TDD+Verification Gate） | ENGINEERING.md + 代码 |
-| **QA** | forge-qa | `/forge-qa` | QA 纯验收（测试+报告，不修代码） | QA.md + 修复清单 |
+| **QA** | forge-qa | `/forge-qa` | QA 纯验收（验收计划→测试→报告→举一反三，不修代码） | QA.md + 验收报告 + 修复清单 |
 | **审查** | forge-review | `/forge-review` | 代码审查（结构性问题） | — |
 | **发布** | forge-ship | `/forge-ship` | 合并 + 测试 + CHANGELOG + PR | — |
 
@@ -109,6 +113,7 @@ Forge 是一套**以文档为中心的 AI 辅助开发框架**。核心理念：
 | [design-skill-fusion-methodology.md](docs/design-skill-fusion-methodology.md) | 设计 Skill 融合方法论 — 整合思路、迭代流程 |
 | [design-skill-audit-report.md](docs/design-skill-audit-report.md) | 设计 Skill 审计报告 — 能力评估 |
 | [forge-deliver-analysis.md](docs/forge-deliver-analysis.md) | forge-deliver 重写分析 — v1 vs v2 对比、逐 Phase 差异、重写映射表 |
+| [openspec-research.md](docs/openspec-research.md) | OpenSpec 调研 — 评估结论：吸收 Given/When/Then 思想，不引入工具链 |
 | [glossary.md](docs/glossary.md) | 术语词典 — 关键概念中英对照 |
 
 ---
@@ -118,13 +123,13 @@ Forge 是一套**以文档为中心的 AI 辅助开发框架**。核心理念：
 **场景 A：新想法**
 ```
 /forge-brainstorm  → 讨论想法，产出思考文档
-/forge-prd         → 转化为正式 PRD
+/forge-prd         → 转化为正式 PRD + Feature Spec（用户确认后才开发）
 /forge-dev         → 调度设计 + 工程 + QA
 ```
 
 **场景 B：已有 PRD**
 ```
-/forge-dev         → 直接调度
+/forge-dev         → 检查 Feature Spec → 调度
 ```
 
 **场景 C：不知道下一步**
@@ -157,12 +162,14 @@ Forge 是一套**以文档为中心的 AI 辅助开发框架**。核心理念：
 
 1. **讨论是最便宜的修复** — 充分讨论 → 充分设计 → 才写代码。前端严格，后端轻松。
 2. **文档是源代码的上游** — PRD 变更驱动代码变更，不是反过来
-3. **上下文是最稀缺的资源** — 调度器精简（30%），子任务独立上下文（100%）
-4. **证据先于断言** — TDD + Verification Gate，不说"应该可以"
-5. **用户保持控制权** — 关键决策交用户确认，执行细节自动完成
-6. **原子化一切** — 每个任务独立 commit，可追溯、可回滚
-7. **方法论完整继承** — 不压缩成口号，完整继承成熟方法论到 Skill 中
-8. **复盘闭环** — 做完 → 复盘 → 沉淀 → 反哺 Skill → 下次更好
+3. **规范驱动开发** — Feature Spec（Given/When/Then）是开发和 QA 的行为契约，无 Spec 不写代码
+4. **上下文是最稀缺的资源** — 调度器精简（30%），子任务独立上下文（100%）
+5. **证据先于断言** — TDD + Verification Gate，不说"应该可以"，声称完成须提供验证证据
+6. **用户保持控制权** — Feature Spec 确认、验收计划确认、举一反三确认——关键决策交用户
+7. **原子化一切** — 每个任务独立 commit，可追溯、可回滚
+8. **举一反三** — 发现问题后搜索相似模式，不仅修单点
+9. **方法论完整继承** — 不压缩成口号，完整继承成熟方法论到 Skill 中
+10. **复盘闭环** — 做完 → 复盘 → 沉淀 → 反哺 Skill → 下次更好
 
 ---
 
@@ -225,11 +232,12 @@ forge-cookbook/
 │   ├── forge-deliver/           ←   端到端编排
 │   ├── forge-doc-release/       ←   发布后文档更新
 │   └── forge-fupan/             ←   复盘
-├── docs/                        ← 文档（10 篇）
+├── docs/                        ← 文档（11 篇）
 │   ├── forge-user-guide.md      ←   使用指南
 │   ├── external-tools-analysis.md ←  外部工具分析
 │   ├── architecture.md          ←   架构设计
 │   ├── skills-reference.md      ←   技能参考手册
+│   ├── openspec-research.md     ←   OpenSpec 调研报告
 │   └── ...
 └── assets/                      ← 架构图、流程图（SVG）
 ```

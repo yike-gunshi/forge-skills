@@ -32,10 +32,10 @@ Doc-Driven Dev 按职责分为四层，每层独立演进：
 
 | 上游 → 下游 | 传递介质 |
 |------------|---------|
-| forge-prd → forge-dev | PRD.md + PRD-CHANGELOG（迭代摘要） |
+| forge-prd → forge-dev | PRD.md（含 Feature Spec）+ PRD-CHANGELOG（迭代摘要） |
 | forge-dev → forge-design | CONTEXT.md + RESEARCH.md + PRD 路径 |
-| forge-dev → forge-eng | CONTEXT.md + RESEARCH.md + DESIGN.md 路径 |
-| forge-dev → forge-qa | PRD 路径 + ENGINEERING.md 路径 |
+| forge-dev → forge-eng | CONTEXT.md + RESEARCH.md + DESIGN.md 路径 + Feature Spec（行为场景+验收检查表） |
+| forge-dev → forge-qa | PRD 路径（含 Feature Spec）+ ENGINEERING.md 路径 |
 | forge-eng → forge-review | Git diff（分支对比） |
 | forge-review → forge-ship | 审查通过的分支 |
 | 全链路 → forge-fupan | Git 历史 + 项目文档 |
@@ -87,7 +87,7 @@ forge-dev（调度器）                     forge-eng（执行器）
 
 ```
 project/docs/
-├── PRD.md                        ← forge-prd 管理
+├── PRD.md                        ← forge-prd 管理（含 Feature Spec 章节）
 ├── PRD-CHANGELOG.md              ← forge-prd 管理
 ├── vX.Y-CONTEXT.md               ← forge-dev 管理（Discussion 产出）
 ├── vX.Y-RESEARCH.md              ← forge-dev 管理（Research 产出）

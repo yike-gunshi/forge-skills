@@ -9,15 +9,20 @@
 ```
 1. 用户：「瀑布流布局在移动端卡片间距不对」
 2. /forge-prd             → 诊断根因，更新 PRD v3.2
-3. /forge-dev             → Discussion → Research → 调度建议
-4. 用户确认执行计划
-5. forge-dev 在独立上下文中依次调度 forge-design → forge-eng → do-qa
-6. /forge-review          → 代码审查
-7. /forge-ship            → 发布
-8. /forge-fupan              → 复盘沉淀（可选）
+3.   ↳ 生成 Feature Spec  → 用户流程 + 页面结构 + Given/When/Then + 验收检查表
+4.   ↳ 用户确认 Feature Spec（⚠️ 关键门禁）
+5. /forge-dev             → 检查 Feature Spec → Discussion → Research → 调度
+6. 用户确认执行计划
+7. forge-dev 调度 forge-design → forge-eng（逐场景自验）→ forge-qa
+8.   ↳ forge-qa 先给用户看验收计划 → 确认后执行测试 → 验收报告
+9. /forge-review          → 代码审查
+10. /forge-ship           → 发布
+11. /forge-fupan          → 复盘沉淀（可选）
 ```
 
 **适用**：新功能、功能调整、跨模块变更
+
+> **与之前的区别**：步骤 3-4 是新增的 Feature Spec 确认门禁，步骤 8 是 QA 验收计划确认。
 
 ### 场景 B：跳过诊断，直接开发
 
@@ -70,6 +75,7 @@ PRD 已更新好，或需求非常明确：
 ### 需求阶段
 
 - **先诊断再改**：用 `/forge-prd` 诊断根因，不要直接改 PRD
+- **Feature Spec 是最重要的门禁**：确认 Feature Spec 中的用户流程、页面结构、Given/When/Then 场景后才进入开发。整体不满意可调整架构，细节不满意可精确反馈
 - **利用反驳机制**：forge-prd 会主动质疑不合理需求——这是特性不是 Bug
 - **版本号预留**：forge-prd 会预留版本号，避免多会话冲突
 
@@ -88,7 +94,9 @@ PRD 已更新好，或需求非常明确：
 
 ### 质量阶段
 
+- **先看验收计划再测试**：forge-qa 会基于 Feature Spec 生成验收计划，确认后才执行
 - **QA 级别选标准**：除非时间极紧
+- **反馈时触发举一反三**：报告问题后 AI 会搜索相似模式，产出类似风险清单
 - **forge-review 的 AUTO-FIX 不需要确认**
 - **严重问题必须修**
 
@@ -159,7 +167,13 @@ git worktree add .worktrees/feat-dark-mode -b feat/dark-mode
 A：不是。每个 Skill 独立可用。
 
 **Q：没有 PRD 能直接用 forge-eng 吗？**
-A：可以。从代码推断上下文，但有 PRD 效果更好。
+A：可以，但 forge-dev 会警告缺少 Feature Spec。有 PRD + Feature Spec 效果最好。
+
+**Q：什么是 Feature Spec？**
+A：PRD 中的一个章节，包含用户流程总览、页面/系统结构、Given/When/Then 行为场景和验收检查表。它同时服务于用户确认和 QA 验收。
+
+**Q：举一反三是什么？**
+A：当你在验收时反馈问题，AI 会修复后自动搜索代码库中相似模式，产出类似风险清单问你是否一并修复。
 
 **Q：forge-dev 会自动执行所有子技能吗？**
 A：不会。确认后才执行。
