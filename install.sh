@@ -12,7 +12,7 @@ SKILLS_DIR="$HOME/.claude/skills"
 SKILLS=(
   forge-brainstorm forge-bugfix forge-deliver forge-design forge-design-impl
   forge-dev forge-doc-release forge-eng forge-fupan forge-prd
-  forge-qa forge-review forge-ship
+  forge-qa forge-review forge-ship forge-status
 )
 
 if [ "$1" = "--uninstall" ]; then

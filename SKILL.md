@@ -134,6 +134,7 @@ D) 其他 — 告诉我你想做什么
 | `/forge-ship` | 发布 | 合并+推送+创建 PR |
 | `/forge-deliver` | 端到端交付 | 全自动从需求到发布 |
 | `/forge-fupan` | 复盘 | 知识沉淀和方法论迭代 |
+| `/forge-status` | 并行会话巡检 | 扫 `.forge/active.md`，按硬信号清理僵尸 |
 
 ---
 

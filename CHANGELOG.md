@@ -2,7 +2,40 @@
 
 本文档记录 forge-cookbook 的重要变更。遵循 [Keep a Changelog](https://keepachangelog.com/) 风格。
 
-标签命名：`vYYYY.MM.DD`（以迭代发布日期为准）。
+标签命名：`vYYYY.MM.DD`（以迭代发布日期为准，同日多次发布追加 `.N` 后缀）。
+
+---
+
+## [v2026.04.19.1] — 2026-04-19（并行化迭代）
+
+### 主题
+
+`forge-bugfix` v5.0 → v6.0：**多会话并行协调**。支持 3–4 个 Claude Code 窗口同时修不同功能域的 bug，互不撞车。
+
+详细见 [`docs/forge-bugfix-changelog.md`](docs/forge-bugfix-changelog.md) 的 v6.0 节。
+
+### Added
+- **`.forge/active.md` 心跳文件**：跨 worktree 共享的并行会话登记表，字段极简（session id / worktree / 任务 id / 功能域）
+- **功能域判重**：`backlog.md` 表格新增"功能域"和"领取会话"列；`.forge/active.md` 头部有"功能域声明"区，项目自定义业务标签（AI 不得自创）
+- **合并前 merge 预演**（forge-bugfix P7.1.0）：`git merge --no-commit --no-ff` 预演，冲突则回退 + 让用户决策 rebase 或暂存
+- **新 skill `/forge-status`**：扫 `.forge/active.md`，按硬信号（worktree 存在性 + 分支合并状态）判活/死，交互确认后清理。合并 status + cleanup 两种职责为一个 skill
+- **session id 自动获取**：`skills/forge-bugfix/scripts/get-session-id.sh` 通过 `$PPID` 回溯读 `~/.claude/sessions/<pid>.json`
+- **新增模板**：`skills/forge-bugfix/templates/active.md`
+
+### Changed
+- **`forge-bugfix` SKILL.md**：version 5.0 → 6.0；铁律 +1（并行协调登记）；P0 新增并行探测；P2 新增 2.0 功能域判重节；P3 新增 3.1.5 登记 active；P7 新增 7.1.0 合并预演 / 7.1.2 冲突处理；规则新增 7 条并行纪律（29.1-29.7）
+- **`forge-fupan` SKILL.md**：Phase 5.0 新增"清理本会话 `.forge/active.md` 登记"步骤（只清 session id 匹配的行，不动其他会话）
+- **`forge-bugfix` description**：从串行"一次只修一个 bug"改为支持"多会话并行 + 同域归并 + 异域并行 + 合并预演"
+- **闭环哲学**：修复完成后**不立即清 active.md**，交给 forge-fupan（正常结束）或 /forge-status（兜底）；绝不用时间戳判"僵尸"
+- **README.md / docs/forge-user-guide.md / docs/skills-reference.md / SKILL.md**：Skills-14 → 15，相关 skill 清单同步加入 forge-status
+- **`install.sh`**：SKILLS 数组新增 forge-status
+
+### Design Decisions（关键决策记录在 changelog）
+
+- **为什么不用文件集判重而用功能域**：用户直接否决文件集方案——3 个 ASR bug 跨前后端时文件集零重叠但上下文强相关，功能域是业务视角能正确分组
+- **为什么一个会话内多 bug 仍然各自独立 worktree**：同域归并是复用"认知"，但代码隔离价值与会话数量无关
+- **为什么不用时间戳判僵尸**：时间启发式会误杀活跃会话；worktree 存在性 + 分支合并状态是客观事实
+- **为什么 status 和 cleanup 合并成一个 skill**：用户明确要求"别复杂"，一个命令一条流程直接走完
 
 ---
 

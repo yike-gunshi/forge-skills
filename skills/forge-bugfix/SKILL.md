@@ -1,23 +1,24 @@
 ---
 name: forge-bugfix
-version: 5.0.0
+version: 6.0.0
 description: |
-  一次只修一个 bug + 独立 worktree + 双层验收（forge-qa 自动 → 用户人工）。
-  每次修完生成结构化验收清单文档，AI 在会话中提供路径供用户点击跳转。
+  一次修一个 bug + 独立 worktree + 双层验收 + **多会话并行协调**（v6.0 新）。
+  每个修复生成结构化验收清单文档。支持 3-4 个窗口同时修不同功能域的 bug，
+  靠 `.forge/active.md` 心跳文件 + 功能域判重 + 合并前 merge 预演避免撞车。
   铁律：不做根因分析就不写修复代码 + 修完不自动合并 + 没有验收清单不算完 +
-  新发现禁止当场顺手修（必须分流到 backlog）+ 多 bug 默认不串成长会话。
+  新发现禁止当场顺手修（必须分流到 backlog）+ 多 bug 默认不串成长会话 +
+  **并行会话必须在 active.md 登记，同域归并会话、异域鼓励并行**。
 
-  会话级（一次性）：P0 环境探测 → P1 问题理解 + 强制读 PRD / ENG / Bugfix 历史 / Memory。
+  会话级（一次性）：P0 环境探测（+ 读 active.md 看其他会话）→ P1 问题理解 + 强制读 PRD / ENG / Bugfix 历史 / Memory。
   每次修复（可循环）：
-    P2 范围推荐（用户指定、用户新反馈或从 backlog.md 捞候选）→ P3 创建 worktree + 复现
+    P2 范围推荐（用户指定、backlog 候选、按功能域判重）→ P3 创建 worktree + 写入 active.md + 复现
     → P4 根因追踪 + 5 Whys + 方案确认 → P5 worktree 内修复 + 原子提交
     → P5.3 生成验收清单文档（docs/bugfix/reviews/BF-XX.md）
-    → P6 调用 forge-qa 做自动验收，填清单 QA 列
-    → P6.5 用户人工验收（AI 给清单路径，用户填用户列 + 最终结论）
-    → P7 按三选一分流（Pass 合并 / Fail 回 P5 / Pass + 新发现 合并并分流）
-    → P7.5 新发现分流到 backlog.md（同根判定必须举证）→ P8 沉淀。
+    → P6 调用 forge-qa 做自动验收 → P6.5 用户人工验收
+    → P7 按三选一分流（Pass 合并 + merge 预演 / Fail 回 P5 / Pass + 新发现）
+    → P7.5 新发现分流到 backlog.md → P8 沉淀（active.md 由 forge-fupan 清理）。
   出口：强烈建议新会话或 /clear、/compact 后继续下一个 bug；
-    全部完成 → 建议 /forge-review、/forge-ship 或 /forge-fupan。
+    全部完成 → 建议 /forge-review、/forge-ship、/forge-fupan 或 /forge-status。
 
   触发方式：用户说"bugfix"、"反馈个问题"、"修这个 bug"、"这里有问题"、"为什么不对"、"排查一下"、"investigate"、"forge-bugfix"，
   或用户报告错误、异常行为、功能失效时主动建议使用。
@@ -66,6 +67,7 @@ allowed-tools:
 5. **没有验收清单不算完**。P5 修复完成后必须生成 `docs/bugfix/reviews/BF-XX.md`，经 forge-qa 和用户两层填写后才进 P7。
 6. **新发现的 bug / 新需求 / 模糊反馈 → `docs/bugfix/backlog.md`**，绝不在当前修复内夹带。
 7. **同根判定必须举证**。AI 声称"这条新发现是当前 bug 同根"时，必须列出具体证据（同文件、同函数、同数据流），证据不足默认为独立 bug。
+8. **并行协调必须登记**（v6.0）。P2 确认范围 + P3 创建 worktree 之后，必须在项目根 `.forge/active.md` 追加一行会话登记；P2 推荐前必须读 `.forge/active.md` 做功能域判重；P7 合并前必须跑 `git merge --no-commit --no-ff` 预演。清理 active 的责任在 forge-fupan 或 /forge-status，不在 forge-bugfix 自己。
 
 ---
 
@@ -206,6 +208,37 @@ echo "REVIEWS 目录: $DOC_REVIEWS"
 REPORT_DIR="$_ROOT/.gstack/bugfix-reports"
 mkdir -p "$REPORT_DIR/screenshots" 2>/dev/null
 echo "报告目录: $REPORT_DIR"
+
+# === 并行会话环境（v6.0 新增）===
+# active.md: 跨 worktree 的心跳文件，项目根 .forge/active.md
+mkdir -p "$_ROOT/.forge" 2>/dev/null
+ACTIVE="$_ROOT/.forge/active.md"
+if [ ! -f "$ACTIVE" ]; then
+  # 首次使用，从模板初始化（模板路径按 skill 安装位置回退）
+  for tpl in "$HOME/.claude/skills/forge-bugfix/templates/active.md" \
+             "$HOME/.claude/skills/forge/skills/forge-bugfix/templates/active.md"; do
+    [ -f "$tpl" ] && cp "$tpl" "$ACTIVE" && echo "✅ 初始化 .forge/active.md（请编辑功能域声明区）" && break
+  done
+fi
+echo "ACTIVE=$ACTIVE"
+
+# 当前 Claude Code session id（通过 PID 回溯 ~/.claude/sessions/<pid>.json）
+SID_SCRIPT=""
+for s in "$HOME/.claude/skills/forge-bugfix/scripts/get-session-id.sh" \
+         "$HOME/.claude/skills/forge/skills/forge-bugfix/scripts/get-session-id.sh"; do
+  [ -x "$s" ] || [ -f "$s" ] && SID_SCRIPT="$s" && break
+done
+CURRENT_SID=""
+if [ -n "$SID_SCRIPT" ]; then
+  CURRENT_SID=$(bash "$SID_SCRIPT" 2>/dev/null || echo "")
+fi
+[ -n "$CURRENT_SID" ] && echo "SESSION_ID=$CURRENT_SID" || echo "SESSION_ID=（无法自动获取，后续 P3 会提示）"
+
+# 扫一眼 active.md 里"进行中会话"节，报告当前有哪些并行会话
+if [ -f "$ACTIVE" ]; then
+  echo "--- 当前并行会话 ---"
+  awk '/^## 进行中会话/{flag=1;next} /^## /{flag=0} flag && /^- /{print}' "$ACTIVE" | grep -v '<!--' || echo "（暂无）"
+fi
 ```
 
 **关键变量**：
@@ -219,8 +252,12 @@ echo "报告目录: $REPORT_DIR"
 | `$DOC_BACKLOG` | bug 任务池 `docs/bugfix/backlog.md` |
 | `$DOC_REVIEWS` | 验收清单目录 `docs/bugfix/reviews/` |
 | `$REPORT_DIR` | 截图和报告输出目录 |
+| `$ACTIVE` | 并行心跳文件 `.forge/active.md`（v6.0） |
+| `$CURRENT_SID` | 当前 Claude Code session id（v6.0） |
 
 ⚠️ **新增**：APP_URL 检测时记录占用进程 PID 和 cwd，防止 worktree 端口劫持（历史踩坑：worktree 旧 uvicorn 抢 8080，主项目改动不生效，30+ 分钟才定位）。
+
+⚠️ **v6.0 新增**：P0 结束时 AI 必须向用户报告当前 `.forge/active.md` 的"进行中会话"情况——如果发现疑似僵尸（worktree 目录不存在 / 分支已合并到 main），**建议用户先跑 /forge-status 清理**再继续。AI 不自己清（那是 /forge-status 的职责）。
 
 ---
 
@@ -279,6 +316,25 @@ git status --porcelain
 ## P2 范围推荐（双来源捞候选 + 写入 backlog.md）
 
 > 🎯 核心：不做"全量分诊排序后逐个修"，而是"AI 推荐单次修复范围，其余进 backlog.md"。
+> **v6.0 新增**：P2 必须做功能域判重（读 `.forge/active.md`），决定**同域合并到已有会话** vs **异域鼓励新窗口并行**。
+
+### 2.0 并行状态读取 + 功能域准备（v6.0 新增）
+
+**硬性步骤**。在 2.1 捞候选之前，AI 必须：
+
+1. **读 `.forge/active.md`**
+   - 解析"功能域声明"区 → 得到本项目的合法功能域标签清单 `$DOMAINS`
+   - 解析"进行中会话"节 → 得到所有占用中的域集合 `$BUSY_DOMAINS`（多域条目视为同时占用多个）
+   - 如果 `.forge/active.md` 不存在，AI 提示用户"首次使用并行化，需要你在 .forge/active.md 里声明功能域标签（示例已给出）"，并暂停等用户确认后再继续
+
+2. **给每条候选 bug 打功能域标签**
+   - 标签必须从 `$DOMAINS` 选取，不得自创
+   - 重构型 bug 允许多域（逗号分隔），任一域与 `$BUSY_DOMAINS` 有交集即判冲突
+   - 无法判定时向用户确认，不猜测
+
+3. **对照判定**
+   - bug.功能域 ∩ `$BUSY_DOMAINS` ≠ 空 → 标记"⚠️ 域冲突：域 X 当前由 session Y 占用"
+   - bug.功能域 ∩ `$BUSY_DOMAINS` = 空 → 标记"✅ 可并行"
 
 ### 2.1 AI 捞候选
 
@@ -308,23 +364,28 @@ AI 合并两个来源，推荐**本次修哪个/哪些**：
 
 本会话新报告：N 个问题
 Backlog 待修区：M 个条目（P0: X 个 / P1: Y 个 / P2: Z 个）
+当前并行会话：K 个（域 asr / 域 player ... 被占用）
 
 我推荐本次修：
 
   ✅ 本次：[Bug A]（BF-0419-2）
      来源：本会话新报告 / 或 backlog 登记于 2026-04-17
+     功能域：asr
+     并行判定：✅ 可并行（域 asr 当前无活跃会话）
+        或：⚠️ 域冲突（域 asr 已被 session abc-123 占用——建议你切去那个窗口加入而非新开）
      理由：阻塞核心流程且独立可定位（或：Bug A + Bug C 共因 = XX.tsx 的 source 字段处理）
 
   📋 推迟到 backlog（下次修复或下次会话再说）：
-     - Bug B: [症状] → 写入 backlog.md 🐛 待修区（P1）
-     - Bug D: [症状] → 写入 backlog.md 🐛 待修区（P2）
+     - Bug B: [症状] → 写入 backlog.md 🐛 待修区（P1，域 auth）
+     - Bug D: [症状] → 写入 backlog.md 🐛 待修区（P2，域 player）
      - 新需求 N1: [描述] → 写入 backlog.md 💡 新需求区（建议 /forge-prd）
 
-我会把推迟的写入 `$DOC_BACKLOG`。
+我会把推迟的写入 `$DOC_BACKLOG`，把本次修复的在 P3 登记到 `.forge/active.md`。
 
-A) 同意推荐 — 进入 P3 创建 worktree
+A) 同意推荐 — 进入 P3 创建 worktree 并登记 active
 B) 调整范围 — 改修 [其他 bug]
 C) 我想多修一些 — 违反单次修复原则，请说明理由
+D) 域冲突，我切到已有会话 — 本次终止，去 session abc-123 的窗口继续
 ```
 
 ### 2.3 写入 backlog.md
@@ -373,6 +434,42 @@ WT_BRANCH="bugfix/$WT_NAME"
 git worktree add "$WT_PATH" -b "$WT_BRANCH"
 echo "✅ worktree 创建: $WT_PATH (分支: $WT_BRANCH)"
 ```
+
+### 3.1.5 登记 .forge/active.md（v6.0 硬性步骤）
+
+worktree 创建成功之后**立即**登记，不得拖到修复结束再补。
+
+```bash
+# 字段：session id / worktree 相对路径 / 任务 id / 功能域
+DOMAIN="<P2.0 打好的功能域标签，单域或逗号分隔多域>"
+REL_WT="${WT_PATH#$_ROOT/}"   # 存相对路径，便于跨机器
+LINE="- session: $CURRENT_SID / worktree: $REL_WT / 任务: $BUG_ID / 域: $DOMAIN"
+
+# 追加到 active.md 的"进行中会话"节末尾（用 awk 精确插入在 "---" 之前）
+python3 -c "
+import pathlib,re
+p=pathlib.Path('$ACTIVE')
+txt=p.read_text()
+# 找到'## 进行中会话'节，在它后面的（暂无进行中会话）或第一个 --- 之前插入
+pat=re.compile(r'(## 进行中会话\n[\s\S]*?)(\n---)', re.M)
+line='''$LINE'''
+def repl(m):
+    body=m.group(1)
+    # 去掉占位行
+    body=re.sub(r'\n（暂无进行中会话）', '', body)
+    if not body.endswith('\n'):
+        body+='\n'
+    return body + line + '\n' + m.group(2)
+p.write_text(pat.sub(repl, txt, count=1))
+"
+
+echo "✅ 已登记到 .forge/active.md: session=$CURRENT_SID 域=$DOMAIN"
+```
+
+**硬性要求**：
+- `$CURRENT_SID` 为空时 AI 必须停下问用户，不得用 "unknown" 或占位符登记
+- 登记失败（awk 未匹配等）必须向用户报错，不得静默跳过
+- backlog.md 中对应 bug 的状态同时改 `in-progress`，"领取会话"字段填 session id 前 12 位即可
 
 ### 3.2 ⚠️ worktree 端口冲突预检
 
@@ -884,12 +981,43 @@ cat "$REVIEW_DOC"
 
 ### 7.1 Pass → worktree 合并决策
 
-用户勾了 ✅ Pass，AI 通过 AskUserQuestion 询问合并方式：
+用户勾了 ✅ Pass，AI **先做合并预演**（v6.0 新增硬性步骤），再询问合并方式。
+
+#### 7.1.0 合并预演（硬性门禁，v6.0 新增）
+
+并行场景下，另一个会话可能已经合并了东西到 main，或者改到了相同文件。正式合并前必须预演：
+
+```bash
+# 进入主仓库（不是 worktree）
+cd "$_ROOT"
+git fetch origin --quiet 2>/dev/null || true
+git checkout main 2>/dev/null || git checkout master
+git pull --ff-only 2>/dev/null || true
+
+# --no-commit --no-ff 做一次预演 merge
+if git merge --no-commit --no-ff "$WT_BRANCH" 2>/tmp/merge_preview.log; then
+  # 预演成功，立即回退，让下一步真正执行
+  git merge --abort 2>/dev/null
+  MERGE_OK=1
+else
+  # 冲突了，回退
+  git merge --abort 2>/dev/null
+  MERGE_OK=0
+  echo "⚠️ 合并预演失败："
+  cat /tmp/merge_preview.log
+fi
+```
+
+- `MERGE_OK=1` → 进 7.1.1 询问合并方式
+- `MERGE_OK=0` → 进 7.1.2 冲突处理
+
+#### 7.1.1 合并询问（预演通过时）
 
 ```
 🎯 worktree 合并决策 (BF-0419-2)
 
 验收结论：✅ Pass
+合并预演：✅ 无冲突
 worktree: .worktrees/bf-{MMDD}-N
 分支:     bugfix/bf-{MMDD}-N
 本次:     N commits
@@ -909,6 +1037,39 @@ C) 推迟决定 — 先做别的，稍后回来处理
 ```
 
 合并细节：如果 `git pull` 拉到新的 commits，先在 worktree 内 `git rebase main` 解决冲突，再回主仓库执行 merge。合并后 `git worktree remove` 清理 worktree 并 `git branch -d` 删除分支。
+
+#### 7.1.2 冲突处理（预演失败时）
+
+预演失败说明并行会话改到了相同文件。不自动解决，交给用户决策：
+
+```
+⚠️ 合并冲突 (BF-0419-2)
+
+本次修复合并到 main 会产生冲突。冲突文件：
+{冲突文件列表，来自 /tmp/merge_preview.log}
+
+可能原因：另一个 worktree（查 .forge/active.md）已经合并了修改，或者主分支有新提交。
+
+A) 让我先 rebase（推荐）
+   cd .worktrees/bf-{MMDD}-N
+   git rebase main
+   # 我会尝试自动解决，解决不了的给你标记冲突点
+   解决后回这里重跑 7.1 预演。
+
+B) 暂存这个修复，先处理别的
+   保留 worktree 和分支不动，以后再回来合并。
+
+C) 让我看冲突文件再决定
+   我读冲突文件的当前状态和你的修改对比给你看。
+```
+
+#### 7.1.3 合并后的 active.md 处理（v6.0）
+
+合并成功后 **不立即清理 active.md**——清理的职责分给 forge-fupan（正常结束）或 /forge-status（兜底）。forge-bugfix 只做两件事：
+- 把 `docs/bugfix/backlog.md` 中对应 bug 的状态改 `resolved`，从"🐛 待修"剪切到"🗄️ 已处理"
+- 保留 active.md 中的那一行（等复盘或 /forge-status 清）
+
+这样如果会话中还要继续修下一个 bug，active.md 的登记仍有效；如果会话在此结束，用户走 /forge-fupan 会一次性清掉。
 
 ### 7.2 Fail → 回 P5
 
@@ -1092,13 +1253,20 @@ D) 已合并的 commits 想发布 → /forge-ship
 
 E) 想沉淀本会话经验 → /forge-fupan
    提取知识、诊断 AI/用户协作模式、写复盘文档。
+   （复盘时会自动清理本会话在 .forge/active.md 的登记）
 
-F) 关闭会话 — 没事了
+F) 清点所有并行会话 → /forge-status
+   如果你开了多个窗口在修不同 bug，这个命令扫一遍 .forge/active.md，
+   基于 worktree 存在性 + 分支合并状态报告哪些是活跃、哪些是僵尸可清理。
+
+G) 关闭会话 — 没事了
+   ⚠️ 但 .forge/active.md 里本会话的登记还在，下次建议跑 /forge-status 清理。
 
 ⚠️ 如果有暂存的 worktree，建议在 review/ship 前先决定它们的去留。
 ```
 
 **默认推荐 A**。用户明确偏好："新 bug 默认新会话完成工作，或 /clear /compact 后继续"。
+**走 A) 之前如果用户开了多个并行会话**，AI 可以主动提一句"别忘了也可以用 /forge-status 总览一下其他会话"。
 
 ---
 
@@ -1160,6 +1328,16 @@ F) 关闭会话 — 没事了
 27. **worktree 内启动服务 → 必须核对进程 cwd**（`lsof -p $PID | grep cwd`）。
 28. **不提供 "弃用 worktree" 选项**。Fail 走回 P5 继续修；真的要放弃走 P4.4 三振出局。
 29. **多次修复并发允许，但每次独立 worktree + 独立端口**。
+
+### 并行协调纪律（v6.0 新增）
+
+29.1. **P0 必须读 `.forge/active.md`**，把已占用功能域报告给用户；发现僵尸记录建议用户跑 /forge-status 清理。
+29.2. **P2 必须做功能域判重**。同域冲突时优先建议"切去那个会话"，不默认新开窗口。
+29.3. **P3 创建 worktree 成功后立即登记 active.md**，不得拖到修复结束。`$CURRENT_SID` 为空必须停下问用户，不得用占位符登记。
+29.4. **功能域标签必须从 `.forge/active.md` 的"功能域声明"区选**，AI 不得自创新标签；首次使用的项目由 AI 初始化模板 + 用户编辑域列表后才继续。
+29.5. **P7.1 合并前必须跑 `git merge --no-commit --no-ff` 预演**，冲突就回退 + 让用户决策 rebase 或暂存。
+29.6. **合并成功后不清 active.md**，交给 forge-fupan 或 /forge-status 清理。backlog.md 的状态同步改 `resolved` 是 forge-bugfix 的职责。
+29.7. **不得基于时间戳判定"会话已死"**。只认 worktree 存在性 + 分支 merge 状态这两个硬信号。
 
 ### Backlog 纪律
 

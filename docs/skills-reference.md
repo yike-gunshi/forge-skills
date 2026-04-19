@@ -351,6 +351,30 @@
 
 ---
 
+## 七·五、forge-status — 并行会话巡检（v6.0 新增）
+
+**命令**：`/forge-status`
+**职责**：读 `.forge/active.md` 心跳文件，按硬信号（worktree 目录存在性 + 分支合并状态）判定哪些并行会话登记是活跃、哪些是僵尸，交互确认后清理。
+
+### 触发场景
+
+- 用户主动：早上打开电脑查看并行状态、手动清理过 worktree 后同步 active
+- 其他 skill 调用（只读）：forge-bugfix 的 P0 阶段调用，只报告不清理
+
+### 硬信号（不使用时间戳）
+
+- worktree 目录不存在 → 真·已弃用
+- 分支已 `merged` 到 main → 真·已完成，漏清理
+- 两者都不满足 → 真·活跃，保留
+
+### backlog.md 联动
+
+清理 active.md 时同步更新 `docs/bugfix/backlog.md`：
+- 已合并 → 状态改 `resolved`，剪切到"已处理"区
+- 已删除（未合并）→ 状态回 `pending`，清空"领取会话"
+
+---
+
 ## 八、forge-ship — 发布工作流
 
 **命令**：`/forge-ship`

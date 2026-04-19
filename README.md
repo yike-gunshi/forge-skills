@@ -9,7 +9,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-Skill-blueviolet)](https://claude.ai/code)
-[![Skills](https://img.shields.io/badge/Skills-14-blue)]()
+[![Skills](https://img.shields.io/badge/Skills-15-blue)]()
 
 [快速开始](#快速开始) · [Skill 清单](#skill-清单) · [设计哲学](#设计哲学) · [安装](#安装) · [文档](#文档导航) · [**English**](README_EN.md)
 
@@ -173,10 +173,11 @@ forge   ❯ 已修复。搜索代码库发现 3 处类似风险：
 
 | Skill | 命令 | 职责 |
 |-------|------|------|
-| forge-bugfix | `/forge-bugfix` | 系统性 Bug 调查与修复（六阶段根因分析） |
+| forge-bugfix | `/forge-bugfix` | 系统性 Bug 调查与修复（双层验收 + 多会话并行协调 v6.0） |
+| forge-status | `/forge-status` | 并行会话巡检与清理（扫 `.forge/active.md`，按硬信号判活/死） |
 | forge-deliver | `/forge-deliver` | 端到端交付编排（8 Phase，支持 `--auto` / `--resume`） |
 | forge-doc-release | `/forge-doc-release` | 发布后文档同步 |
-| forge-fupan | `/forge-fupan` | 协作复盘与知识沉淀 |
+| forge-fupan | `/forge-fupan` | 协作复盘与知识沉淀（结束时自动清本会话 active 登记） |
 
 ### 总入口
 

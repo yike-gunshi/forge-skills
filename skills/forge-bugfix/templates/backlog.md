@@ -25,9 +25,20 @@
 
 状态规则：
 - pending：待修
-- in-progress：正在某个 worktree 修
+- in-progress：正在某个 worktree 修（必须同时在 .forge/active.md 登记）
 - resolved：已修复（移到"🗄️ 已处理"区，永久保留）
 - wontfix：决定不修（移到"🗄️ 已处理"区，永久保留）
+
+功能域规则（v6.0 新增，用于并行判重）：
+- 功能域标签从 .forge/active.md 的"功能域声明"区选取，AI 不自创
+- 单域：`asr`；多域（重构型）：`asr,player`（逗号分隔，无空格）
+- P2 推荐时同域合并会话、不同域鼓励并行；任一域冲突即判冲突
+- 没有 .forge/active.md 的项目需要先建立功能域清单
+
+领取会话（in-progress 时必填）：
+- 值为 Claude Code 的 session id（通过 skills/forge-bugfix/scripts/get-session-id.sh 获取）
+- 同时在项目根 .forge/active.md 追加一行心跳记录
+- 修复合并后由 forge-fupan 或 /forge-status 清理 active.md
 
 已处理区**永久保留**，不要清理。用于以后定位问题时回溯历史。
 -->
@@ -39,11 +50,13 @@
 
 ## 🐛 待修 bug
 
-| 编号 | 描述 | 来源 | 上下文 | 优先级 | 状态 |
-|---|---|---|---|---|---|
-| 示例: BF-0419-3 | 登录后头像不刷新 | BF-0419-2 验收时发现 | AuthStore.ts, Avatar.tsx | P1 | pending |
+| 编号 | 描述 | 来源 | 上下文 | 功能域 | 优先级 | 状态 | 领取会话 |
+|---|---|---|---|---|---|---|---|
+| 示例: BF-0419-3 | 登录后头像不刷新 | BF-0419-2 验收时发现 | AuthStore.ts, Avatar.tsx | auth | P1 | pending | — |
+| 示例: BF-0419-4 | ASR 识别完成前按钮可连点 | 本会话报告 | Recorder.tsx, /api/asr | asr | P1 | in-progress | abc-123-xyz |
 
 <!-- 新条目追加到表格末尾 -->
+<!-- 领取会话列：pending 时填 —，in-progress 时填 session id（8-12 位前缀足够） -->
 
 ## 🌀 待澄清反馈
 
