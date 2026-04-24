@@ -1,6 +1,5 @@
 ---
 name: forge-deliver
-version: 2.0.0
 description: |
   端到端交付纯编排层。自身不实现任何业务逻辑，通过调用 forge-* 子 Skill 完成交付：
   forge-brainstorm → forge-prd → forge-design → forge-design-impl → forge-eng →
@@ -136,6 +135,7 @@ cat .deliver/state.json
 .deliver/
 ├── state.json                    # 流水线状态（持久化）
 ├── requirement.md                # Phase 0 产出（forge-prd）
+├── visual-decision.md            # UI/设计任务的视觉决策索引（可选）
 ├── design.md                     # Phase 1 产出（forge-design，可能不存在）
 ├── design-impl-report.md         # Phase 1 产出（forge-design-impl，可能不存在）
 ├── eng-report.md                 # Phase 2 产出（forge-eng）
@@ -268,17 +268,18 @@ git apply .deliver/checkpoints/phase-N-done.patch  # 恢复到阶段 N
 
 1. **调用 forge-design**
    - 输入：指向项目中的 PRD.md
-   - 指令：让 forge-design 产出/更新 DESIGN.md
+   - 指令：让 forge-design 产出/更新 DESIGN.md；如涉及前端页面、组件、状态或布局，必须执行 Image 2 视觉稿门禁（见 `../_shared/visual-decision-layer.md`）
    - 期望产出：项目中的 DESIGN.md 已更新
 
 2. **调用 forge-design-impl**
    - 输入：指向项目中的 DESIGN.md
-   - 指令：让 forge-design-impl 将设计规范转化为样式代码
+   - 指令：让 forge-design-impl 将设计规范转化为样式代码；若有 Image 2 视觉稿，作为观感参考，最终用真实截图验证
    - 期望产出：样式/布局代码已实现
 
 3. **收集产出**
    - 将设计摘要写入 `.deliver/design.md`
    - 将实现报告写入 `.deliver/design-impl-report.md`
+   - 如有视觉稿/真实截图，将路径、prompt、确认结论汇总写入 `.deliver/visual-decision.md`
 
 4. **产出验证**
    - 检查项目中 DESIGN.md 存在

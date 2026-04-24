@@ -1,6 +1,5 @@
 ---
 name: forge-bugfix
-version: 6.1.0
 description: |
   一次修一个 bug + 独立 worktree + 双层验收 + **多会话并行协调** + dev server 端口治理（v6.1）。
   每个修复生成结构化验收清单文档。支持 3-4 个窗口同时修不同功能域的 bug，

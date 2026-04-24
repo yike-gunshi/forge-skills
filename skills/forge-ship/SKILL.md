@@ -1,6 +1,5 @@
 ---
 name: forge-ship
-version: 1.0.0
 description: |
   发布工作流：检测并合并基础分支、运行测试、审查 diff、
   更新 CHANGELOG、提交、推送、创建 PR。

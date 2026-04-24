@@ -1,6 +1,5 @@
 ---
 name: forge-doc-release
-version: 1.0.0
 description: |
   发布后文档更新。读取所有项目文档，与 diff 交叉对照，
   更新 README/ARCHITECTURE/CONTRIBUTING/CLAUDE.md 使之匹配已发布内容，

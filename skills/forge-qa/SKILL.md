@@ -1,6 +1,5 @@
 ---
 name: forge-qa
-version: 3.2.0
 description: |
   QA 验收与测试报告。纯验收模式：测试+报告，不修代码。
   两种调用模式：
@@ -653,6 +652,8 @@ test-spec 由 Claude 基于文档理解自动生成，但它是**结构化的、
 | V3 | {组件名} | padding | {值} | css_value |
 | ... | ... | ... | ... | ... |
 
+如果存在 Image 2 视觉稿、`.do-dev/visual-decision.md` 或 `.deliver/visual-decision.md`，在计划中单列「视觉意图参考」：说明会用真实浏览器截图对比信息层级、密度、主操作和空态/错态覆盖。Image 2 不作为 pass/fail 证据，pass/fail 只来自 Feature Spec、DESIGN.md、CSS 属性、行为断言和真实截图。
+
 ---
 
 共 {N} 项验收（功能 {X} 项 + 视觉 {Y} 项 + 流程 {Z} 项），预计 {时间}。
@@ -775,6 +776,7 @@ Phase 4 深度（仅详尽级别）
 
 从 DESIGN.md 提取硬规则 → CSS 断言。使用 `page.evaluate(el => getComputedStyle(el))`。
 检查项：字号 ≥ 12px、间距遵循 4px 网格、平台配色正确。
+如果有 Image 2 视觉稿，仅用作解释偏差的参考，不能替代 CSS 断言或真实截图。
 
 **能发现**：字号不达标、间距违规、颜色错误
 **不能发现**："看起来不对但 CSS 值合规"的美学问题

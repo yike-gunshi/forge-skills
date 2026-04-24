@@ -1,3 +1,7 @@
 __pycache__/
 *.pyc
 .DS_Store
+.pytest_cache/
+.do-dev/
+node_modules/
+skills/forge-fupan/workbench/frontend/node_modules/

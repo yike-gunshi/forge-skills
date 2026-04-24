@@ -82,7 +82,8 @@ description: '工程文档管理与代码实现。管理项目的 ENGINEERING.md
 1. 定位 PRD：搜索 `{项目目录}/docs/PRD.md`
 2. 定位 DESIGN.md：搜索 `{项目目录}/docs/DESIGN.md`
 3. 定位 RESEARCH.md：搜索 `{项目目录}/docs/*RESEARCH*`（如果 forge-dev 产出了调研报告）
-4. 定位 ENGINEERING.md：
+4. 定位视觉决策索引（如有）：搜索 `.do-dev/visual-decision.md`、`.deliver/visual-decision.md`、`docs/讨论/*/assets/*.meta.json`
+5. 定位 ENGINEERING.md：
    ```
    搜索模式：
    - {项目目录}/docs/ENGINEERING.md
@@ -90,8 +91,8 @@ description: '工程文档管理与代码实现。管理项目的 ENGINEERING.md
    - {项目目录}/docs/*工程*
    - {项目目录}/**/ENGINEERING*.md
    ```
-5. 定位 ENGINEERING CHANGELOG：模式匹配 `*engineering*changelog*`
-6. 分支判断：有 → 迭代模式；无 → 创建模式
+6. 定位 ENGINEERING CHANGELOG：模式匹配 `*engineering*changelog*`
+7. 分支判断：有 → 迭代模式；无 → 创建模式
 
 ---
 
@@ -136,10 +137,11 @@ description: '工程文档管理与代码实现。管理项目的 ENGINEERING.md
 1. 读取 PRD 最新迭代摘要，提取工程相关变更
 2. 读取 DESIGN.md（如有），提取设计约束
 3. 读取 RESEARCH.md（如有），提取技术调研结论
-4. 读取完整 ENGINEERING.md
-5. 读取 ENGINEERING CHANGELOG（如有），做热点分析
-6. 用 Agent(Explore) 扫描项目源码，理解当前架构
-7. 向用户总结当前工程状态，确认理解是否正确
+4. 读取视觉决策索引（如有），明确哪些 Image 2 / Figma 图只是观感参考，哪些真实截图是验收证据
+5. 读取完整 ENGINEERING.md
+6. 读取 ENGINEERING CHANGELOG（如有），做热点分析
+7. 用 Agent(Explore) 扫描项目源码，理解当前架构
+8. 向用户总结当前工程状态，确认理解是否正确
 
 ---
 
@@ -470,6 +472,7 @@ TDD 级别：{task.tdd_level}
 工程上下文：
 - ENGINEERING.md: {eng_doc_path}（如有）
 - DESIGN.md: {design_doc_path}（如有）
+- 视觉决策索引: {visual_decision_path or "无"}（Image 2 只作观感参考，最终以 DESIGN.md、Feature Spec、真实截图和测试为准）
 
 === 实现流程（根据 TDD 级别） ===
 

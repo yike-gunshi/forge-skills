@@ -6,6 +6,27 @@
 
 ---
 
+## [v2026.04.24.2] — 2026-04-24（Fupan Workbench + 视觉决策层）
+
+### Added
+- **`forge-fupan` 本地 Workbench**：新增 `skills/forge-fupan/workbench/`，包含 FastAPI 本地服务、React/Vite 静态前端、task JSON 状态流和历史复盘浏览。
+- **学习地图确认**：复盘先生成候选知识区，用户在页面选择数量和深度（`了解 / 表达 / 复现`）后，AI 再继续调研。
+- **多任务队列**：多个复盘 task 可并存，页面只展开一个完整表单；AI 只轮询自己的 task ID。
+- **历史复盘网页阅读**：首页按历史索引展示“学到的知识”，详情页渲染 Markdown。
+- **Forge 视觉决策层**：新增 `skills/_shared/visual-decision-layer.md`，统一规定 brainstorm、PRD、design、design-impl、eng、QA、fupan 中何时使用 Mermaid/show-widget、Image 2 和真实截图。
+- **Image 2 生成脚本**：新增 `skills/_shared/generate_image2.py`，按统一约定保存图片、prompt 和 meta，缺少 `OPENAI_API_KEY` 时保留 prompt pack 并降级。
+
+### Changed
+- **复盘表达语气调整**：将旧的批改感措辞改为“表达复盘”“待补背景”“增加的沟通成本”等学习型表达。
+- **运行态轻量化**：前端由 Vite 构建为静态文件，运行时由 FastAPI 托管，不要求用户手动启动 npm dev server。
+- **前端设计门禁前移**：`forge-design` 对新页面/组件/状态要求先生成 1-3 张 Image 2 视觉稿供用户确认；`forge-qa` 明确 Image 2 只作观感参考，不作为通过证据。
+- **Skill frontmatter 兼容最新校验**：移除旧式 `version` 字段，确保全部 `forge-*` skill 通过最新 `skill-creator` 的 `quick_validate.py`。
+
+### Notes
+- 第一版只面向本机单用户，不做账号、云同步、数据库、全文搜索或知识图谱。
+- FastAPI/Uvicorn 缺失时，`forge-fupan` 应降级到对话内确认。
+- 视觉稿不替代 DESIGN.md、Feature Spec、CSS 断言或真实截图；它只用于提前暴露误解和辅助人工判断。
+
 ## [v2026.04.24.1] — 2026-04-24（Dev Server 端口治理）
 
 ### 主题

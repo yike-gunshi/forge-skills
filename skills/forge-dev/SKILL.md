@@ -1,6 +1,6 @@
 ---
 name: forge-dev
-description: '开发调度器。接力 forge-prd 产出的 PRD 变更，半自动调度设计(forge-design)、工程(forge-eng)、QA(forge-qa) 子技能。读取 PRD 迭代摘要，并行调研技术方案，判断需要调用哪些子技能，列出建议顺序供用户确认后以独立上下文执行。触发方式：用户说"开始开发"、"实现需求"、"forge-dev"、PRD 更新后需要进入开发阶段时使用。'
+description: '开发调度器。接力 forge-prd 产出的 PRD 变更，半自动调度设计(forge-design)、工程(forge-eng)、QA(forge-qa) 子技能。读取 PRD 迭代摘要，并行调研技术方案，传递 Image 2/Figma/真实截图等视觉决策索引，判断需要调用哪些子技能，列出建议顺序供用户确认后以独立上下文执行。触发方式：用户说"开始开发"、"实现需求"、"forge-dev"、PRD 更新后需要进入开发阶段时使用。'
 ---
 
 # /forge-dev：开发调度器
@@ -162,6 +162,7 @@ ls "$_ROOT"/docs/brainstorm-*.md 2>/dev/null && echo "发现思考文档（docs/
 ```
 .do-dev/
 ├── state.json                    # 调度状态（持久化）
+├── visual-decision.md            # UI/设计相关任务的视觉决策索引（可选）
 ├── checkpoints/
 │   ├── design-done.patch         # 设计阶段完成后的代码状态
 │   ├── eng-done.patch            # 工程阶段完成后的完整 diff
@@ -379,6 +380,16 @@ git apply .do-dev/checkpoints/[phase]-done.patch      # 恢复到指定阶段
 
 **跳过条件：** `type == "backend"` 时跳过 forge-design，在 state.json 中标记为 `skipped`。
 
+### 视觉决策传递（UI/前端任务）
+
+如果项目类型为 `frontend` 或 `fullstack`，且变更涉及页面、组件、状态或布局：
+
+1. 读取 `../_shared/visual-decision-layer.md`，判断是否需要 Image 2、show-widget 或真实截图。
+2. 若 PRD/brainstorm/DESIGN.md 已有视觉稿，汇总到 `.do-dev/visual-decision.md`。
+3. 调度 `forge-design` 时明确要求完成 Image 2 视觉稿门禁；若无法生成，至少产出 prompt pack 并标注阻塞。
+4. 调度 `forge-eng` / `forge-design-impl` 时传入 `.do-dev/visual-decision.md`，要求实现后用真实截图替换或对比视觉稿。
+5. 调度 `forge-qa` 时说明：Image 2 只作为观感参考，pass/fail 仍基于 Feature Spec、DESIGN.md、CSS 断言和真实截图。
+
 ### 产出执行计划
 
 通过 AskUserQuestion 向用户展示：
@@ -450,6 +461,7 @@ for wave in waves:
             调研报告：{research_path}
             前序产出：{previous_outputs}
             用户偏好：{context_path}
+            视觉决策索引：{visual_decision_path or "无"}
 
             请按照你的 SKILL.md 流程执行。
             """,

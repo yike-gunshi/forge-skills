@@ -1,6 +1,5 @@
 ---
 name: forge-review
-version: 1.0.0
 description: |
   上线前 PR 审查。分析当前分支与基础分支的 diff，检查 SQL 安全、竞态条件、
   LLM 信任边界、枚举完整性等测试捕获不到的结构性问题。发现问题直接修复。
