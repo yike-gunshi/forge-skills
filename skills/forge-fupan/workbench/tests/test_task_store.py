@@ -41,6 +41,13 @@ class TaskStoreTest(unittest.TestCase):
                 "id": "task-current",
                 "project": "forge-cookbook",
                 "summary": "current",
+                "expression_issue_quotes": [
+                    {
+                        "quote": "帮我看看这个",
+                        "issue": "目标不明确，AI 无法判断要看功能、设计还是代码。",
+                        "suggestion": "下次可以说：请按功能正确性和可读性 review 这段实现。",
+                    }
+                ],
                 "topics": [{"id": "fastapi", "title": "FastAPI"}],
                 "active": True,
             },
@@ -50,6 +57,7 @@ class TaskStoreTest(unittest.TestCase):
         self.assertEqual(older["status"], "pending_selection")
         self.assertEqual(current["status"], "pending_selection")
         self.assertEqual(read_task("task-current", root=self.root)["project"], "forge-cookbook")
+        self.assertEqual(read_task("task-current", root=self.root)["expression_issue_quotes"][0]["quote"], "帮我看看这个")
         self.assertEqual([task["id"] for task in list_tasks(root=self.root)], ["task-current", "task-old"])
 
     def test_submit_selection_is_one_way_and_preserves_choice(self):

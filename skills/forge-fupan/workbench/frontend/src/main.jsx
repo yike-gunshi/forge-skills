@@ -38,6 +38,21 @@ function countLabel(count, unit) {
   return `${count} ${unit}`;
 }
 
+function normalizeQuoteItems(items = []) {
+  return items
+    .map((item) => {
+      if (typeof item === 'string') {
+        return { quote: item, issue: '', suggestion: '' };
+      }
+      return {
+        quote: item?.quote || item?.text || '',
+        issue: item?.issue || item?.reason || '',
+        suggestion: item?.suggestion || item?.better_prompt || '',
+      };
+    })
+    .filter((item) => item.quote);
+}
+
 function StatusPill({ status, active }) {
   const label = active ? '当前' : {
     pending_selection: '待确认',
@@ -163,6 +178,10 @@ function TaskForm({ task, onSubmitted }) {
   const [message, setMessage] = useState('');
   const readOnly = task.status !== 'pending_selection';
   const selectedCount = topics.filter((topic) => topic.selected).length;
+  const expressionIssueQuotes = normalizeQuoteItems(task.expression_issue_quotes || task.expression_issues || []);
+  const issueQuoteSet = new Set(expressionIssueQuotes.map((item) => item.quote));
+  const contextQuestions = (task.user_questions || []).filter((question) => !issueQuoteSet.has(question));
+  const hasQuoteBox = expressionIssueQuotes.length > 0 || contextQuestions.length > 0;
 
   function updateTopic(id, patch) {
     setTopics((current) => current.map((topic) => (topic.id === id ? { ...topic, ...patch } : topic)));
@@ -198,12 +217,31 @@ function TaskForm({ task, onSubmitted }) {
         </div>
         <StatusPill status={task.status} active={task.active} />
       </div>
-      {task.user_questions?.length > 0 && (
+      {hasQuoteBox && (
         <div className="question-box">
-          <p className="small-title">用户原话摘录</p>
-          {task.user_questions.map((question, index) => (
-            <p key={`${question}-${index}`}>{question}</p>
-          ))}
+          {expressionIssueQuotes.length > 0 && (
+            <section className="quote-group quote-group-issue">
+              <p className="small-title">表达待优化原话</p>
+              <p className="quote-note">AI 从本次会话自行判断，把影响沟通效率的原话完整摘出来。</p>
+              <ul className="quote-list">
+                {expressionIssueQuotes.map((item, index) => (
+                  <li key={`${item.quote}-${index}`}>
+                    <blockquote>{item.quote}</blockquote>
+                    {item.issue && <p className="quote-meta">问题：{item.issue}</p>}
+                    {item.suggestion && <p className="quote-meta">下次可以说：{item.suggestion}</p>}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+          {contextQuestions.length > 0 && (
+            <section className="quote-group">
+              <p className="small-title">{expressionIssueQuotes.length ? '背景原话摘录' : '用户原话摘录'}</p>
+              {contextQuestions.map((question, index) => (
+                <p className="quote-line" key={`${question}-${index}`}>{question}</p>
+              ))}
+            </section>
+          )}
         </div>
       )}
       <div className="topic-grid">

@@ -66,6 +66,18 @@ def normalize_topic(topic):
     return topic
 
 
+def normalize_expression_issue_quote(item):
+    if isinstance(item, str):
+        return {"quote": item, "issue": "", "suggestion": ""}
+    item = dict(item or {})
+    quote = item.get("quote") or item.get("text") or ""
+    return {
+        "quote": str(quote).strip(),
+        "issue": str(item.get("issue") or item.get("reason") or "").strip(),
+        "suggestion": str(item.get("suggestion") or item.get("better_prompt") or "").strip(),
+    }
+
+
 def create_task(payload, root=None):
     payload = dict(payload or {})
     now = utc_now()
@@ -81,6 +93,11 @@ def create_task(payload, root=None):
         "active": bool(payload.get("active", True)),
         "summary": payload.get("summary") or "",
         "user_questions": list(payload.get("user_questions") or []),
+        "expression_issue_quotes": [
+            quote
+            for quote in (normalize_expression_issue_quote(item) for item in payload.get("expression_issue_quotes") or [])
+            if quote["quote"]
+        ],
         "topics": [normalize_topic(topic) for topic in payload.get("topics") or []],
         "selection": payload.get("selection") or None,
     }
@@ -118,6 +135,7 @@ def list_tasks(root=None):
                     "active": False,
                     "summary": "task JSON 无法读取",
                     "user_questions": [],
+                    "expression_issue_quotes": [],
                     "topics": [],
                     "selection": None,
                     "error": "task_json_unreadable",

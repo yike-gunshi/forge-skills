@@ -68,8 +68,10 @@ pending_selection -> submitted -> consumed
 ## 四、前端实现
 
 - 首页：任务队列、当前任务表单、历史复盘列表。
+- 当前任务表单支持 `expression_issue_quotes`，用于展示 LLM 自行判断出的表达待优化原话；老 task 缺少该字段时继续显示 `user_questions`。
 - 详情页：知识地图侧栏、Markdown 阅读区、源文件路径。
-- 响应式：桌面三列 topic，移动端单列；历史表格移动端改为纵向条目。
+- 响应式：桌面三列 topic，中等宽度两列，移动端单列；历史表格移动端改为纵向条目。
+- TopBar 的本地地址和刷新按钮使用独立 flex action 区，避免中等宽度下重合。
 - 样式使用 `docs/DESIGN.md` 的 Slate + Blue + Amber token。
 
 ## 五、测试矩阵

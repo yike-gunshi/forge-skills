@@ -70,6 +70,22 @@ button, textarea {
   margin-bottom: 24px;
 }
 
+.topbar > div:first-child {
+  min-width: 0;
+}
+
+.topbar-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.topbar-actions .mono {
+  white-space: nowrap;
+}
+
 h1, h2 {
   margin: 0;
   letter-spacing: 0;
@@ -226,6 +242,52 @@ textarea:focus-visible {
 
 .question-box p:last-child {
   margin-bottom: 0;
+}
+
+.quote-group + .quote-group {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.quote-note {
+  margin: 4px 0 12px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.quote-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quote-list li {
+  border-left: 3px solid var(--color-current);
+  padding-left: 12px;
+}
+
+.quote-list blockquote {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.quote-meta {
+  margin: 6px 0 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.quote-line {
+  margin: 12px 0 0;
+  font-size: 15px;
+  line-height: 1.6;
 }
 
 .topic-grid {
@@ -532,6 +594,11 @@ textarea {
   .form-footer {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .topbar-actions {
+    justify-content: flex-start;
+    width: 100%;
   }
 
   .panel,

@@ -47,8 +47,12 @@ curl -s -X POST http://127.0.0.1:8899/api/tasks/release-smoke/selection ...
 ## 浏览器验收
 
 - `npx playwright screenshot --full-page http://127.0.0.1:8898 /tmp/fupan-workbench-release.png`：PASS
+- Playwright 首页能力截图：`docs/assets/fupan-workbench/v2026.04.24.3-home.png`：PASS
+- Playwright 详情页能力截图：`docs/assets/fupan-workbench/v2026.04.24.3-detail.png`：PASS
 - 首页首屏显示当前任务、学习深度选择、补充反馈、历史复盘列表：PASS
 - 历史复盘列表显示“学到的知识”，未显示 `My selections` / selection / depth：PASS
+- 批注修复：顶部 `127.0.0.1` 与“刷新状态”按钮分离显示，不再重合：PASS
+- 批注修复：任务区展示 `expression_issue_quotes`，包含表达待优化原话、问题原因和下次说法：PASS
 - 批注修复：知识区卡片的推荐标签和 `了解 / 表达 / 复现` 按钮固定在底部，左右卡片底线对齐：PASS
 - 批注修复：反馈输入框与 footer 操作区保持清楚间距：PASS
 - 举一反三：768-1199px 宽度下知识区卡片改为 2 列，不留下空白第三列：PASS

@@ -6,6 +6,19 @@
 
 ---
 
+## [v2026.04.24.3] — 2026-04-24（Fupan Workbench 批注修复）
+
+### Fixed
+- **顶部状态栏重合**：修复中等宽度下 `127.0.0.1` 与“刷新状态”按钮重叠的问题。
+- **学习深度按钮对齐**：知识区卡片改为底部控制区，`了解 / 表达 / 复现` 按钮在左右卡片中保持同一底线。
+- **反馈区间距**：反馈输入框与提交 footer 保持清楚间距。
+- **表达待优化原话展示**：学习地图 task 新增 `expression_issue_quotes`，由 LLM 自行判断并逐字摘录表达有问题的用户原话，Workbench 展示原话、问题原因和下次说法。
+
+### Evidence
+- Playwright 首页能力截图：`docs/assets/fupan-workbench/v2026.04.24.3-home.png`
+- Playwright 详情页能力截图：`docs/assets/fupan-workbench/v2026.04.24.3-detail.png`
+- 验收：`npm run build`、`pytest`、`py_compile`、浏览器 console error = 0。
+
 ## [v2026.04.24.2] — 2026-04-24（Fupan Workbench + 视觉决策层）
 
 ### Added
@@ -18,9 +31,14 @@
 
 ### Changed
 - **复盘表达语气调整**：将旧的批改感措辞改为“表达复盘”“待补背景”“增加的沟通成本”等学习型表达。
+- **表达待优化原话入库**：`forge-fupan` 生成学习地图时会让 LLM 自行判断并摘录用户表达有问题的原话，Workbench 单独展示。
 - **运行态轻量化**：前端由 Vite 构建为静态文件，运行时由 FastAPI 托管，不要求用户手动启动 npm dev server。
 - **前端设计门禁前移**：`forge-design` 对新页面/组件/状态要求先生成 1-3 张 Image 2 视觉稿供用户确认；`forge-qa` 明确 Image 2 只作观感参考，不作为通过证据。
 - **Skill frontmatter 兼容最新校验**：移除旧式 `version` 字段，确保全部 `forge-*` skill 通过最新 `skill-creator` 的 `quick_validate.py`。
+
+### Fixed
+- **顶部状态栏重合**：本地 IP 和“刷新状态”按钮改为独立 flex action 区，避免中等宽度下重叠。
+- **原话摘录信息不足**：当前任务区新增“表达待优化原话”，展示 LLM 判断出的原始问题表达、问题原因和下次说法。
 
 ### Notes
 - 第一版只面向本机单用户，不做账号、云同步、数据库、全文搜索或知识图谱。
