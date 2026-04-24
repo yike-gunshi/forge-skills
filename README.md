@@ -173,7 +173,7 @@ forge   ❯ 已修复。搜索代码库发现 3 处类似风险：
 
 | Skill | 命令 | 职责 |
 |-------|------|------|
-| forge-bugfix | `/forge-bugfix` | 系统性 Bug 调查与修复（双层验收 + 多会话并行协调 v6.0） |
+| forge-bugfix | `/forge-bugfix` | 系统性 Bug 调查与修复（双层验收 + 多会话并行协调 + 端口治理 v6.1） |
 | forge-status | `/forge-status` | 并行会话巡检与清理（扫 `.forge/active.md`，按硬信号判活/死） |
 | forge-deliver | `/forge-deliver` | 端到端交付编排（8 Phase，支持 `--auto` / `--resume`） |
 | forge-doc-release | `/forge-doc-release` | 发布后文档同步 |

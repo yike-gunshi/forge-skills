@@ -1,10 +1,11 @@
 ---
 name: forge-bugfix
-version: 6.0.0
+version: 6.1.0
 description: |
-  一次修一个 bug + 独立 worktree + 双层验收 + **多会话并行协调**（v6.0 新）。
+  一次修一个 bug + 独立 worktree + 双层验收 + **多会话并行协调** + dev server 端口治理（v6.1）。
   每个修复生成结构化验收清单文档。支持 3-4 个窗口同时修不同功能域的 bug，
-  靠 `.forge/active.md` 心跳文件 + 功能域判重 + 合并前 merge 预演避免撞车。
+  靠 `.forge/active.md` 心跳文件 + 功能域判重 + 合并前 merge 预演避免撞车；
+  启动应用时优先使用项目统一 dev entrypoint，避免 worktree 抢端口或测到旧服务。
   铁律：不做根因分析就不写修复代码 + 修完不自动合并 + 没有验收清单不算完 +
   新发现禁止当场顺手修（必须分流到 backlog）+ 多 bug 默认不串成长会话 +
   **并行会话必须在 active.md 登记，同域归并会话、异域鼓励并行**。
@@ -165,21 +166,32 @@ elif python3 -c "from playwright.sync_api import sync_playwright" 2>/dev/null; t
 fi
 echo "PW_AVAILABLE=$PW_AVAILABLE"
 
-# === 框架 / 测试框架 / 应用端口 ===
-# ... 框架探测 / 测试框架探测 / 默认应用端口探测 ...
+# === 框架 / 测试框架 / Dev Server 状态 ===
+# ... 框架探测 / 测试框架探测 ...
 
-# === 扫描本地端口 → $APP_URL ===
+# === 统一 dev server 入口 → $APP_URL ===
 APP_URL=""
-for port in 3456 3000 4000 5173 8080 8000; do
-  if lsof -i :"$port" -sTCP:LISTEN &>/dev/null 2>&1; then
-    APP_URL="http://localhost:$port"
-    # 记录占用进程的 cwd，避免 worktree 端口劫持
-    _PID=$(lsof -ti :"$port" -sTCP:LISTEN 2>/dev/null | head -1)
-    _CWD=$(lsof -p "$_PID" 2>/dev/null | awk '$4=="cwd"{print $9}')
-    echo "APP_URL=$APP_URL (PID=$_PID cwd=$_CWD)"
-    break
-  fi
-done
+DEV_STATUS=""
+if [ -f "$_ROOT/package.json" ] && (cd "$_ROOT" && npm run 2>/dev/null | grep -q "dev:status"); then
+  DEV_STATUS="$(cd "$_ROOT" && npm run dev:status 2>/dev/null || true)"
+  echo "$DEV_STATUS"
+  APP_URL="$(printf "%s\n" "$DEV_STATUS" | awk '/Frontend:/{print $2; exit}')"
+elif [ -x "$_ROOT/scripts/dev-stack.sh" ]; then
+  DEV_STATUS="$(cd "$_ROOT" && bash scripts/dev-stack.sh status 2>/dev/null || true)"
+  echo "$DEV_STATUS"
+  APP_URL="$(printf "%s\n" "$DEV_STATUS" | awk '/Frontend:/{print $2; exit}')"
+else
+  # 兼容旧项目：只读探测，不把探测结果当作 worktree 启动许可
+  for port in 3456 3000 4000 5173 8080 8000; do
+    if lsof -i :"$port" -sTCP:LISTEN &>/dev/null 2>&1; then
+      APP_URL="http://localhost:$port"
+      _PID=$(lsof -ti :"$port" -sTCP:LISTEN 2>/dev/null | head -1)
+      _CWD=$(lsof -p "$_PID" 2>/dev/null | awk '$4=="cwd"{print $9}')
+      echo "APP_URL=$APP_URL (PID=$_PID cwd=$_CWD)"
+      break
+    fi
+  done
+fi
 [ -z "$APP_URL" ] && echo "APP_URL=（未检测到运行中的应用）"
 
 # === 项目文档清单 ===
@@ -247,7 +259,7 @@ fi
 |------|------|
 | `$BROWSE` | gstack/browse 路径，空=不可用 |
 | `$PW_AVAILABLE` | Playwright 是否可用 |
-| `$APP_URL` | 本地应用 URL（含占用进程 PID + cwd）|
+| `$APP_URL` | 本地应用 URL（优先来自项目 `dev:status` / `dev-stack status`）|
 | `$DOC_PRD` / `$DOC_ENG` / `$DOC_BUGFIX` | 项目文档路径 |
 | `$DOC_BACKLOG` | bug 任务池 `docs/bugfix/backlog.md` |
 | `$DOC_REVIEWS` | 验收清单目录 `docs/bugfix/reviews/` |
@@ -255,7 +267,7 @@ fi
 | `$ACTIVE` | 并行心跳文件 `.forge/active.md`（v6.0） |
 | `$CURRENT_SID` | 当前 Claude Code session id（v6.0） |
 
-⚠️ **新增**：APP_URL 检测时记录占用进程 PID 和 cwd，防止 worktree 端口劫持（历史踩坑：worktree 旧 uvicorn 抢 8080，主项目改动不生效，30+ 分钟才定位）。
+⚠️ **新增**：APP_URL 不再优先扫描常见端口。若项目提供 `npm run dev:status` 或 `scripts/dev-stack.sh`，必须从统一状态输出读取 URL、PID、cwd，防止 worktree 端口劫持（历史踩坑：worktree 旧 uvicorn 抢 8080，主项目改动不生效，30+ 分钟才定位）。
 
 ⚠️ **v6.0 新增**：P0 结束时 AI 必须向用户报告当前 `.forge/active.md` 的"进行中会话"情况——如果发现疑似僵尸（worktree 目录不存在 / 分支已合并到 main），**建议用户先跑 /forge-status 清理**再继续。AI 不自己清（那是 /forge-status 的职责）。
 
@@ -471,27 +483,43 @@ echo "✅ 已登记到 .forge/active.md: session=$CURRENT_SID 域=$DOMAIN"
 - 登记失败（awk 未匹配等）必须向用户报错，不得静默跳过
 - backlog.md 中对应 bug 的状态同时改 `in-progress`，"领取会话"字段填 session id 前 12 位即可
 
-### 3.2 ⚠️ worktree 端口冲突预检
+### 3.2 ⚠️ worktree Dev Server 契约
 
 **强制步骤**。历史踩坑：worktree 内启动的服务和主仓库抢同一端口，curl/前端打到旧代码上，调试 30+ 分钟。
 
-```bash
-# 1. 检查目标端口是否被现有 worktree 占用
-for port in 3456 3000 4000 5173 8080 8000; do
-  PID=$(lsof -ti :"$port" -sTCP:LISTEN 2>/dev/null | head -1)
-  if [ -n "$PID" ]; then
-    CWD=$(lsof -p "$PID" 2>/dev/null | awk '$4=="cwd"{print $9}')
-    echo "端口 $port: PID=$PID cwd=$CWD"
-  fi
-done
+如果本 bug 只需读代码和单元测试即可复现，可以不启动应用；一旦需要浏览器、curl、截图或端到端复现，就必须走项目统一 dev server 入口。
 
-# 2. 如果发现 cwd 是其他 worktree，向用户报警：
-#    "⚠️ 端口 $port 被 .worktrees/$other 的进程占用，
-#     本次修复启动服务会走端口冲突。建议：
-#     A) kill 该进程后启动本次服务（推荐）
-#     B) 本次服务用其他端口（如 +10）
-#     C) 本次不启服务，直接读代码 + 单元测试"
+```bash
+cd "$WT_PATH"
+
+if [ -f package.json ] && npm run 2>/dev/null | grep -q "dev:status"; then
+  npm run dev:status || true
+  npm run dev
+  npm run dev:status | tee /tmp/forge-dev-status.txt
+  APP_URL=$(awk '/Frontend:/{print $2; exit}' /tmp/forge-dev-status.txt)
+elif [ -x scripts/dev-stack.sh ]; then
+  bash scripts/dev-stack.sh status || true
+  bash scripts/dev-stack.sh start
+  bash scripts/dev-stack.sh status | tee /tmp/forge-dev-status.txt
+  APP_URL=$(awk '/Frontend:/{print $2; exit}' /tmp/forge-dev-status.txt)
+else
+  echo "未发现统一 dev server 入口；必须显式选择非默认端口，并记录 PID/cwd/URL"
+  echo "旧项目兜底探测："
+  for port in 3456 3000 4000 5173 8080 8000; do
+    PID=$(lsof -ti :"$port" -sTCP:LISTEN 2>/dev/null | head -1)
+    if [ -n "$PID" ]; then
+      CWD=$(lsof -p "$PID" 2>/dev/null | awk '$4=="cwd"{print $9}')
+      echo "端口 $port: PID=$PID cwd=$CWD"
+    fi
+  done
+fi
 ```
+
+**硬性要求**：
+- 有 `npm run dev:status` 或 `scripts/dev-stack.sh` 时，不得裸跑 `uvicorn` / `vite` / `next dev`。
+- `APP_URL` 必须从状态输出读取，传给复现、截图和 forge-qa；不得凭常见端口猜。
+- 状态输出必须显示监听进程 cwd 属于当前 worktree；不一致就先 `npm run dev:stop` / `bash scripts/dev-stack.sh stop` 后重启。
+- 旧项目没有统一入口时，AI 必须把端口、PID、cwd、URL 写进报告，且不得占用主分支固定端口。
 
 ### 3.3 切换到 worktree 工作
 
@@ -784,8 +812,9 @@ QA 全过之后再交给你做人工二次验收（P6.5）。
 | 验证项 ≥ 3 条 | 读清单，数表格行数 | 回 P5.3 补齐验证项 |
 | "QA 验证"列全是 ⏳ 待填 | `grep -c "⏳ 待填" "$REVIEW_DOC"` | AI 越位填过就清空重来 |
 | worktree 代码已提交 | `cd "$WT_PATH" && git status --porcelain` 应为空 | 补提交 |
-| 应用可访问（如 bug 类型需要） | `curl -sf "$APP_URL" > /dev/null` | 重启服务 |
-| 进程身份核对（应用运行） | `lsof -p $PID \| grep cwd` 指向当前 worktree | 杀旧进程重启 |
+| APP_URL 来源（如 bug 类型需要） | `APP_URL` 来自 `npm run dev:status` / `scripts/dev-stack.sh status` 输出 | 回 P3.2 重启并重新读取 |
+| 应用可访问（如 bug 类型需要） | `curl -sf "$APP_URL" > /dev/null` | 用统一 dev 入口重启 |
+| 进程身份核对（应用运行） | `dev:status` 或 `lsof -p $PID \| grep cwd` 指向当前 worktree | 停当前 worktree 服务后重启 |
 
 **任一不通过 → 不启动 forge-qa，先补齐。**
 
@@ -811,7 +840,7 @@ Skill(
 | `bug_id=BF-{MMDD}-{N}` | 本次 Bug 编号 | ✅ |
 | `worktree=<路径>` | 当前 worktree 绝对路径 | ✅ |
 | `commit=<hash>` | 修复 commit 短 hash | ✅ |
-| `app_url=<URL>` | 本地应用 URL（若 bug 类型需要）| 条件必填 |
+| `app_url=<URL>` | 本地应用 URL（若 bug 类型需要；必须来自 dev:status/dev-stack status）| 条件必填 |
 
 AI 在调用前向用户说明：
 
@@ -1324,10 +1353,11 @@ G) 关闭会话 — 没事了
 
 ### worktree 纪律
 
-26. **worktree 创建前必须做端口冲突预检**。
-27. **worktree 内启动服务 → 必须核对进程 cwd**（`lsof -p $PID | grep cwd`）。
+26. **worktree 创建后如需启动应用，必须先执行 P3.2 Dev Server 契约**。
+27. **项目存在统一入口时必须使用它**：`npm run dev:status` / `npm run dev` / `scripts/dev-stack.sh`，不得裸跑 `uvicorn`、`vite`、`next dev`。
 28. **不提供 "弃用 worktree" 选项**。Fail 走回 P5 继续修；真的要放弃走 P4.4 三振出局。
-29. **多次修复并发允许，但每次独立 worktree + 独立端口**。
+29. **多次修复并发允许，但每次独立 worktree + 独立端口**；端口必须来自项目 dev-stack / `.devserver.json` / 状态输出，不能靠猜常见端口。
+29.0. **APP_URL 必须可追溯**：传给浏览器、curl、forge-qa 的 URL 必须能在 dev:status/dev-stack status 中找到对应 cwd。
 
 ### 并行协调纪律（v6.0 新增）
 

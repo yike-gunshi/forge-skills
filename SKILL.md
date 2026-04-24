@@ -37,6 +37,16 @@ git log --oneline -3 2>/dev/null
 echo "--- Worktree ---"
 git worktree list 2>/dev/null
 
+# 只读检测 Dev Server（如项目提供统一入口）
+echo "--- Dev Server ---"
+if [ -f "$_ROOT/package.json" ] && (cd "$_ROOT" && npm run 2>/dev/null | grep -q "dev:status"); then
+  (cd "$_ROOT" && npm run dev:status 2>/dev/null) || true
+elif [ -x "$_ROOT/scripts/dev-stack.sh" ]; then
+  (cd "$_ROOT" && bash scripts/dev-stack.sh status 2>/dev/null) || true
+else
+  echo "未发现统一 dev server 状态入口"
+fi
+
 # 检测分支
 echo "--- 分支 ---"
 git branch --show-current 2>/dev/null

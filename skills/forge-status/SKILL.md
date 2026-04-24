@@ -34,6 +34,11 @@ allowed-tools:
 - ❌ 最近 commit 时间——AI 慢不等于僵尸
 - ❌ 进程存活检查——Claude Code 会话结束后进程就没了，不代表工作废弃
 
+**Dev server 附加巡检（不参与僵尸判定）**：
+- 可以报告 `.devserver.json`、tmux session、监听端口、PID、cwd，帮助用户发现多余前后端
+- 这些信息只用于"有哪些服务在跑"的可见性，不用于判定 `.forge/active.md` 的会话是否僵尸
+- 如需停止服务，优先提示用户在对应 worktree 内运行项目自己的 `npm run dev:stop` / `scripts/dev-stack.sh stop`
+
 ## 两种调用模式
 
 | 模式 | 调用方 | 行为 |
@@ -112,6 +117,35 @@ reason="worktree 存在 + 分支未合并"
 合计：活跃 2 条 / 待清理 2 条
 ```
 
+### 步骤 3.5：Dev server 附加巡检
+
+只报告，不清理、不作为 active.md 僵尸判定依据：
+
+```bash
+echo "🖥️ Dev server 附加巡检（只读，不参与僵尸判定）"
+
+find "$_ROOT" "$_ROOT/.worktrees" -name .devserver.json -print 2>/dev/null | while read -r f; do
+  echo "- devserver: $f"
+  cat "$f" 2>/dev/null
+done
+
+tmux ls 2>/dev/null | grep -E "dev|frontend|backend|info2action" || true
+
+for port in 3000 3001 3456 3567 3568 3600 5173 8000 8080 8100; do
+  PID=$(lsof -ti :"$port" -sTCP:LISTEN 2>/dev/null | head -1)
+  if [ -n "$PID" ]; then
+    CWD=$(lsof -p "$PID" 2>/dev/null | awk '$4=="cwd"{print $9}')
+    echo "- port $port: PID=$PID cwd=$CWD"
+  fi
+done
+```
+
+报告中明确写：
+
+```
+说明：上面的 dev server 只说明"有服务在跑"，不说明 active.md 里的任务已完成或已废弃。
+```
+
 ### 步骤 4：分模式处理
 
 #### 模式 A：交互清理（默认）
@@ -158,6 +192,7 @@ C) 先不清 — 只报告，暂不改文件
 3. **批量清理只在用户选 A) 时执行**，模糊回复默认走 B) 逐条确认。
 4. **backlog.md 和 active.md 必须联动**，不能只清 active 留 backlog 挂着"领取会话"。
 5. **不主动删 worktree 目录或分支**。这是 forge-bugfix P7 的职责，/forge-status 只改文档记录。
+6. **Dev server 巡检不得参与僵尸判定**。进程存在不代表任务活跃，进程不存在也不代表任务废弃。
 
 ## 典型使用场景
 

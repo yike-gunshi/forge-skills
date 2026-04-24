@@ -6,6 +6,28 @@
 
 ---
 
+## [v2026.04.24.1] — 2026-04-24（Dev Server 端口治理）
+
+### 主题
+
+把 worktree 启动前后端这件事从"靠人记住端口"改成"由项目统一状态入口负责"。核心目标是：main 只跑一套服务，worktree 不抢端口，QA 不测错进程。
+
+### Changed
+- **`forge-bugfix` v6.0 → v6.1**：P0/P3.2/P6/铁律接入 `npm run dev:status` / `scripts/dev-stack.sh`，应用启动和 `APP_URL` 都必须来自统一状态输出。
+- **`forge-eng` 新增 Dev Server 端口契约**：worktree 创建后如需运行应用，优先使用项目统一 dev entrypoint；收尾前必须停止当前 worktree 服务。
+- **`forge-qa` v3.1 → v3.2**：浏览器验收不再猜 `localhost:3000/5173/8080`，Mode B 的 `app_url` 必须由调用方或 dev-status 提供。
+- **`forge-status` 增加只读 dev server 巡检**：展示 `.devserver.json`、tmux session、监听端口、PID、cwd；但不把进程状态用于 active.md 僵尸判定。
+- **`/forge` 总入口展示 dev server 状态**：如果项目提供 `dev:status` 或 `dev-stack`，状态检查时一并展示当前前后端监听信息。
+
+### Fixed
+- **worktree 抢主分支端口**：避免旧 Vite / uvicorn 继续占着 `3000`、`5173`、`8080`，导致浏览器看到旧代码。
+- **localhost URL 不可追溯**：`APP_URL` 必须能追到具体 cwd，减少"我到底测的是哪个分支"的排查时间。
+- **QA 测错服务**：forge-qa 不再自行扫常见端口，避免把 main 或其他 worktree 当作当前修复结果。
+
+### Notes
+- 这是流程治理 release，不改变业务功能。
+- `skills/forge-brainstorm/SKILL.md` 的既有未提交改动不属于本次端口治理，未纳入本次 release。
+
 ## [v2026.04.24] — 2026-04-24（Codex 安装兼容）
 
 ### Fixed

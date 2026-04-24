@@ -1,6 +1,6 @@
 ---
 name: forge-qa
-version: 3.1.0
+version: 3.2.0
 description: |
   QA 验收与测试报告。纯验收模式：测试+报告，不修代码。
   两种调用模式：
@@ -8,7 +8,8 @@ description: |
     Mode B（单 bug 验收）：配合 forge-bugfix 的 P6 调用，读取 docs/bugfix/reviews/BF-XX.md，
       针对清单里每个验证项跑自动化测试，把结果回填到"QA 验证"列和"QA 验收记录"节。
       QA 全过 → 通知 forge-bugfix 进 P6.5；QA 有挂 → 通知 forge-bugfix 回 P5。
-  核心原则：断言引擎模式，每个测试必须有 pass/fail，不允许 catch 吞错误。
+  核心原则：断言引擎模式，每个测试必须有 pass/fail，不允许 catch 吞错误；
+  浏览器验收必须使用调用方传入或 dev-status 输出的 app_url，不猜 localhost 端口。
   支持三种测试引擎：gstack/browse、Playwright、纯代码。
   触发方式：
     Mode A：用户说"测试"、"QA"、"forge-qa"、forge-dev 调度器调用
@@ -77,6 +78,13 @@ fi
 if [ "$MODE" = "B" ]; then
   [ -f "$REVIEW_DOC" ] || { echo "❌ 验收清单不存在: $REVIEW_DOC"; exit 1; }
   [ -n "$BUG_ID" ] || BUG_ID=$(basename "$REVIEW_DOC" .md)
+  if [ -n "$WORKTREE" ] && [ -d "$WORKTREE" ] && [ -z "$APP_URL" ]; then
+    if [ -f "$WORKTREE/package.json" ] && (cd "$WORKTREE" && npm run 2>/dev/null | grep -q "dev:status"); then
+      echo "⚠️ 当前项目提供 dev:status，但 Mode B 未传 app_url。若验收项涉及浏览器、curl 或截图，调用方必须先运行 npm run dev:status，并把 Frontend URL 作为 app_url 传入。"
+    elif [ -x "$WORKTREE/scripts/dev-stack.sh" ]; then
+      echo "⚠️ 当前项目提供 scripts/dev-stack.sh，但 Mode B 未传 app_url。若验收项涉及浏览器、curl 或截图，调用方必须先运行 dev-stack status，并把 Frontend URL 作为 app_url 传入。"
+    fi
+  fi
 fi
 ```
 
@@ -93,7 +101,7 @@ Mode A 详见"## 三层架构"往下的完整流程。
 | `bug_id=BF-{MMDD}-{N}` | ✅ | 用于命名截图 / 日志 |
 | `worktree=<路径>` | ✅ | 在该 worktree 内运行测试 |
 | `commit=<hash>` | ✅ | 用于定位修复范围 |
-| `app_url=<URL>` | 条件 | 仅当 bug 类型涉及应用运行时 |
+| `app_url=<URL>` | 条件 | 仅当 bug 类型涉及应用运行时；必须来自调用方的 `dev:status` / `dev-stack status` 输出 |
 
 ## 三层架构
 
@@ -118,6 +126,7 @@ Mode A 详见"## 三层架构"往下的完整流程。
 4. **断言必须验证功能正确性，不能只验证元素存在** — `visible` 和 `count_gte` 是前置条件，不是验收断言。每个测试用例必须至少包含一个验证**数据值/文本内容/状态变化**的深层断言（`contains_text`、`has_attribute`、`css_value`、`matches_regex`、自定义 `evaluate`）。详见下方"断言深度规则"。
 5. **证据先于结论** — 每个测试结果必须有截图、输出、或日志作为证据。
 6. **控制台零容忍** — 任何 `pageerror` 或 `console.error` 自动 FAIL。
+7. **不得猜本地端口** — 有 `app_url` 就只测该 URL；没有 `app_url` 时，优先读取 `dev:status` / `dev-stack status`，不得自行发明 `localhost:3000`、`5173`、`8080` 等地址。
 
 ## 定位说明
 
@@ -222,9 +231,19 @@ QA_RUNNER=""
 
 # === 本地服务探测 ===
 echo "本地服务:"
-for port in 3000 3456 4000 5173 8080 8081; do
-  curl -s -o /dev/null -w "%{http_code}" "http://localhost:$port" 2>/dev/null | grep -qE "200|301|302|304" && echo "  http://localhost:$port ✓"
-done
+if [ -n "$APP_URL" ]; then
+  echo "  APP_URL=$APP_URL（由调用方传入）"
+elif [ -f "$_ROOT/package.json" ] && (cd "$_ROOT" && npm run 2>/dev/null | grep -q "dev:status"); then
+  (cd "$_ROOT" && npm run dev:status)
+  echo "  未传 APP_URL：如需浏览器验收，请使用 dev:status 输出中的 Frontend URL 重新调用 forge-qa。"
+elif [ -x "$_ROOT/scripts/dev-stack.sh" ]; then
+  (cd "$_ROOT" && bash scripts/dev-stack.sh status)
+  echo "  未传 APP_URL：如需浏览器验收，请使用 dev-stack status 输出中的 Frontend URL 重新调用 forge-qa。"
+else
+  for port in 3000 3456 4000 5173 8080 8081; do
+    curl -s -o /dev/null -w "%{http_code}" "http://localhost:$port" 2>/dev/null | grep -qE "200|301|302|304" && echo "  http://localhost:$port ✓（旧项目兜底探测）"
+  done
+fi
 
 # === 报告目录 ===
 REPORT_DIR="$_ROOT/.gstack/qa-reports"
@@ -1290,7 +1309,7 @@ AI 解析出：
 **断言原则**（和 Mode A 一致）：
 - 必须基于"用户视角可见的内容变化"
 - 不得单独用技术指标（HTTP 200 数量 / DOM 节点存在）
-- 必须核对进程身份（`ps aux | grep <服务>` + `lsof -p $PID | grep cwd`）
+- 必须核对进程身份（优先看 `dev:status` / `dev-stack status`；兜底用 `ps aux | grep <服务>` + `lsof -p $PID | grep cwd`）
 
 ### B.5 控制台零容忍（强制）
 
@@ -1323,7 +1342,7 @@ AI 解析出：
 - 修复后：原始症状消失（after 截图）
 
 **进程身份**：
-- APP_URL=http://localhost:3456, PID=8234, cwd=/path/to/worktree ✅ 一致
+- APP_URL=http://localhost:3456, 来源=dev:status, PID=8234, cwd=/path/to/worktree ✅ 一致
 ```
 
 ### B.7 状态信号和退出
@@ -1359,3 +1378,4 @@ AI 解析出：
 3. **每条结果必须有证据链接**（截图 / 日志 / 测试输出路径）
 4. **控制台零容忍**（一致）
 5. **不能越界修改清单的其他列**（特别是"你的验收"列，那是用户的）
+6. **应用 URL 必须由调用方或 dev-status 提供**，不得在 Mode B 中猜测本地端口。

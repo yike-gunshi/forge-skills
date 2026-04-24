@@ -5,6 +5,38 @@
 
 ---
 
+## v6.1（2026-04-24）
+
+### 解决的核心问题
+
+v6.0 解决了"多个 worktree 能不能并行修 bug"的问题，但还没有约束"这些 worktree 怎么启动前后端"。真实使用中会出现旧 Vite / uvicorn 进程继续占着 `3000`、`5173`、`8080`，新会话打开浏览器后看到的是旧代码，排查成本很高。
+
+### 核心改变
+
+- **统一 dev server 入口优先**：如果项目提供 `npm run dev:status` / `npm run dev` / `scripts/dev-stack.sh`，forge-bugfix 必须使用它，不得裸跑 `uvicorn`、`vite`、`next dev`
+- **APP_URL 可追溯**：复现、截图、curl、forge-qa 的 `app_url` 必须来自 dev-status 输出，不能凭常见端口猜
+- **进程身份核对前移**：P3.2 要求状态输出或 `lsof` 能证明监听进程 cwd 属于当前 worktree
+- **QA 不猜端口**：forge-qa v3.2 在 Mode B 中要求调用方传入来自 dev-status 的 URL；未传时只提示，不自行发明 `localhost:3000`
+- **forge-status 增加只读 dev server 巡检**：报告 `.devserver.json`、tmux session、监听端口、PID、cwd，但不把进程状态用于 active.md 僵尸判定
+
+### 新增/修改清单
+
+| 文件 | 性质 | 说明 |
+|---|---|---|
+| `SKILL.md` | 改 | 总入口只读展示项目统一 dev server 状态 |
+| `skills/forge-bugfix/SKILL.md` | 改 | version 6.0→6.1；P0/P3.2/P6/铁律接入 dev-status/dev-stack |
+| `skills/forge-eng/SKILL.md` | 改 | 新增第 5.6 步 Dev Server 端口契约 |
+| `skills/forge-qa/SKILL.md` | 改 | version 3.1→3.2；Mode B 不猜端口，app_url 必须可追溯 |
+| `skills/forge-status/SKILL.md` | 改 | 新增 dev server 附加巡检，明确不参与僵尸判定 |
+
+### 设计决策
+
+- **为什么不只写在项目 CLAUDE.md**：CLAUDE.md 是提醒，不是流程门禁；forge-bugfix / forge-eng / forge-qa 都可能直接启动或验收应用，所以约束必须进入 skill 本身
+- **为什么不继续扫描常见端口**：扫描只能知道"有服务"，不知道"是不是当前 worktree 的服务"；URL 必须来自项目状态入口，才能追溯到 cwd
+- **为什么 forge-status 不用进程判断僵尸**：dev server 可能手动停掉，也可能会话结束后仍在跑；active.md 仍然只认 worktree 存在性和分支合并状态这两个硬信号
+
+---
+
 ## v6.0（2026-04-19）
 
 ### 解决的核心问题

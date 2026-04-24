@@ -14,13 +14,13 @@ description: '工程文档管理与代码实现。管理项目的 ENGINEERING.md
 完整模式：
   第0步 定位文档 → 第0.5步 模式选择 → 第1步 范围挑战 → 第2步 理解现状
   → 第3步 四章审查 → 第4步 方案设计 → 第5步 更新文档
-  → 第5.5步 创建Worktree → 第5.7步 测试框架检测
+  → 第5.5步 创建Worktree → 第5.6步 Dev Server 端口契约 → 第5.7步 测试框架检测
   → 第6步 任务拆分(含TDD级别) → 第7步 Wave执行(TDD+Verification)
   → 第8步 必需产出 → 第9步 确认总结 → 第10步 分支收尾
 
 轻量模式：
   第0步 定位文档 → 第0.5步 模式选择
-  → 第5.5步 创建Worktree → 第5.7步 测试框架检测
+  → 第5.5步 创建Worktree → 第5.6步 Dev Server 端口契约 → 第5.7步 测试框架检测
   → 第6步 任务拆分(含TDD级别) → 第7步 Wave执行(TDD+Verification)
   → 第9步 确认总结 → 第10步 分支收尾
 ```
@@ -300,10 +300,47 @@ Worktree 就绪：
   路径：{full-path}
   分支：{branch-name}
   基线测试：{通过 N 个 / 无测试框架}
+  Backend URL：{如已启动则填写；未启动则写 未启动}
+  Frontend URL：{如已启动则填写；未启动则写 未启动}
+  APP_URL：{供浏览器/QA 使用的 URL；来自 dev:status，不得猜}
   准备开始实现 {feature-name}
 ```
 
 **后续所有 Wave 执行都在 worktree 目录中进行。**
+
+---
+
+## 第5.6步：Dev Server 端口契约（如项目需要运行应用）
+
+**核心原则**：worktree 可以并行，但 dev server 必须由项目统一入口分配和复用端口。不要在 worktree 里裸跑 `uvicorn`、`vite`、`next dev` 或临时 `npm run dev -- --port ...`，除非项目没有统一入口。
+
+### 统一入口优先级
+
+```bash
+# 必须在 worktree 根目录执行
+cd "$WORKTREE"
+
+if npm run 2>/dev/null | grep -q "dev:status"; then
+  npm run dev:status
+  npm run dev
+  npm run dev:status | tee /tmp/forge-dev-status.txt
+elif [ -x scripts/dev-stack.sh ]; then
+  bash scripts/dev-stack.sh status
+  bash scripts/dev-stack.sh start
+  bash scripts/dev-stack.sh status | tee /tmp/forge-dev-status.txt
+else
+  echo "未发现统一 dev server 入口；如必须启动应用，使用显式非默认端口并记录 PID/cwd/URL"
+fi
+```
+
+### 硬性要求
+
+1. **有统一入口就必须用统一入口**：`npm run dev:status` / `npm run dev` / `scripts/dev-stack.sh` 优先于任何手写启动命令。
+2. **APP_URL 必须来自状态输出**：浏览器测试、curl、forge-qa 的 `app_url` 都从 `dev:status` / `dev-stack status` 输出读取，不得凭常见端口猜测。
+3. **启动前先看状态**：如果当前 worktree 已有对应服务，复用；不要重复启动同一套前后端。
+4. **进程身份必须核对**：状态输出或 `lsof -p $PID | grep cwd` 必须证明监听进程 cwd 属于当前 worktree。
+5. **主分支端口固定，worktree 端口自动隔离**：如果项目 dev-stack 已规定 main 使用固定端口，worktree 不得抢这些端口。
+6. **收尾前停本 worktree 服务**：删除或合并 worktree 前运行 `npm run dev:stop` 或 `bash scripts/dev-stack.sh stop`；没有统一入口时，按记录的 PID 精确停止当前 worktree 的进程。
 
 ---
 
