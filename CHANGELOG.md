@@ -6,6 +6,17 @@
 
 ---
 
+## [v2026.04.24] — 2026-04-24（Codex 安装兼容）
+
+### Fixed
+- **Codex skill 未加载 forge 系列**：安装脚本此前只写入 `~/.claude/skills`，导致 Codex 当前会话可发现的 `~/.agents/skills` 中没有 `forge-fupan` 等 skill。
+
+### Changed
+- **`install.sh` 默认安装到双目标**：同时创建 Claude Code `~/.claude/skills` 和 Codex `~/.agents/skills` 的 symlink。
+- **新增安装目标参数**：`--target claude|codex|both`、`--status`、`--dry-run`、`--force`。
+- **安装安全性提升**：默认只替换 symlink；遇到同名真实文件/目录会停止并提示，避免误删。
+- **README 安装说明**：补充 Claude Code / Codex 双端安装和状态检查命令。
+
 ## [v2026.04.19.1] — 2026-04-19（并行化迭代）
 
 ### 主题
