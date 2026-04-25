@@ -10,6 +10,9 @@
 - 路径仍使用 docs/bugfix/reviews/，以兼容既有 backlog 链接和 forge-qa 的 review_doc 参数。
 - 截图保存在 ./assets/{{BUG_ID}}/ 下，并在 Markdown 中用 ![](...) 内嵌展示。
 - QA 只填 QA 相关区域；用户只填「你的验收」和「最终结论」区域。
+- 交给用户验收前，forge-bugfix 必须用 scripts/validate-bugfix-report.py 校验通过。
+- 前端/交互 bug 的 QA 证据必须回到用户原话，写清"用户现在能看到/完成什么"。
+- 涉及前端展示、权限、数据可见性的 bug 必须检查配置/开关/数据就绪状态。
 - 若处于 QA 自动闭环/批量修复模式，单 bug 报告可以停在「QA 通过，等待最终人工验收」，
   最终由批次汇总文档统一交给用户验收。
 -->
@@ -20,7 +23,7 @@
 
 | 字段 | 内容 |
 |---|---|
-| 状态 | {{pending / in-progress / fixed-awaiting-qa / qa-failed / qa-pass-pending-final-review / blocked-human / resolved / deferred}} |
+| 状态 | {{pending / in-progress / fixed-awaiting-qa / qa-incomplete / qa-failed / qa-pass-pending-user-verification / qa-pass-pending-final-review / qa-pass-user-accepted / blocked-human / resolved / deferred}} |
 | Bug 描述 | {{一句话描述用户或 QA 看到的现象}} |
 | 来源 | {{用户反馈 / forge-qa / 人工验收新发现 / 其他}} |
 | 功能域 | {{从 .forge/active.md 的功能域声明中选择}} |
@@ -111,6 +114,14 @@ _待填写_
 | Backend / API | {{http://localhost:xxxx 或 —}} | {{dev:status / dev-stack status / 其他}} | {{PID=, cwd=, branch=}} | {{PASS / FAIL / N/A}} |
 | API Health | {{/health 或 —}} | {{curl / 其他}} | {{状态码 / 响应摘要}} | {{PASS / FAIL / N/A}} |
 
+### 配置 / 开关 / 数据就绪检查
+
+| 检查项 | 实际值 | 预期 | 结论 |
+|---|---|---|---|
+| Feature flag / config | {{例如 event_aggregation_ready=true 或 N/A}} | {{本 bug 需要的状态}} | {{PASS / FAIL / N/A}} |
+| 后端返回状态 | {{例如 enabled=true / 权限状态 / API 字段}} | {{预期值}} | {{PASS / FAIL / N/A}} |
+| 数据就绪 | {{记录数量 / fixture / 测试数据说明}} | {{足以验证用户问题}} | {{PASS / FAIL / N/A}} |
+
 **代码身份**
 
 | 字段 | 内容 |
@@ -153,6 +164,15 @@ forge-qa 规则：
 -->
 
 _待 forge-qa 填写_
+
+### 9.0 用户问题闭环断言
+
+| 字段 | 内容 |
+|---|---|
+| 用户原话 / 原始问题 | {{用户看到/反馈的原始问题，不要改写成技术问题}} |
+| 最终用户可见结果 | {{现在用户能看到/完成什么，必须对应用户原话}} |
+| 证明方式 | {{截图 / 交互步骤 / API 断言 / 测试命令}} |
+| 结论 | {{PASS / FAIL / BLOCKED}} |
 
 ### 验证项模板
 
