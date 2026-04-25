@@ -6,6 +6,25 @@
 
 ---
 
+## [v2026.04.25] — 2026-04-25（Bug 修复验收报告与 QA 自动闭环）
+
+### Added
+- **Bug 修复验收报告**：`docs/bugfix/reviews/BF-XX.md` 从“修完后的验收清单”升级为从发现到关闭的单 bug 案卷，覆盖发现、复现、根因、TDD、修复、QA、人工验收和新发现分流。
+- **QA 自动闭环**：`forge-qa` 可产出结构化 BF candidate，交给 `forge-bugfix` 独立 worktree/TDD 修复，再由 `forge-qa` Mode B 回归。
+- **Codex Browser Use 接入**：Codex 环境中前端页面/交互/视觉/控制台 QA 优先使用 `browser-use:browser` 采集用户视角截图和 DOM 证据。
+- **批次最终验收**：支持多 bug、多会话、多天修复后统一汇总到最终人工验收包。
+
+### Changed
+- **`forge-bugfix` v7.0**：新增 P2.5 报告创建；P5 改为独立 TDD 驱动；P6 支持单 bug 验收和批次待最终验收；自动闭环最多 3 轮，疑问进入 `blocked-human`。
+- **`forge-qa` Mode B**：从回填“验收清单”升级为回填 Bug 修复验收报告，包括逐步截图、深度断言、前后端环境身份校验。
+- **`backlog.md` 状态模型**：新增 `fixed-awaiting-qa`、`qa-failed`、`qa-pass-pending-final-review`、`blocked-human`、`deferred` 等状态。
+- **工程边界原则**：批次 = 管理单元，Bug = 工程单元，Worktree = 隔离单元，TDD = 质量单元，QA = 验收单元。
+
+### Evidence
+- 发布说明：`docs/releases/v2026.04.25.md`
+- 迭代记录：`docs/iterations/2026-04-25-Bug修复验收报告与QA自动闭环.md`
+- 验证：`git diff --check`（release scope）通过。
+
 ## [v2026.04.24.3] — 2026-04-24（Fupan Workbench 批注修复）
 
 ### Fixed

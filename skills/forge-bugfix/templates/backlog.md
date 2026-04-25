@@ -12,10 +12,12 @@
 读取来源：
 1. 新会话启动 forge-bugfix 时，P2 主动读此处推荐候选
 2. 用户说"看一下待修 bug"时读此处
+3. forge-qa 在功能开发后的 QA 自动闭环模式中，把发现的问题登记到此处
 
 编号规则：
 - 每条 bug 编号 BF-{MMDD}-{N}，N 在该日期递增
 - 编号一旦分配，即使条目被删除也不复用
+- 每个 BF 编号都必须有对应的 Bug 修复验收报告：docs/bugfix/reviews/BF-{MMDD}-{N}.md
 
 优先级规则：
 - P0：阻塞核心流程、高频出现、涉及安全或数据
@@ -26,6 +28,11 @@
 状态规则：
 - pending：待修
 - in-progress：正在某个 worktree 修（必须同时在 .forge/active.md 登记）
+- fixed-awaiting-qa：代码已修并提交，等待 forge-qa 回归
+- qa-failed：forge-qa 回归失败，需回到 bugfix
+- qa-pass-pending-final-review：自动 QA 已通过，等待最终人工验收
+- blocked-human：自动闭环遇到需求/设计/环境/根因疑问，等待用户判断
+- deferred：确认延期，不进入当前批次
 - resolved：已修复（移到"🗄️ 已处理"区，永久保留）
 - wontfix：决定不修（移到"🗄️ 已处理"区，永久保留）
 
@@ -47,16 +54,17 @@
 
 > 本项目的 bug 任务池。forge-bugfix 启动时从此处捞候选。
 > 新发现的 bug 会自动分流到此处。
+> 每个 BF 条目都对应一份 Bug 修复验收报告；backlog 只做索引和状态看板。
 
 ## 🐛 待修 bug
 
-| 编号 | 描述 | 来源 | 上下文 | 功能域 | 优先级 | 状态 | 领取会话 |
-|---|---|---|---|---|---|---|---|
-| 示例: BF-0419-3 | 登录后头像不刷新 | BF-0419-2 验收时发现 | AuthStore.ts, Avatar.tsx | auth | P1 | pending | — |
-| 示例: BF-0419-4 | ASR 识别完成前按钮可连点 | 本会话报告 | Recorder.tsx, /api/asr | asr | P1 | in-progress | abc-123-xyz |
+| 编号 | 描述 | 来源 | 上下文 | 功能域 | 优先级 | 状态 | 领取会话 | 报告 |
+|---|---|---|---|---|---|---|---|---|
+| 示例: BF-0419-3 | 登录后头像不刷新 | BF-0419-2 验收时发现 | AuthStore.ts, Avatar.tsx | auth | P1 | pending | — | docs/bugfix/reviews/BF-0419-3.md |
+| 示例: BF-0419-4 | ASR 识别完成前按钮可连点 | forge-qa | Recorder.tsx, /api/asr | asr | P1 | qa-pass-pending-final-review | abc-123-xyz | docs/bugfix/reviews/BF-0419-4.md |
 
 <!-- 新条目追加到表格末尾 -->
-<!-- 领取会话列：pending 时填 —，in-progress 时填 session id（8-12 位前缀足够） -->
+<!-- 领取会话列：pending 时填 —，in-progress 及之后填 session id（8-12 位前缀足够） -->
 
 ## 🌀 待澄清反馈
 
@@ -86,7 +94,7 @@
 <!-- 按月分节。归档时追加到对应月份。-->
 <!-- 格式：编号 | 描述 | 状态 | 处理日期 | 链接 -->
 <!-- 示例：-->
-<!-- - **BF-0419-3** 登录头像不刷新 — resolved 2026-04-20 → 详见 docs/bugfix/reviews/BF-0419-3.md -->
+<!-- - **BF-0419-3** 登录头像不刷新 — resolved 2026-04-20 → Bug 修复验收报告 docs/bugfix/reviews/BF-0419-3.md -->
 <!-- - **N-0419-1** 登录页"记住我" — 已通过 /forge-prd 立项为 feature-remember-me -->
 
 ---
@@ -94,6 +102,11 @@
 ## 快速操作提示
 
 - 新建 bug 条目：追加到"🐛 待修 bug"表末尾，分配 BF-{MMDD}-{N} 编号
-- 开始修某个 bug：把该行 `状态` 改成 `in-progress`，记录 worktree 名
-- 修完 bug：把行从"🐛 待修 bug"剪切到"🗄️ 已处理"的对应月份下，附 review 文档链接
+- 新建或领取 bug：同步创建 `docs/bugfix/reviews/{BUG_ID}.md` Bug 修复验收报告
+- 开始修某个 bug：把该行 `状态` 改成 `in-progress`，记录领取会话
+- 修完代码：状态改 `fixed-awaiting-qa`
+- QA 失败：状态改 `qa-failed`，回到 bugfix
+- QA 通过但等待批次最终人工验收：状态改 `qa-pass-pending-final-review`
+- 遇到需要用户判断的问题：状态改 `blocked-human`，在报告里写决策卡
+- 用户最终验收通过：把行从"🐛 待修 bug"剪切到"🗄️ 已处理"的对应月份下，附 Bug 修复验收报告链接
 - 新需求走立项：把行从"💡 新需求"剪切到"🗄️ 已处理"，附对应 feature 链接

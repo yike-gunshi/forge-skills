@@ -5,6 +5,62 @@
 
 ---
 
+## v7.0（2026-04-25）
+
+### 解决的核心问题
+
+v6.1 已经约束了 worktree、并行协调和 dev server 身份，但单 bug 文档仍偏“修完后的验收清单”。真实使用中，用户需要在最终人工验收时看到 QA 当时的逐步截图、前后端地址、进程身份和环境一致性；同时，功能开发后的 forge-qa 发现多个 bug 时，应自动进入有界 bugfix 闭环，而不是每个 bug 都打断用户。
+
+### 核心改变
+
+- **验收清单升级为 Bug 修复验收报告**
+  - 路径仍为 `docs/bugfix/reviews/BF-XX.md`，兼容历史链接和 `review_doc` 参数
+  - 创建时机前移到 bug 登记/领取时，不再等修完才创建
+  - 报告覆盖发现、复现、根因、TDD、修复、QA、人工验收和新发现分流
+- **QA 截图内嵌 Markdown**
+  - 前端交互每个有意义的状态节点都截图
+  - 截图保存在 `docs/bugfix/reviews/assets/BF-XX/`
+  - 报告中直接使用 `![](./assets/BF-XX/...)`
+- **Codex Browser Use 接入**
+  - 在 Codex 环境中，前端页面/交互/视觉/控制台验收优先使用 `browser-use:browser`
+  - Browser Use 负责用户视角截图、DOM 证据和 in-app browser 操作
+  - Playwright 继续负责可重复脚本断言，gstack/browse 作为已有项目补充
+  - Computer Use 只作为 Browser Use 不可用或非浏览器桌面应用的兜底
+- **前后端环境身份强校验**
+  - 报告展示 Frontend/Backend URL、来源、PID、cwd、commit
+  - QA 使用的地址必须和用户验收地址一致
+  - PID/cwd 不指向当前 worktree 直接 QA_FAIL
+- **QA 自动闭环**
+  - forge-qa Mode A 发现 bug 时产出结构化 BF candidate
+  - 调度层/forge-dev 可自动写入 backlog、创建 BF 报告并调用 forge-bugfix
+  - forge-bugfix 修复后再由 forge-qa Mode B 回归
+  - 全部 QA 绿后，用户只做一次最终人工验收
+- **批量仍保持单 bug 工程隔离**
+  - 每个 bug 独立 BF 报告、worktree、TDD、commit、QA
+  - 批次文档只做最终验收汇总，不替代单 bug 报告
+- **自动闭环有上限**
+  - 同一 bug 连续回修失败 3 次或遇到需求/设计/环境疑问，标记 `blocked-human`
+  - AI 必须给用户决策卡，禁止无限循环
+
+### 新增/修改清单
+
+| 文件 | 性质 | 说明 |
+|---|---|---|
+| `skills/forge-bugfix/templates/review-checklist.md` | 改 | 从验收清单模板升级为 Bug 修复验收报告模板 |
+| `skills/forge-bugfix/templates/backlog.md` | 改 | 增加报告链接列和 `fixed-awaiting-qa` / `qa-failed` / `qa-pass-pending-final-review` / `blocked-human` 等状态 |
+| `skills/forge-bugfix/SKILL.md` | 改 | P2.5 创建报告；P5 独立 TDD；P6 批量待最终验收；P8 批次汇总 |
+| `skills/forge-qa/SKILL.md` | 改 | Mode A 输出结构化 BF candidate；Mode B 回填截图、断言、环境身份；接入 browser-use:browser |
+| `docs/iterations/2026-04-25-Bug修复验收报告与QA自动闭环.md` | 新 | 本次迭代说明 |
+
+### 设计决策
+
+- **为什么不改 `reviews/` 路径**：路径是稳定接口，backlog 和 forge-qa 都依赖它。语义升级通过标题和模板完成。
+- **为什么不让 forge-qa 修代码**：职责分离仍然成立。forge-qa 发现问题并产出结构化 bug，forge-bugfix 独立修复。
+- **为什么批量仍要求独立 worktree/TDD**：批量是管理单元，不是工程单元。质量边界必须落在单 bug 上。
+- **为什么 Codex 下优先 Browser Use**：用户最后是在 Codex in-app browser 里验收前端结果，Browser Use 生成的 DOM 和截图证据更贴近人工验收表面；脚本级 Playwright 仍保留为稳定断言能力。
+
+---
+
 ## v6.1（2026-04-24）
 
 ### 解决的核心问题
