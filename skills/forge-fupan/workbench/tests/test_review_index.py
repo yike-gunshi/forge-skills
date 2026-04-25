@@ -57,6 +57,23 @@ class ReviewIndexTest(unittest.TestCase):
         with self.assertRaises(KeyError):
             index.read_review("../secret")
 
+    def test_rewrites_review_asset_links_to_http_route(self):
+        assets = self.project / "assets"
+        assets.mkdir()
+        (assets / "dashboard.png").write_bytes(b"png")
+        (self.project / "2026-04-24-1010-[fupan]-workbench.md").write_text(
+            "# Fupan Workbench 设计\n\n![仪表盘](assets/dashboard.png)\n",
+            encoding="utf-8",
+        )
+        index = ReviewIndex(review_root=self.root)
+        review_id = index.list_reviews()[0]["id"]
+        detail = index.read_review(review_id)
+
+        self.assertIn(f"/api/reviews/{review_id}/assets/assets/dashboard.png", detail["content"])
+        self.assertEqual(index.resolve_asset_path(review_id, "assets/dashboard.png"), (assets / "dashboard.png").resolve())
+        with self.assertRaises(KeyError):
+            index.resolve_asset_path(review_id, "../secret.png")
+
 
 if __name__ == "__main__":
     unittest.main()

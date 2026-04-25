@@ -1,14 +1,22 @@
 """Historical review index for Fupan Workbench."""
 
 import hashlib
+import os
 import re
 from pathlib import Path
+from urllib.parse import quote
 
 from markdown_reader import first_date_from_name, read_markdown
 
 
 INDEX_ITEM_RE = re.compile(r"- \*\*\[(?P<title>.+?)\]\((?P<path>.+?)\)\*\*(?P<tags>(?:\s+`[^`]+`)*)\s*(?P<tail>.*)")
 TAG_RE = re.compile(r"`([^`]+)`")
+MARKDOWN_LINK_RE = re.compile(
+    r"(?P<prefix>!?\[[^\]]*\]\()"
+    r"(?P<target><[^>\n]+>|[^)\s]+)"
+    r"(?P<suffix>(?:\s+\"[^\"]*\"|\s+'[^']*'|\s+\([^)]*\))?\))"
+)
+EXTERNAL_LINK_PREFIXES = ("http://", "https://", "data:", "mailto:", "#")
 
 
 def default_review_root():
@@ -45,6 +53,7 @@ class ReviewIndex:
         path = Path(review["path"]).expanduser()
         self._assert_inside_root(path)
         detail = read_markdown(path)
+        detail["content"] = self._rewrite_asset_links(detail["content"], review_id, path)
         detail.update(
             {
                 "id": review["id"],
@@ -56,6 +65,23 @@ class ReviewIndex:
             }
         )
         return detail
+
+    def resolve_asset_path(self, review_id, asset_path):
+        if self._cache is None:
+            self.list_reviews()
+        if review_id not in self._cache:
+            raise KeyError(review_id)
+        candidate = Path(asset_path)
+        if candidate.is_absolute() or ".." in candidate.parts:
+            raise KeyError(asset_path)
+        review_path = Path(self._cache[review_id]["path"]).expanduser().resolve()
+        base = review_path.parent.resolve()
+        resolved = (base / candidate).resolve()
+        try:
+            resolved.relative_to(base)
+        except ValueError:
+            raise KeyError(asset_path)
+        return resolved
 
     def _read_global_index(self):
         index_path = self.review_root / "INDEX.md"
@@ -133,3 +159,31 @@ class ReviewIndex:
             resolved.relative_to(root)
         except ValueError:
             raise KeyError(str(path))
+
+    def _rewrite_asset_links(self, content, review_id, review_path):
+        review_path = Path(review_path).expanduser().resolve()
+        base = review_path.parent.resolve()
+
+        def replacement(match):
+            target = match.group("target")
+            unwrapped = target[1:-1] if target.startswith("<") and target.endswith(">") else target
+            if unwrapped.startswith(EXTERNAL_LINK_PREFIXES):
+                return match.group(0)
+            path = Path(unwrapped).expanduser()
+            if path.is_absolute():
+                try:
+                    rel_path = path.resolve().relative_to(base)
+                except ValueError:
+                    return match.group(0)
+            else:
+                rel_path = path
+            if ".." in rel_path.parts:
+                return match.group(0)
+            rel_url = quote(rel_path.as_posix(), safe="/-._~")
+            review_url = quote(review_id, safe="")
+            rewritten = f"/api/reviews/{review_url}/assets/{rel_url}"
+            if target.startswith("<") and target.endswith(">"):
+                rewritten = f"<{rewritten}>"
+            return f"{match.group('prefix')}{rewritten}{match.group('suffix')}"
+
+        return MARKDOWN_LINK_RE.sub(replacement, content.replace(os.sep, "/"))

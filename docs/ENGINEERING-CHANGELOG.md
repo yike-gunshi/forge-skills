@@ -1,5 +1,28 @@
 # 工程变更日志
 
+## [v2026.04.25-fupan-workbench-polish] - 2026-04-25
+
+### 变更背景
+
+Workbench 第一版已可用，但真实使用后发现任务生命周期和阅读导航还不够闭环：已完成任务没有从队列消失，UTC 时间直接展示，详情页缺少目录，表达原话阅读成本偏高。
+
+### 技术方案
+
+- `task_store.list_tasks()` 默认过滤 `consumed` task。
+- `forge-fupan/SKILL.md` 在最终复盘保存后补充 `launcher.py consume` 调用。
+- React 前端新增上海时间格式化、详情页目录生成、Markdown heading id 注入。
+- CSS 调整 quote block 字号、详情页侧栏目录、无任务时首页历史复盘的布局。
+- Markdown 图片渲染为可点击按钮，点击后由 React lightbox 放大展示，Escape/关闭按钮退出。
+- 左侧知识地图改为 `KnowledgeMap` 编号列表，展示“学习路线”和知识点数量。
+- `forge-fupan/SKILL.md` 的文档结构新增 `TLDR` 强制区块，要求 frontmatter 后立即给出可快速学习的记忆卡。
+
+### 验证计划
+
+- Python 单测覆盖 `consumed` task 出队。
+- Vite build 验证前端构建产物。
+- 文档规则检查覆盖 TLDR 位置、条数和“下次可以说”表达方法。
+- Playwright 验证首页不展示已完成任务、上海时间展示、详情页目录跳转、图片放大、知识地图编号列表和控制台无错误。
+
 ## [v2026.04.24-fupan-workbench] - 2026-04-24
 
 ### 变更背景

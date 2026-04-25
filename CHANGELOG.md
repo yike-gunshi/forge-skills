@@ -6,6 +6,25 @@
 
 ---
 
+## [v2026.04.25.1] — 2026-04-25（Fupan Workbench 阅读与队列体验优化）
+
+### Changed
+- **上海时间展示**：Workbench 首页 task UTC 时间转换为中国上海时间；顶部显示最近刷新时间。
+- **完成任务出队**：`consumed` task 默认不再进入 `/api/tasks` 首页队列，`forge-fupan` 最终复盘写完后会调用 `launcher.py consume`。
+- **详情页目录**：历史复盘详情页基于 Markdown H2/H3 生成可点击目录，并为正文标题注入稳定锚点。
+- **Markdown 图片放大**：复盘详情页正文图片支持点击放大，Escape 或关闭按钮返回阅读。
+- **知识地图侧栏**：左侧“学到的知识”改为编号学习路线，显示知识点数量，减少大块蓝色标签噪音。
+- **复盘顶部 TLDR**：`forge-fupan` 输出文档在 frontmatter 后强制增加 `TLDR`，用短分点沉淀关键词、表达方法、关键知识、决策、避坑和下次行动。
+- **表达原话可读性**：“表达待优化原话”字号、行高和问题/建议说明提升，避免关键学习材料像脚注。
+- **首页空态收敛**：没有待处理任务时不再展示空任务面板，历史复盘直接成为首页主体。
+
+### Evidence
+- 验证：`python3 -m unittest discover -s skills/forge-fupan/workbench/tests -p 'test_*.py'` 通过。
+- 验证：`/tmp/fupan-polish-venv/bin/python -m pytest -q skills/forge-fupan/workbench/tests` 通过，7 passed。
+- 验证：`npm run build` 通过。
+- 文档规则：TLDR 必须位于 frontmatter 后、目录前，至少 5 条，并包含 1 条“下次可以说：...”。
+- 浏览器验收：Playwright 确认上海时间、consumed 出队、详情页目录跳转、图片放大、知识地图编号列表、console error = 0。
+
 ## [v2026.04.25] — 2026-04-25（Bug 修复验收报告与 QA 自动闭环）
 
 ### Added

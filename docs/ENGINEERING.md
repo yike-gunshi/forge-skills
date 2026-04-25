@@ -1,12 +1,23 @@
 # Forge — 工程文档 (ENGINEERING.md)
 
-**版本:** v2026.04.24-fupan-workbench
-**日期:** 2026-04-24
+**版本:** v2026.04.25-fupan-workbench-polish
+**日期:** 2026-04-25
 **状态:** 已实现
 
 ---
 
 ## 迭代历史摘要
+
+### v2026.04.25-fupan-workbench-polish — Fupan Workbench 阅读与队列体验优化
+
+- `/api/tasks` 默认不返回 `consumed` task，让已完成复盘从首页任务队列出队。
+- `forge-fupan` 在最终复盘写完后调用 `launcher.py consume --task-id "$_TASK_ID"` 标记任务完成。
+- 前端时间格式化改为中国上海时区语义：UTC task 时间转换到上海时间，文件名解析出的本地复盘时间按上海本地时间展示。
+- 详情页基于 Markdown headings 生成 H2/H3 目录，并给渲染后的标题注入稳定锚点。
+- Markdown 图片渲染为可点击 zoom 控件，通过 React lightbox 放大查看。
+- 详情页知识地图独立组件化，使用编号列表替代左侧大块标签。
+- `forge-fupan/SKILL.md` 文档结构要求新增顶部 `TLDR`，位于 frontmatter 后、目录前。
+- 前端构建产物继续输出到 `skills/forge-fupan/workbench/static/`。
 
 ### v2026.04.24-fupan-workbench — Fupan Workbench 本地交互式复盘学习工作台
 
@@ -63,13 +74,14 @@ pending_selection -> submitted -> consumed
 
 - `submit_selection` 只允许从 `pending_selection` 流转到 `submitted`。
 - `wait` 只读取指定 `task_id`，不会消费其他 task。
+- `list_tasks` 默认过滤 `consumed`，保留 JSON 文件但不进入首页任务队列。
 - 写入 JSON 使用临时文件 + `os.replace()` 原子替换。
 
 ## 四、前端实现
 
 - 首页：任务队列、当前任务表单、历史复盘列表。
 - 当前任务表单支持 `expression_issue_quotes`，用于展示 LLM 自行判断出的表达待优化原话；老 task 缺少该字段时继续显示 `user_questions`。
-- 详情页：知识地图侧栏、Markdown 阅读区、源文件路径。
+- 详情页：本篇目录、编号式知识地图、Markdown 阅读区、图片放大层、源文件路径。
 - 响应式：桌面三列 topic，中等宽度两列，移动端单列；历史表格移动端改为纵向条目。
 - TopBar 的本地地址和刷新按钮使用独立 flex action 区，避免中等宽度下重合。
 - 样式使用 `docs/DESIGN.md` 的 Slate + Blue + Amber token。

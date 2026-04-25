@@ -116,14 +116,17 @@ def read_task(task_id, root=None):
     return data
 
 
-def list_tasks(root=None):
+def list_tasks(root=None, include_consumed=False):
     directory = tasks_dir(root)
     if not directory.exists():
         return []
     tasks = []
     for path in directory.glob("*.json"):
         try:
-            tasks.append(read_task(path.stem, root))
+            task = read_task(path.stem, root)
+            if task.get("status") == "consumed" and not include_consumed:
+                continue
+            tasks.append(task)
         except Exception:
             tasks.append(
                 {
@@ -141,7 +144,10 @@ def list_tasks(root=None):
                     "error": "task_json_unreadable",
                 }
             )
-    return sorted(tasks, key=lambda task: (not task.get("active"), task.get("created_at", "")), reverse=False)
+    status_rank = {"pending_selection": 0, "submitted": 1, "failed": 2, "consumed": 3}
+    tasks.sort(key=lambda task: task.get("created_at") or "", reverse=True)
+    tasks.sort(key=lambda task: (not task.get("active"), status_rank.get(task.get("status"), 9)))
+    return tasks
 
 
 def validate_selection(selection):

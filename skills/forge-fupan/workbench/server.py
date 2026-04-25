@@ -79,6 +79,18 @@ def create_app(workbench_home=None, review_root=None, repo_path=None, skill_path
         except Exception as exc:
             raise HTTPException(status_code=400, detail=str(exc))
 
+    @app.get("/api/reviews/{review_id}/assets/{asset_path:path}")
+    def api_review_asset(review_id, asset_path):
+        try:
+            asset = reviews.resolve_asset_path(review_id, asset_path)
+        except KeyError:
+            raise HTTPException(status_code=404, detail="asset_not_found")
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
+        if not asset.exists() or not asset.is_file():
+            raise HTTPException(status_code=404, detail="asset_not_found")
+        return FileResponse(str(asset))
+
     assets_dir = static_dir / "assets"
     if assets_dir.exists():
         app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")

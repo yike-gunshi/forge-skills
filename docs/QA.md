@@ -1,16 +1,59 @@
 # Forge — QA 报告
 
-**版本:** v2026.04.24-fupan-workbench
-**日期:** 2026-04-24
+**版本:** v2026.04.25-fupan-workbench-polish
+**日期:** 2026-04-25
 **结论:** PASS
 
 ---
 
 ## 全局评估
 
+Fupan Workbench 本次阅读与队列体验优化已通过验收：`consumed` task 默认从首页队列出队，首页任务时间按中国上海时区语义展示，“表达待优化原话”字号提升，详情页 H2/H3 目录可点击跳转，浏览器控制台无错误。
+
 Fupan Workbench 第一版已通过核心验收：task 创建、页面展示、用户提交、AI 按 task_id 读取、历史复盘列表、详情页渲染和移动端布局均可用。
 
 ## 验证命令
+
+```bash
+python3 -m unittest discover -s skills/forge-fupan/workbench/tests -p 'test_*.py'
+```
+
+结果：`7 tests in 0.059s OK`。
+
+```bash
+/tmp/fupan-polish-venv/bin/python -m pytest -q skills/forge-fupan/workbench/tests
+```
+
+结果：`7 passed in 0.08s`。
+
+```bash
+npm run build
+```
+
+结果：Vite build passed，产物输出到 `skills/forge-fupan/workbench/static/`。
+
+```bash
+/tmp/fupan-polish-venv/bin/python skills/forge-fupan/workbench/server.py --host 127.0.0.1 --port 8897 --home /tmp/fupan-polish.wiz3uO/home --review-root /tmp/fupan-polish.wiz3uO/reviews --log-level warning
+```
+
+结果：临时服务启动成功，Playwright 可访问首页和详情页。
+
+## v2026.04.25 浏览器验收
+
+- 首页显示“上海时间 2026-04-25 12:03”：PASS
+- UTC task `2026-04-25T03:48:00Z` 显示为 `2026-04-25 11:48`：PASS
+- `consumed` task 文案“已经完成的复盘不应继续显示。”未出现在首页队列：PASS
+- “表达待优化原话”以更大 quote block 展示，问题/建议说明可读：PASS
+- 详情页左侧显示“本篇目录”，包含 H2/H3：PASS
+- 点击目录项后 URL hash 更新到对应章节：PASS
+- Markdown 图片渲染为“放大图片”按钮，点击后出现 lightbox：PASS
+- lightbox 支持 Escape 关闭，关闭后遮罩消失：PASS
+- 左侧“学到的知识”显示为编号学习地图，并展示 `5 个` 数量：PASS
+- `forge-fupan/SKILL.md` 文档结构要求 frontmatter 后立即写 `## TLDR`：PASS
+- TLDR checklist 要求至少 5 条，并包含 1 条“下次可以说：...”表达方法：PASS
+- 浏览器 `console.error`：0：PASS
+
+## v2026.04.24 验证命令
 
 ```bash
 /tmp/fupan-workbench-release-venv/bin/python -m pip install -r skills/forge-fupan/workbench/requirements.txt

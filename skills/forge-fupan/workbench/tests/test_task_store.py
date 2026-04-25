@@ -11,6 +11,7 @@ from task_store import (
     TaskStateError,
     create_task,
     list_tasks,
+    mark_consumed,
     read_task,
     submit_selection,
     wait_for_submission,
@@ -59,6 +60,14 @@ class TaskStoreTest(unittest.TestCase):
         self.assertEqual(read_task("task-current", root=self.root)["project"], "forge-cookbook")
         self.assertEqual(read_task("task-current", root=self.root)["expression_issue_quotes"][0]["quote"], "帮我看看这个")
         self.assertEqual([task["id"] for task in list_tasks(root=self.root)], ["task-current", "task-old"])
+
+    def test_consumed_tasks_are_hidden_from_default_queue(self):
+        create_task({"id": "task-done", "project": "forge-cookbook", "topics": []}, root=self.root)
+        submit_selection("task-done", {"topics": [], "feedback": "done"}, root=self.root)
+        mark_consumed("task-done", root=self.root)
+
+        self.assertEqual(list_tasks(root=self.root), [])
+        self.assertEqual([task["id"] for task in list_tasks(root=self.root, include_consumed=True)], ["task-done"])
 
     def test_submit_selection_is_one_way_and_preserves_choice(self):
         create_task(
