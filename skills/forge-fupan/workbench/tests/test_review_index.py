@@ -48,6 +48,19 @@ class ReviewIndexTest(unittest.TestCase):
         self.assertNotIn("selection", review)
         self.assertNotIn("depth", review)
 
+    def test_merges_index_with_new_markdown_not_yet_indexed(self):
+        (self.project / "2026-04-27-1125-[fupan]-codex.md").write_text(
+            "---\nsession: test.jsonl\n---\n\n## 一、工作叙事\n\nCodex 兼容。\n",
+            encoding="utf-8",
+        )
+        index = ReviewIndex(review_root=self.root)
+        reviews = index.list_reviews()
+
+        self.assertEqual(len(reviews), 2)
+        titles = [review["title"] for review in reviews]
+        self.assertIn("Fupan Workbench 设计", titles)
+        self.assertIn("一、工作叙事", titles)
+
     def test_detail_uses_id_mapping_not_arbitrary_path(self):
         index = ReviewIndex(review_root=self.root)
         review_id = index.list_reviews()[0]["id"]

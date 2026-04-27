@@ -38,9 +38,11 @@ class ReviewIndex:
         self._cache = None
 
     def list_reviews(self):
-        reviews = self._read_global_index()
-        if not reviews:
-            reviews = self._scan_markdown_files()
+        indexed_reviews = self._read_global_index()
+        scanned_reviews = self._scan_markdown_files()
+        reviews_by_path = {review["path"]: review for review in scanned_reviews}
+        reviews_by_path.update({review["path"]: review for review in indexed_reviews})
+        reviews = list(reviews_by_path.values())
         self._cache = {review["id"]: review for review in reviews}
         return sorted(reviews, key=lambda review: review.get("created_at") or "", reverse=True)
 
