@@ -19,7 +19,7 @@
 
 ## 这是什么
 
-Forge 是一套 Claude Code Skills，覆盖从头脑风暴到发布复盘的**完整开发链路**。14 个 Skill 既可全链路串联（`/forge-deliver`），也可独立调用（`/forge-eng`）。
+Forge 是一套 Claude Code / Codex Skills，覆盖从头脑风暴到发布复盘的**完整开发链路**。15 个 Skill 既可全链路串联（`/forge-deliver`），也可独立调用（`/forge-eng`）。
 
 核心理念：**规范驱动开发（Spec-Driven Development）**——每个功能在写代码前必须有 Feature Spec（Given/When/Then 行为场景 + 验收检查表），用户确认后才进入开发，QA 基于同一份 Spec 做断言。
 
@@ -177,11 +177,11 @@ forge   ❯ 已修复。搜索代码库发现 3 处类似风险：
 | forge-status | `/forge-status` | 并行会话巡检与清理（扫 `.forge/active.md`，按硬信号判活/死） |
 | forge-deliver | `/forge-deliver` | 端到端交付编排（8 Phase，支持 `--auto` / `--resume`） |
 | forge-doc-release | `/forge-doc-release` | 发布后文档同步 |
-| forge-fupan | `/forge-fupan` | 本地 Workbench 先确认学习地图，再生成复盘与知识沉淀（结束时自动清本会话 active 登记） |
+| forge-fupan | `/forge-fupan` | 本地 Workbench 先确认知识点、深度和补充反馈，再基于 Claude/Codex 会话生成复盘、知识图与知识沉淀 |
 
 ### 视觉决策层
 
-Forge 现在内置 `skills/_shared/visual-decision-layer.md`：在脑暴、PRD、设计、实现、QA 和复盘之间统一传递视觉判断。结构问题优先用 Mermaid / show-widget；需要提前判断页面气质、布局密度、空态/错态时使用 Image 2；最终验收仍以真实截图、CSS 断言和 Feature Spec 为准。
+Forge 现在内置 `skills/_shared/visual-decision-layer.md`：在脑暴、PRD、设计、实现、QA 和复盘之间统一传递视觉判断。结构问题优先用 Mermaid / show-widget；复盘会为每个展开知识模块生成 Image 2 学习图；需要提前判断页面气质、布局密度、空态/错态时使用 Image 2；最终验收仍以真实截图、CSS 断言和 Feature Spec 为准。
 
 ### 总入口
 

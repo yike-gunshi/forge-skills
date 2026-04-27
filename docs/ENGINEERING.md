@@ -1,12 +1,27 @@
 # Forge — 工程文档 (ENGINEERING.md)
 
-**版本:** v2026.04.25-fupan-workbench-polish
-**日期:** 2026-04-25
+**版本:** v2026.04.27-fupan-report-structure
+**日期:** 2026-04-27
 **状态:** 已实现
 
 ---
 
 ## 迭代历史摘要
+
+### v2026.04.27-fupan-report-structure — Fupan 复盘报告结构优化
+
+- `forge-fupan/SKILL.md` 报告结构改为：工作叙事、表达与行为复盘、知识拓展、AI 表现复盘、速查手册、末尾 TLDR。
+- 删除强制 show-widget 仪表盘生成阶段，Token 统计只作为内部分析材料，不再输出精力分布图。
+- 预检脚本新增 Claude Code / Codex Desktop 双来源会话定位：Codex 优先用 `CODEX_THREAD_ID` 匹配 `~/.codex/sessions/**/rollout-*.jsonl`，Claude 保留 `~/.claude/projects/**/*.jsonl`。
+- 预检脚本新增原始会话可用性检查：统计 user/agent/tool/compacted 事件，输出 `FULL_LOG_AVAILABLE`、`PARTIAL_LOG_AVAILABLE` 或 `SUMMARY_ONLY_OR_MISSING`。
+- `parse_tokens.py` 新增 Codex JSONL 方言解析：从 `event_msg.token_count.payload.info.total_token_usage` 读取累计快照并做差分，避免流式刷新重复计数。
+- Workbench task JSON 的 `topics` 字段保持兼容，但语义改为“知识点”而不是大领域。
+- Workbench 提交的 `selection.feedback` 必须作为全局写作约束消费，影响知识调研、行为诊断取舍、AI 表现复盘和 TLDR/SOP。
+- Phase 1 根据原始会话可用性选择完整复盘、JSONL 恢复复盘或轻量复盘；轻量复盘不得伪造用户原话、轮次或行为序列证据。
+- 新增 Phase 2.5：每个展开知识模块生成 1 张 Image 2 学习图。优先使用 Codex 内置 `image_gen`，生成前创建 marker，生成后只复制新增 PNG 到复盘 `assets/`；fallback 使用 `skills/_shared/generate_image2.py`。
+- Workbench task 时间戳改为 timezone-aware UTC，避免 `datetime.utcnow()` deprecation warning。
+- Prompt 分析字段收敛为“表达问题”和“低关键词版 / 进阶版”两档优化说法。
+- 文档内容检查改为结构门禁：禁止旧章节、禁止严重度标记、TLDR 必须位于全文最后。
 
 ### v2026.04.25-fupan-workbench-polish — Fupan Workbench 阅读与队列体验优化
 
@@ -16,7 +31,7 @@
 - 详情页基于 Markdown headings 生成 H2/H3 目录，并给渲染后的标题注入稳定锚点。
 - Markdown 图片渲染为可点击 zoom 控件，通过 React lightbox 放大查看。
 - 详情页知识地图独立组件化，使用编号列表替代左侧大块标签。
-- `forge-fupan/SKILL.md` 文档结构要求新增顶部 `TLDR`，位于 frontmatter 后、目录前。
+- `forge-fupan/SKILL.md` 文档结构要求新增末尾 `TLDR`，位于全文最后。
 - 前端构建产物继续输出到 `skills/forge-fupan/workbench/static/`。
 
 ### v2026.04.24-fupan-workbench — Fupan Workbench 本地交互式复盘学习工作台

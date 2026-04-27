@@ -6,6 +6,28 @@
 
 ---
 
+## [v2026.04.27] — 2026-04-27（Fupan 复盘报告结构优化）
+
+### Changed
+- **删除无效概览**：`forge-fupan` 最终复盘不再输出“仪表盘速览”和“会话脉络”，也不再强制生成 show-widget 仪表盘。
+- **Claude/Codex 会话兼容**：预检会优先用 `CODEX_THREAD_ID` 定位 Codex Desktop 当前 JSONL，并保留 Claude Code `~/.claude/projects` 兼容路径。
+- **压缩后复盘策略**：新增原始会话可用性检查，区分“完整复盘 / JSONL 恢复复盘 / 轻量复盘”，避免压缩后误以摘要伪造逐条 Prompt 证据。
+- **Workbench 反馈入链**：`selection.feedback` 从“提交附带字段”升级为调研和成文的全局约束，影响知识调研、行为诊断、AI 表现复盘和末尾 TLDR/SOP。
+- **工作叙事收敛**：第一章改为短段落叙事，只保留目标、关键转折、交付结果和协作问题。
+- **Prompt 分析重构**：逐条 Prompt 分析删除严重度标记，只保留“表达问题”和“低关键词版 / 进阶版”的更好说法。
+- **行为诊断升级**：原“模式诊断”改为“行为诊断”，用“问题 / 分析 / 建议”分析用户在 AI coding 协作中的行为问题。
+- **知识拓展聚焦**：从大领域调研改为按单个知识点呈现，固定结构为“是什么 / 怎么用 / 延伸学习”。
+- **知识模块图**：每个最终展开的知识模块默认生成 1 张 Image 2 学习图，优先使用 Codex 内置 `image_gen`，fallback 到 `generate_image2.py`；复制图片时只取本轮新增 PNG，图片失败时保存 prompt pack，不阻塞复盘。
+- **Workbench 时间戳**：task 时间戳改为 timezone-aware UTC，移除 `datetime.utcnow()` deprecation warning。
+- **知识来源约束收敛**：每个知识点至少提供 1 个权威延伸来源，按官方/主流项目文档、权威教程/官方视频、高质量社区资源排序，避免误读为每类资源都必须齐全。
+- **AI 表现复盘改造**：取消固定四维评分，由 AI 基于会话证据自行识别表现问题和用户可辅助方式。
+- **末尾 TLDR**：TLDR 移到全文最后，只沉淀需要记住的知识、表达优化和协作 SOP。
+
+### Evidence
+- 文档规则：最终复盘不得包含旧章节；TLDR 必须位于全文最后；速查手册只保留“概念 / 解释 / 场景”三列；必须读取 `task.selection.feedback`；压缩后必须先判断原始会话可用性。
+- 发布说明：`docs/releases/v2026.04.27.md`
+- 验证：`parse_tokens.py` 已在 Codex Desktop JSONL 和 Claude Code JSONL 上跑通；Codex 内置 `image_gen` 已生成测试学习图；`skill-creator` quick validate、Workbench 单测、Python 编译检查、`npm run build` 和 `git diff --check` 通过。
+
 ## [v2026.04.25.1] — 2026-04-25（Fupan Workbench 阅读与队列体验优化）
 
 ### Changed
@@ -14,7 +36,7 @@
 - **详情页目录**：历史复盘详情页基于 Markdown H2/H3 生成可点击目录，并为正文标题注入稳定锚点。
 - **Markdown 图片放大**：复盘详情页正文图片支持点击放大，Escape 或关闭按钮返回阅读。
 - **知识地图侧栏**：左侧“学到的知识”改为编号学习路线，显示知识点数量，减少大块蓝色标签噪音。
-- **复盘顶部 TLDR**：`forge-fupan` 输出文档在 frontmatter 后强制增加 `TLDR`，用短分点沉淀关键词、表达方法、关键知识、决策、避坑和下次行动。
+- **复盘 TLDR**：`forge-fupan` 输出文档强制增加 `TLDR`，用短分点沉淀关键词、表达方法和关键知识。
 - **表达原话可读性**：“表达待优化原话”字号、行高和问题/建议说明提升，避免关键学习材料像脚注。
 - **首页空态收敛**：没有待处理任务时不再展示空任务面板，历史复盘直接成为首页主体。
 
@@ -22,7 +44,7 @@
 - 验证：`python3 -m unittest discover -s skills/forge-fupan/workbench/tests -p 'test_*.py'` 通过。
 - 验证：`/tmp/fupan-polish-venv/bin/python -m pytest -q skills/forge-fupan/workbench/tests` 通过，7 passed。
 - 验证：`npm run build` 通过。
-- 文档规则：TLDR 必须位于 frontmatter 后、目录前，至少 5 条，并包含 1 条“下次可以说：...”。
+- 文档规则：TLDR 至少 5 条，并包含 1 条“下次可以说：...”。
 - 浏览器验收：Playwright 确认上海时间、consumed 出队、详情页目录跳转、图片放大、知识地图编号列表、console error = 0。
 
 ## [v2026.04.25] — 2026-04-25（Bug 修复验收报告与 QA 自动闭环）
@@ -50,7 +72,7 @@
 
 ### Fixed
 - **顶部状态栏重合**：修复中等宽度下 `127.0.0.1` 与“刷新状态”按钮重叠的问题。
-- **学习深度按钮对齐**：知识区卡片改为底部控制区，`了解 / 表达 / 复现` 按钮在左右卡片中保持同一底线。
+- **学习深度按钮对齐**：知识点卡片改为底部控制区，`了解 / 表达 / 复现` 按钮在左右卡片中保持同一底线。
 - **反馈区间距**：反馈输入框与提交 footer 保持清楚间距。
 - **表达待优化原话展示**：学习地图 task 新增 `expression_issue_quotes`，由 LLM 自行判断并逐字摘录表达有问题的用户原话，Workbench 展示原话、问题原因和下次说法。
 
@@ -63,7 +85,7 @@
 
 ### Added
 - **`forge-fupan` 本地 Workbench**：新增 `skills/forge-fupan/workbench/`，包含 FastAPI 本地服务、React/Vite 静态前端、task JSON 状态流和历史复盘浏览。
-- **学习地图确认**：复盘先生成候选知识区，用户在页面选择数量和深度（`了解 / 表达 / 复现`）后，AI 再继续调研。
+- **学习地图确认**：复盘先生成候选知识点，用户在页面选择数量和深度（`了解 / 表达 / 复现`）后，AI 再继续调研。
 - **多任务队列**：多个复盘 task 可并存，页面只展开一个完整表单；AI 只轮询自己的 task ID。
 - **历史复盘网页阅读**：首页按历史索引展示“学到的知识”，详情页渲染 Markdown。
 - **Forge 视觉决策层**：新增 `skills/_shared/visual-decision-layer.md`，统一规定 brainstorm、PRD、design、design-impl、eng、QA、fupan 中何时使用 Mermaid/show-widget、Image 2 和真实截图。

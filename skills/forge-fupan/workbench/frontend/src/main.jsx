@@ -393,7 +393,7 @@ function TaskForm({ task, onSubmitted }) {
       </label>
       {message && <div className={message.startsWith('提交失败') ? 'inline-error' : 'inline-success'}>{message}</div>}
       <div className="form-footer">
-        <span className="muted">已选择 {readOnly ? task.selection?.topics?.filter((topic) => topic.selected).length || 0 : selectedCount} 个知识区</span>
+        <span className="muted">已选择 {readOnly ? task.selection?.topics?.filter((topic) => topic.selected).length || 0 : selectedCount} 个知识点</span>
         <button className="button button-primary" disabled={readOnly || submitting || selectedCount === 0} type="submit">
           {readOnly ? '已提交' : submitting ? '提交中' : '提交学习选择'}
         </button>

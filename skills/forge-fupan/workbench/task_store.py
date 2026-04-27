@@ -9,7 +9,7 @@ import json
 import os
 from pathlib import Path
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 
 VALID_STATUSES = {"pending_selection", "submitted", "consumed", "failed"}
@@ -30,11 +30,11 @@ def tasks_dir(root=None):
 
 
 def utc_now():
-    return datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def make_task_id():
-    stamp = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     return "fupan-{}-{}".format(stamp, uuid4().hex[:8])
 
 
