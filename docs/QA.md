@@ -16,7 +16,7 @@ Claude Code / Codex Desktop 会话兼容已验证：预检脚本能在 Codex 环
 
 Workbench 用户反馈链路已补入 skill 约束：`selection.feedback` 必须参与知识调研、行为诊断取舍、AI 表现复盘和最终 TLDR/SOP。
 
-知识模块图路径已验证：Codex 内置 `image_gen` 可生成学习图，默认输出到 `$CODEX_HOME/generated_images/{CODEX_THREAD_ID}/`；skill 规则要求用 marker 只复制本轮新增 PNG 到复盘 `assets/` 并保存 prompt/meta，失败时保存 prompt pack 不阻塞复盘。
+知识模块图路径已验证：Codex 内置 `image_gen` 可生成学习图，默认输出到 `$CODEX_HOME/generated_images/{CODEX_THREAD_ID}/`；skill 规则要求用 marker 只复制本轮新增 PNG 到复盘 `assets/` 并保存 prompt/meta，失败时保存 prompt pack 不阻塞复盘。最终交付必须说明已生成 N 张 / 待生成 N 张，避免把待生成占位误报为图片已完成。
 
 Fupan Workbench 本次阅读与队列体验优化已通过验收：`consumed` task 默认从首页队列出队，首页任务时间按中国上海时区语义展示，“表达待优化原话”字号提升，详情页 H2/H3 目录可点击跳转，浏览器控制台无错误。
 

@@ -177,11 +177,11 @@ forge   ❯ 已修复。搜索代码库发现 3 处类似风险：
 | forge-status | `/forge-status` | 并行会话巡检与清理（扫 `.forge/active.md`，按硬信号判活/死） |
 | forge-deliver | `/forge-deliver` | 端到端交付编排（8 Phase，支持 `--auto` / `--resume`） |
 | forge-doc-release | `/forge-doc-release` | 发布后文档同步 |
-| forge-fupan | `/forge-fupan` | 本地 Workbench 先确认知识点、深度和补充反馈，再基于 Claude/Codex 会话生成复盘、知识图与知识沉淀 |
+| forge-fupan | `/forge-fupan` | 本地 Workbench 先确认知识点、深度和补充反馈，再基于 Claude/Codex 会话生成复盘；知识图默认强尝试生成，失败时保留 prompt pack |
 
 ### 视觉决策层
 
-Forge 现在内置 `skills/_shared/visual-decision-layer.md`：在脑暴、PRD、设计、实现、QA 和复盘之间统一传递视觉判断。结构问题优先用 Mermaid / show-widget；复盘会为每个展开知识模块生成 Image 2 学习图；需要提前判断页面气质、布局密度、空态/错态时使用 Image 2；最终验收仍以真实截图、CSS 断言和 Feature Spec 为准。
+Forge 现在内置 `skills/_shared/visual-decision-layer.md`：在脑暴、PRD、设计、实现、QA 和复盘之间统一传递视觉判断。结构问题优先用 Mermaid / show-widget；复盘会为每个展开知识模块强尝试生成 Image 2 学习图，失败时保留 prompt pack 并标注待生成；需要提前判断页面气质、布局密度、空态/错态时使用 Image 2；最终验收仍以真实截图、CSS 断言和 Feature Spec 为准。
 
 ### 总入口
 

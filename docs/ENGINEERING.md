@@ -18,7 +18,7 @@
 - Workbench task JSON 的 `topics` 字段保持兼容，但语义改为“知识点”而不是大领域。
 - Workbench 提交的 `selection.feedback` 必须作为全局写作约束消费，影响知识调研、行为诊断取舍、AI 表现复盘和 TLDR/SOP。
 - Phase 1 根据原始会话可用性选择完整复盘、JSONL 恢复复盘或轻量复盘；轻量复盘不得伪造用户原话、轮次或行为序列证据。
-- 新增 Phase 2.5：每个展开知识模块生成 1 张 Image 2 学习图。优先使用 Codex 内置 `image_gen`，生成前创建 marker，生成后只复制新增 PNG 到复盘 `assets/`；fallback 使用 `skills/_shared/generate_image2.py`。
+- 新增 Phase 2.5：每个展开知识模块强尝试生成 1 张 Image 2 学习图。优先使用 Codex 内置 `image_gen`，生成前创建 marker，生成后只复制新增 PNG 到复盘 `assets/`；fallback 使用 `skills/_shared/generate_image2.py`；若两条路径都不可用，保存 prompt pack 并在最终回复报告已生成/待生成数量。
 - Workbench task 时间戳改为 timezone-aware UTC，避免 `datetime.utcnow()` deprecation warning。
 - Prompt 分析字段收敛为“表达问题”和“低关键词版 / 进阶版”两档优化说法。
 - 文档内容检查改为结构门禁：禁止旧章节、禁止严重度标记、TLDR 必须位于全文最后。
