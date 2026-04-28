@@ -29,6 +29,9 @@ allowed-tools:
   - AskUserQuestion
 ---
 
+> **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
+> `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+
 # /forge-qa：QA 验收与测试报告
 
 **纯验收模式：测试 + 报告，不修代码。** 发现的问题生成结构化 bug 记录；单 bug 回归时回填 Bug 修复验收报告。

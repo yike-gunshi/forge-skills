@@ -13,6 +13,9 @@ allowed-tools:
   - AskUserQuestion
 ---
 
+> **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
+> `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+
 # /forge-ship：发布上线
 
 ## 前置脚本（每次先运行）

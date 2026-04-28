@@ -40,6 +40,9 @@ allowed-tools:
   - Skill  # P6 必须用 Skill 工具调用 forge-qa（mode=B）
 ---
 
+> **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
+> `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+
 # /forge-bugfix：一次一 bug + Bug 修复验收报告
 
 ## 设计哲学

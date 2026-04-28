@@ -3,6 +3,9 @@ name: forge-brainstorm
 description: '通用头脑风暴。任何时候、任何话题都能用。4种模式：产品·内容·构建·探索。6阶段：上下文感知→深度提问→景观感知→前提挑战→方案生成→思考文档。支持用 Mermaid/show-widget/Image 2 做思维导图、流程图、概念图辅助判断。触发方式：用户说"头脑风暴"、"brainstorm"、"讨论一下"、"我有个想法"、"帮我想想"、"画图梳理想法"、任何需要发散讨论或视觉化决策的场景。'
 ---
 
+> **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
+> `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+
 # /forge-brainstorm：通用头脑风暴
 
 任何时候、任何话题。讨论完用户自己决定下一步。

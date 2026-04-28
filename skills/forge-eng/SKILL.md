@@ -3,6 +3,9 @@ name: forge-eng
 description: '工程文档管理与代码实现。管理项目的 ENGINEERING.md 和 ENGINEERING-CHANGELOG，涵盖前端和后端。支持完整模式（文档+审查+实现）和轻量模式（跳过文档直接实现）。集成 Worktree 会话级隔离、分级 TDD（严格/轻量/验证驱动）、Verification Gate（证据先于断言）。基于 PRD 和 DESIGN.md 产出架构设计、数据流、API 设计、实现清单、测试矩阵，与用户确认关键技术决策后将实现拆分为原子任务、Wave 并行执行、每个任务独立 git commit。触发方式：用户说"工程"、"实现"、"forge-eng"、forge-dev 调度器调用、需要实现代码变更时使用。'
 ---
 
+> **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
+> `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+
 # /forge-eng：工程文档管理与代码实现 v2
 
 管理项目的 ENGINEERING.md（前后端合并），基于 PRD + DESIGN.md 产出工程方案并实现。
