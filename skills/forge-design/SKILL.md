@@ -3,6 +3,9 @@ name: forge-design
 description: '全栈设计规划与文档管理。分级门控体系下，管理项目的 DESIGN.md 和 DESIGN-CHANGELOG。涵盖竞品调研、美学方向探索、配色/字体/风格搜索、三层Token架构、Image 2 视觉稿门禁、99条UX规则审计、反AI模板检测、0-10交互评分。自闭环——所有设计知识内嵌，不依赖外部Skill。触发方式：用户说"设计"、"forge-design"、"先看效果图"、forge-dev 调度器调用、需要创建或更新设计文档时使用。'
 ---
 
+> **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
+> `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+
 # /forge-design：全栈设计规划与文档管理
 
 纯设计规划——**不写代码**。产出 DESIGN.md 和设计方案，交由 forge-design-impl 或 forge-eng 实现。

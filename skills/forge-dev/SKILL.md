@@ -3,6 +3,9 @@ name: forge-dev
 description: '开发调度器。接力 forge-prd 产出的 PRD 变更，半自动调度设计(forge-design)、工程(forge-eng)、QA(forge-qa) 子技能。读取 PRD 迭代摘要，并行调研技术方案，传递 Image 2/Figma/真实截图等视觉决策索引，判断需要调用哪些子技能，列出建议顺序供用户确认后以独立上下文执行。触发方式：用户说"开始开发"、"实现需求"、"forge-dev"、PRD 更新后需要进入开发阶段时使用。'
 ---
 
+> **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
+> `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+
 # /forge-dev：开发调度器
 
 接力 `/forge-prd` 或 `/forge-brainstorm` 的产出，调度设计、工程、QA 子技能完成开发交付。
