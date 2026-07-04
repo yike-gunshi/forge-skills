@@ -25,7 +25,8 @@
   - dev vs deliver → **用户实际用 dev** → 合并方向定为：保 dev、吸收 deliver 的发布/文档尾段、退役 deliver
   - fupan Workbench → 每次都开但**效果不好**；复盘要去公式化，核心目的=提升用户自己的能力 → 立项重设计
 - [x] A4. 上游 skill 最新版调研 ✅ 2026-07-04 → 审计文档第 5 节（Superpowers v5.1 / gstack 30+ / frontend-design / ui-ux-pro-max v2）
-- [ ] A3. 基于分析文档定稿优化方案清单（哪些做、哪些不做）
+- [x] A3. 优化方案确认单已出 → `docs/optimization-plan-2026-07.md`（D-00~D-11 待用户逐项确认）✅ 2026-07-04
+- [x] A5. 技能手册全量重写 → `docs/skills-reference.md`（16 单元人话版档案）✅ 2026-07-04
 
 ### 阶段 1：P0 保命（真源与链接）✅ 2026-07-04 完成
 
