@@ -38,11 +38,12 @@
 
 ### 阶段 2：P1 减重（上下文经济学)
 
-- [ ] C1. forge-bugfix 瘦身：63KB → 骨架 ≤15KB + references/ 按阶段加载
-- [ ] C2. forge-qa 瘦身：64KB → 同上
-- [ ] C3. forge-fupan / forge-design / forge-dev / forge-eng / forge-brainstorm / forge-prd 瘦身（26–38KB 各个评估）
-- [ ] C4. 15 个 frontmatter description 全部压缩到 2–4 行
+- [x] C1. forge-bugfix 瘦身：63KB → 骨架 12.6KB + 4 份阶段手册（含 Mode B 契约单源化）`1a0f65b` ✅ 2026-07-04
+- [x] C2. forge-qa 瘦身：64KB → 骨架 15.4KB + Mode A/B 两份手册 `0422e06` ✅ 2026-07-04
+- [ ] C3. forge-design / forge-dev / forge-brainstorm / forge-prd 瘦身（26–30KB 各个评估；eng 微调；fupan 等 E2、deliver 等 E1）
+- [x] C4. description 全部压缩到 2-4 行（附带删除总入口过宽触发词"继续"）`0d92b74` ✅ 2026-07-04
 - [ ] C5. 工作区 CLAUDE.md 的 forge 段落（约 200 行）收缩成路由表 + 铁律，流程细节回归 skill 单一出处
+- [ ] C6. 实战验证：info2action 下一个真实 bug 走一遍新骨架的 P0-P8 + Mode B（瘦身回归测试）
 
 ### 阶段 3：P2 降门槛（任何项目可用）
 
@@ -54,7 +55,7 @@
 
 - [ ] E1. dev/deliver 合并：保 forge-dev（上下文工程设计），吸收 deliver 的 ship/doc-release 尾段编排，退役 forge-deliver，状态目录统一（消灭 .do-dev/ 与 .deliver/ 并存）
 - [ ] E2. forge-fupan 重设计：去公式化，以「提升用户能力」为核心目标重构；Workbench 降级为可选组件；先精读 gstack 最新版 /learn 和 /retro 做参考（用户反馈：每次都开但效果不好）
-- [ ] E3. P-31 处理：forge-qa/bugfix 引擎清单去掉已丢失的 gstack/browse（倾向删除而非重装，已有 Playwright + browser-use）
+- [x] E3. P-31：qa/bugfix 两侧 gstack/browse 引擎引用全部移除（.gstack/ 报告目录名保留兼容存量）✅ 2026-07-04
 - [ ] E4. 上游增量融合批次：Superpowers v5 的对抗性 spec 审查 + 子代理模型路由；frontend-design 最新反 AI 模板清单；ui-ux-pro-max 数据文件同步（原则：引用不内嵌，先瘦身后融合）
 
 ## 决策记录
