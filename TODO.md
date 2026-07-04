@@ -78,7 +78,9 @@
 - [x] 批次 1-3 无争议清理：README 重写 deliver 段/数字对齐、eng+dev+bugfix 的 gstack/browse 清零、删古董 docs/README ✅
 - [x] 批次 4：eng 673→505 行、dev 518→458 行二次骨架化（Wave 执行/调度细则外移）✅
 - [x] 批次 5：test-dimensions.md 加维度导航表 + 按需跳读指引 ✅
-- [ ] 遗留（评审建议但本轮未做）：test-dimensions 按维度拆 10 文件（当前靠导航表跳读缓解，拆分收益/成本待评估）
+- [x] Opus 复验（B- → B+）三个遗留项全部关闭 ✅ 2026-07-04：doc-policy 停止宣传 audit-project.sh、eng 492 行破线、总入口清单补齐
+- [ ] 遗留（评审建议但暂缓）：test-dimensions 按维度拆 10 文件（导航表已缓解，待用户定夺是否拆）
+- [ ] 未来能力（非本轮）：真正实现 audit-project.sh（老项目接入审计）
 
 ## 决策记录
 
