@@ -88,7 +88,7 @@ test('测试表单', async () => {
 1. 实现功能
 2. 定义验证命令（必须在任务模板中明确写出）：
    - API: curl -s http://localhost:3456/api/xxx | jq .
-   - 页面: 用 gstack/browse 截图验证
+   - 页面: 用 Playwright / browser-use 截图验证
    - 脚本: python3 xxx.py 并检查输出
    - 数据: sqlite3 xxx.db "SELECT count(*) FROM xxx"
 3. 执行验证命令

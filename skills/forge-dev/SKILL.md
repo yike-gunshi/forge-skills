@@ -33,10 +33,7 @@ echo "项目根目录: $_ROOT"
 [ -f "$_ROOT/Makefile" ] && echo "检测到: Makefile"
 
 # 检查浏览器工具（QA 阶段可能需要）
-B=""
-[ -n "$_ROOT" ] && [ -x "$_ROOT/.claude/skills/gstack/browse/dist/browse" ] && B="$_ROOT/.claude/skills/gstack/browse/dist/browse"
-[ -z "$B" ] && [ -x "$HOME/.claude/skills/gstack/browse/dist/browse" ] && B="$HOME/.claude/skills/gstack/browse/dist/browse"
-[ -n "$B" ] && echo "浏览器工具: $B" || echo "浏览器工具: 不可用（QA 将以纯代码模式运行）"
+command -v npx >/dev/null 2>&1 && npx playwright --version >/dev/null 2>&1 && echo "浏览器工具: Playwright 可用" || echo "浏览器工具: Playwright 不可用（QA 将用 browser-use 或纯代码模式）"
 
 # 检查 .forge 状态
 [ -f "$_ROOT/.forge/dev-state.json" ] && echo "发现未完成的开发流水线" && cat "$_ROOT/.forge/dev-state.json"

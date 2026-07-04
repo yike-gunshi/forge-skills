@@ -86,14 +86,7 @@ curl -s -X POST http://localhost:3456/api/xxx \
   -w "\nHTTP Status: %{http_code}\n"
 ```
 
-### 浏览器（gstack/browse）
-```bash
-$B goto http://localhost:3456
-$B screenshot /tmp/verify-task-N.png
-$B console --errors
-```
-
-### 浏览器（Playwright）
+### 浏览器（Playwright / browser-use）
 ```python
 from playwright.sync_api import sync_playwright
 with sync_playwright() as p:

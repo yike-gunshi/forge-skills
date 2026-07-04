@@ -175,14 +175,13 @@ diff <(wc -l "$REVIEW_DOC") <(预期行数)
 
 ### 6.8 P3 复现工具复用
 
-forge-bugfix 的 browser-use:browser、gstack/browse、Playwright、截图留证等工具在 **P3 复现**阶段由 forge-bugfix 直接调用。P6 阶段这些工具由 forge-qa 统一编排，结果填到 Bug 修复验收报告，不产出散乱的 QA 报告。
+forge-bugfix 的 browser-use:browser、Playwright、截图留证等工具在 **P3 复现**阶段由 forge-bugfix 直接调用。P6 阶段这些工具由 forge-qa 统一编排，结果填到 Bug 修复验收报告，不产出散乱的 QA 报告。
 
 Codex 环境中的优先级：
 
 1. 前端页面/交互/视觉 bug：优先 browser-use:browser
 2. 可重复脚本断言：Playwright / 项目测试框架
-3. 快速探索或已有 gstack 项目：gstack/browse
-4. API / 数据 / 静态逻辑：curl、单元测试、代码检查
+3. API / 数据 / 静态逻辑：curl、单元测试、代码检查
 
 ---
 

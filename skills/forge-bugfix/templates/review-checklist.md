@@ -55,7 +55,7 @@ _待填写_
 | 字段 | 内容 |
 |---|---|
 | 复现结论 | {{已复现 / 未复现 / 间歇复现 / 待复现}} |
-| 复现方式 | {{browser-use:browser / Playwright / gstack-browse / 单元测试 / API / 静态检查}} |
+| 复现方式 | {{browser-use:browser / Playwright / 单元测试 / API / 静态检查}} |
 | 复现命令或入口 | {{命令、URL、账号、测试数据说明}} |
 
 ### 复现步骤
@@ -136,7 +136,7 @@ _待填写_
 
 **环境一致性结论**：{{PASS / FAIL / EXPIRED}}
 
-**浏览器证据来源**：{{browser-use:browser / Playwright / gstack-browse / N/A}}
+**浏览器证据来源**：{{browser-use:browser / Playwright / N/A}}
 
 <!--
 硬规则：
