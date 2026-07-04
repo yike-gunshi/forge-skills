@@ -185,10 +185,13 @@
 
 ---
 
-## QA-CHANGELOG 格式
+## QA 历史账本格式（可选）
+
+> 采用当前文档系统的项目优先使用 `docs/CHANGELOG.md` 或项目指定 QA 历史入口。
+> `QA-CHANGELOG.md` 仅作为 legacy 项目的兼容文件名，不是所有项目的必备产物。
 
 ```markdown
-# QA 变更日志
+# QA 历史账本
 
 ## [vX.Y] - YYYY-MM-DD
 
@@ -219,7 +222,7 @@
 
 ---
 
-## 新建 QA-CHANGELOG 的流程
+## 新建 QA 历史账本的流程
 
 1. **现有测试分析**：检查 tests/ 目录，了解已有测试覆盖
 2. **Git 历史**：`git log --oneline -- "tests/" "*test*" "*spec*"` 了解测试演进

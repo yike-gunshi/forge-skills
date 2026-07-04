@@ -1,32 +1,12 @@
 ---
 name: forge-bugfix
 description: |
-  一次修一个 bug + 独立 worktree + 独立 TDD + Bug 修复验收报告 + **多会话并行协调** + dev server 端口治理 + Pass 边界接力（v7.2）。
-  每个 bug 从登记开始就创建结构化 Bug 修复验收报告。支持 3-4 个窗口同时修不同功能域的 bug，
-  靠 `.forge/active.md` 心跳文件 + 功能域判重 + 合并前 merge 预演避免撞车；
-  启动应用时优先使用项目统一 dev entrypoint，避免 worktree 抢端口或测到旧服务。
-  在 Codex 环境中，前端复现和修复后自验优先使用 browser-use:browser 的 in-app browser；
-  Computer Use 只作为 browser-use 不可用或非浏览器桌面应用的兜底。
-  铁律：不做根因分析就不写修复代码 + 每个 bug 独立 worktree/TDD/commit/QA + 没有 Bug 修复验收报告不算完 +
-  用户问题闭环断言、配置/开关/数据就绪检查、QA 截图证据完整性门禁缺一不可 +
-  新发现禁止当场顺手修（原 bug Pass 后询问，用户确认才分流到 backlog）+ 多 bug 默认不串成长会话 +
-  原 bug 已 Pass 后遇到任何新问题，必须先告知“本次 bug 已完成”，询问是否写入文档并给接力 prompt +
-  **并行会话必须在 active.md 登记，同域归并会话、异域鼓励并行**。
-
-  会话级（一次性）：P0 环境探测（+ 读 active.md 看其他会话）→ P1 问题理解 + 强制读 PRD / ENG / Bugfix 历史 / Memory。
-  每次修复（可循环）：
-    P2 范围推荐（用户指定、QA 发现、backlog 候选、按功能域判重）→ P2.5 创建/更新 Bug 修复验收报告
-    → P3 创建 worktree + 写入 active.md + 复现 → P4 根因追踪 + 5 Whys + 方案确认
-    → P5 独立 TDD 驱动修复 + 原子提交 → P5.3 更新报告为待 QA 状态
-    → P6 调用 forge-qa 做自动验收 → P6.5 用户人工验收或批次最终验收等待
-    → P7 按三选一分流（Pass 合并 + merge 预演 / Fail 回 P5 / Pass + 新发现）
-    → P7.4 Pass 边界确认（询问是否把新问题写入文档 + 接力 prompt）
-    → P7.5 新发现分流到 backlog.md → P8 沉淀（active.md 由 forge-fupan 清理）。
-  出口：强烈建议新会话或 /clear、/compact 后继续下一个 bug；
-    全部完成 → 建议 /forge-review、/forge-ship、/forge-fupan 或 /forge-status。
-
-  触发方式：用户说"bugfix"、"反馈个问题"、"修这个 bug"、"这里有问题"、"为什么不对"、"排查一下"、"investigate"、"forge-bugfix"，
-  或用户报告错误、异常行为、功能失效时主动建议使用。
+  系统性 Bug 调查与修复。一次修一个 bug，强制根因分析、独立 worktree、独立 TDD、原子 commit、Bug 修复验收报告和 forge-qa 回归。
+  支持多会话并行协调：通过 `.forge/active.md` 登记、功能域判重、合并前 merge 预演避免撞车；启动应用时优先使用项目统一 dev entrypoint，避免端口抢占或测到旧服务。
+  在 Codex 环境中，前端复现和修复后自验优先使用 browser-use:browser；Computer Use 仅作兜底。
+  铁律：不做根因分析不写代码；没有 Bug 修复验收报告不算完；新发现禁止顺手修，原 bug Pass 后先确认边界再分流到 backlog。
+  流程：P0 环境/active.md 探测 → P1 读 PRD/ENG/Bugfix 历史 → P2 定范围 → P2.5 建报告 → P3 worktree 复现 → P4 根因/5 Whys → P5 TDD 修复 → P6 forge-qa 验收 → P7 Pass/Fail/新发现分流 → P8 沉淀。
+  触发方式：用户说"bugfix"、"反馈个问题"、"修这个 bug"、"这里有问题"、"为什么不对"、"排查一下"、"investigate"、"forge-bugfix"，或用户报告错误、异常行为、功能失效时使用。
 allowed-tools:
   - Bash
   - Read
@@ -42,6 +22,10 @@ allowed-tools:
 
 > **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
 > `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+> **当前文档加载顺序**：先读项目 `CLAUDE.md`、`docs/README.md`、`docs/INDEX.md`、
+> `docs/QA.md` / `docs/ENGINEERING.md` 相关当前真相源，再读活跃 BF 报告和 backlog。
+> 历史 BF 报告在 `docs/archive/raw/bugfix-reviews/`，只作追溯证据。
+> 详细规则见 `skills/_shared/current-doc-loading.md`。
 
 # /forge-bugfix：一次一 bug + Bug 修复验收报告
 
@@ -51,11 +35,12 @@ allowed-tools:
 
 核心机制：
 
-- **Bug 修复验收报告**：每个 bug 从登记/领取开始就创建 `docs/bugfix/reviews/BF-XX.md`
+- **Bug 修复验收报告**：每个 bug 从登记/领取开始就创建活跃报告 `docs/bugfix/reviews/BF-XX.md`（`status: draft`）
   - 发现时：记录来源、现象、初始截图/日志、关联 Feature Spec
   - 修复时：记录 worktree、TDD 红绿证据、根因、commit、涉及文件
   - QA 时：forge-qa 回填前后端地址、环境身份校验、逐步截图、深度断言
   - 人工验收时：用户只看"人工验收指南"和同一组验收地址，填最终结论
+  - 结案后：移动到 `docs/archive/raw/bugfix-reviews/`（`status: archive`），backlog 保留链接
 - **两种验收节奏**：
   - **单 bug 模式**：QA 全过后立即进入 P6.5，等用户验收该 bug
   - **QA 自动闭环 / 批量模式**：单 bug QA 通过后标记 `qa-pass-pending-final-review`，最后由批次汇总统一交给用户验收
@@ -83,7 +68,7 @@ allowed-tools:
 2. **每次只修 1 bug，或 1-2 个**经 P4.5 确认共因**的 bug**。其余进 `docs/bugfix/backlog.md`。
 3. **每个 bug 独立 worktree + 独立 TDD + 独立 commit + 独立 QA 回归**。批量只做编排，不合并工程单元。
 4. **修完不自动合并**，必须等用户填完单 bug 或批次最终验收结论。
-5. **没有 Bug 修复验收报告不算完**。每个 BF 编号必须有 `docs/bugfix/reviews/BF-XX.md`，经 forge-qa 和用户/批次两层验收后才进 P7。
+5. **没有活跃 Bug 修复验收报告不算完**。每个 BF 编号必须先有 `docs/bugfix/reviews/BF-XX.md`，经 forge-qa 和用户/批次两层验收后才进 P7；P8 结案时归档到 `docs/archive/raw/bugfix-reviews/`。
 6. **新发现的 bug / 新需求 / 模糊反馈 → 原 bug Pass 后询问是否写入 `docs/bugfix/backlog.md`**，绝不在当前修复内夹带。
 7. **同根判定必须举证**。AI 声称"这条新发现是当前 bug 同根"时，必须列出具体证据（同文件、同函数、同数据流），证据不足默认为独立 bug。
 8. **并行协调必须登记**（v6.0）。P2 确认范围 + P3 创建 worktree 之后，必须在项目根 `.forge/active.md` 追加一行会话登记；P2 推荐前必须读 `.forge/active.md` 做功能域判重；P7 合并前必须跑 `git merge --no-commit --no-ff` 预演。清理 active 的责任在 forge-fupan 或 /forge-status，不在 forge-bugfix 自己。
@@ -139,7 +124,7 @@ P7.5 ⭐ 新发现分流到 backlog
      ├─ 独立 bug → backlog.md 的 🐛 待修区，分配 BF-XX
      ├─ 新需求 → backlog.md 的 💡 新需求区，建议 /forge-prd 立项
      └─ 模糊反馈 → backlog.md 的 🌀 待澄清区
-P8   沉淀：归档 backlog 对应条目 + bugfix 文档补记
+P8   沉淀：归档 backlog 对应条目 + BF 报告移动到 archive/raw
 
 ═══════════ 出口 ═══════════
 - 用户想继续修下一个 bug → 默认建议新会话或 /clear、/compact
@@ -239,10 +224,13 @@ if [ -z "$DOC_BACKLOG" ]; then
   echo "BACKLOG（首次使用，将从模板初始化）: $DOC_BACKLOG"
 fi
 
-# reviews 目录（每个 bug 一个 Bug 修复验收报告）
+# reviews 目录（每个正在处理的 bug 一个活跃 Bug 修复验收报告）
 DOC_REVIEWS="$_ROOT/docs/bugfix/reviews"
 mkdir -p "$DOC_REVIEWS" 2>/dev/null
 echo "REVIEWS 目录: $DOC_REVIEWS"
+DOC_REVIEWS_ARCHIVE="$_ROOT/docs/archive/raw/bugfix-reviews"
+mkdir -p "$DOC_REVIEWS_ARCHIVE" 2>/dev/null
+echo "REVIEWS 归档目录: $DOC_REVIEWS_ARCHIVE"
 
 [ -d "$_ROOT/docs/bugfix" ] && DOC_BUGFIX="$_ROOT/docs/bugfix" && echo "BUGFIX 历史: $DOC_BUGFIX"
 
@@ -292,7 +280,8 @@ fi
 | `$APP_URL` | 本地应用 URL（优先来自项目 `dev:status` / `dev-stack status`）|
 | `$DOC_PRD` / `$DOC_ENG` / `$DOC_BUGFIX` | 项目文档路径 |
 | `$DOC_BACKLOG` | bug 任务池 `docs/bugfix/backlog.md` |
-| `$DOC_REVIEWS` | Bug 修复验收报告目录 `docs/bugfix/reviews/` |
+| `$DOC_REVIEWS` | 活跃 Bug 修复验收报告目录 `docs/bugfix/reviews/` |
+| `$DOC_REVIEWS_ARCHIVE` | 已结案 Bug 修复验收报告归档目录 `docs/archive/raw/bugfix-reviews/` |
 | `$REPORT_DIR` | 截图和报告输出目录 |
 | `$ACTIVE` | 并行心跳文件 `.forge/active.md`（v6.0） |
 | `$CURRENT_SID` | 当前 Claude Code session id（v6.0） |
@@ -485,7 +474,7 @@ fi
 | 复现记录 | 当前复现结论和待执行步骤 |
 | 验收入口 | 如已知 Frontend/Backend 地址，先写入；最终以 P6 forge-qa 强校验结果为准 |
 
-同时把 `$DOC_BACKLOG` 中该 bug 的“报告”列指向 `docs/bugfix/reviews/${BUG_ID}.md`。
+同时把 `$DOC_BACKLOG` 中该 bug 的“报告”列指向活跃报告 `docs/bugfix/reviews/${BUG_ID}.md`。
 
 **禁止**等到修完代码才创建报告。报告是单个 bug 的过程案卷，不是最后的附录。
 
@@ -1380,321 +1369,41 @@ C) 我想先改写这些问题的描述
 
 ## P7.5 新发现分流
 
-> 🎯 **硬性要求**：P7.5 只能在 P7.4 用户确认“更新到文档”后执行。新发现不得直接修、不得进 TODO、不得停在 AI 脑里；确认后必须逐条分类并写入 `docs/bugfix/backlog.md` 对应区。
+P7.5 只能在 P7.4 用户确认“更新到文档”后执行。合并读取报告新发现、修复过程待确认新发现、forge-qa/用户补充和用户改写后的描述，逐条分类：
 
-### 7.5.1 读取新发现
+| 类别 | 处理 |
+|-----|------|
+| 同根关联 bug | 必须举证同文件/同函数/同数据字段/同上游依赖；写入 backlog 待修区，标记共因，默认建议新会话修 |
+| 独立 bug | 写入 `docs/bugfix/backlog.md` 待修区，分配 BF 编号 |
+| 新需求 | 写入 backlog 新需求区，建议 `/forge-prd` |
+| 模糊反馈 | 写入 backlog 待澄清区，不分配 BF 编号 |
 
-从以下来源合并读取，解析成一条一条的条目（一行一条）：
-
-- Bug 修复验收报告的"新发现"区
-- P5.2 修复过程中列出的“待确认新发现”
-- P6/P6.5 中 forge-qa 或用户补充的新问题
-- P7.4 用户改写后的描述
-
-### 7.5.2 AI 逐条分类
-
-对每条新发现，AI 判断属于哪一类：
-
-| 类别 | 判定标准 | 去哪 | 编号 |
-|-----|---------|------|------|
-| 同根关联 bug（罕见）| 符合 P5.2.1 举证要求（同文件同函数/同数据字段/同上游依赖），但原 bug 已 Pass | `$DOC_BACKLOG` 🐛 待修区，标记“共因 with {BUG_ID}”，建议新会话修 | BF-{MMDD}-{N+1}, +2... |
-| 独立 bug | 是可复现的失效行为，但不符合同根标准 | `$DOC_BACKLOG` 🐛 待修区 | BF-{MMDD}-{N+1}, +2... |
-| 新需求 | 描述的是"希望能..."、当前功能不存在的能力 | `$DOC_BACKLOG` 💡 新需求区 | N-{MMDD}-{M+1}... |
-| 模糊反馈 | 现象说不清、未复现、"感觉有点怪" | `$DOC_BACKLOG` 🌀 待澄清区 | 无编号，时间戳 |
-
-### 7.5.3 AI 必须举证同根
-
-如果 AI 判定某条是"同根"，向用户展示证据：
-
-```
-🔍 新发现 #1：登录页右上角铃铛图标偶尔闪一下
-
-AI 判定：疑似同根
-
-举证：
-- 根因位置：AuthStore.ts:45 `onAuthChange` 回调
-- 当前 bug 引用点：Avatar.tsx:23 订阅该回调
-- 新发现引用点：Bell.tsx:17 同样订阅该回调
-- 结论：两者都受 AuthStore.onAuthChange 回调执行时机影响
-
-A) 确认同根 → 建议新会话一起修（我会写进 backlog 并标记"共因 with BF-0419-2"）
-B) 我觉得不是 → 按独立 bug 处理，写 backlog.md 🐛 待修区
-```
-
-举证不足 → AI 直接按独立 bug 处理，不问用户（用户如果不认可可覆盖）。
-
-### 7.5.4 分流报告
-
-完成分流后向用户输出总结：
-
-```
-📋 新发现分流完成 (来自 BF-0419-2 的验收)
-
-写入 $DOC_BACKLOG：
-
-🐛 待修 bug:
-  - BF-0419-3 铃铛图标偶尔闪一下（P2，独立）
-  - BF-0419-4 登出时有一次 404 请求（P1，独立）
-
-💡 新需求:
-  - N-0419-1 希望登录页加"记住我"选项（建议后续走 /forge-prd）
-
-🌀 待澄清:
-  - [2026-04-19] 翻页时感觉"卡了一下"，未复现
-
-接力 prompt（建议开另一个会话继续）：
-
-我刚完成 {BUG_ID}：{原 bug 一句话标题}，原 bug 已通过 QA/人工验收，当前修复状态：{已合并/已暂存/推迟合并}。修复报告：docs/bugfix/reviews/{BUG_ID}.md。过程中发现的新问题已经写入 docs/bugfix/backlog.md：{列出 BF/N 编号和一句话标题}。请从这些新条目里选一个继续 forge-bugfix，先重新判断范围和根因，不要默认沿用上一个 bug 的结论。
-```
-
-接力 prompt 只需要说清：已完成的原 bug、报告路径、backlog 新编号、建议下个会话重新判断。不要塞入完整根因、完整 diff 或强制方案，给下一个会话保留判断空间。
+举证不足直接按独立 bug 处理。分流完成后只输出简短接力 prompt：原 bug 已完成、报告路径、已登记的新编号、建议下个会话重新判断范围和根因。
 
 ---
 
----
+## P8 沉淀与出口
 
-## P8 沉淀（Bug 修复验收报告作为主产出 + backlog 归档）
+`docs/bugfix/reviews/{BUG_ID}.md` 是处理中的案卷；结案后进入 archive/raw，成为历史证据。P8 只做这些硬动作：
 
-### 8.1 主产出：Bug 修复验收报告已就位
-
-`docs/bugfix/reviews/{BUG_ID}.md` 本身已经是最全的历史记录：
-- 问题发现记录（来源 / 初始证据 / Feature Spec 场景）
-- 复现记录与根因分析
-- 修复记录（worktree / TDD 红绿证据 / 文件 / commit）
-- 验收入口与环境身份校验（Frontend / Backend / PID / cwd / commit）
-- 人工验收指南
-- QA 测试过程与 Markdown 内嵌截图证据
-- 最终结论
-
-**不再重写日级别 bugfix 文档的冗余内容**。如果项目有 `docs/bugfix/{日期}.md` 的日汇总习惯，AI 只追加一行索引：
-
-```markdown
-### {BUG_ID}: {一句话标题}
-
-- **状态**: ✅ 已修复 / ❌ 阻塞
-- **Bug 修复验收报告**: [docs/bugfix/reviews/{BUG_ID}.md](./reviews/{BUG_ID}.md)
-- **worktree**: `.worktrees/bf-{MMDD}-N`（已合并 / 暂存）
-```
-
-### 8.2 Backlog 归档（硬动作）
-
-修复完成的 bug，如果原本登记在 `$DOC_BACKLOG` 🐛 待修区，AI 必须：
-
-1. 从"🐛 待修"表格中**剪切**该行
-2. 粘贴到"🗄️ 已处理"区的对应月份下，格式：
-   ```
-   - **BF-0419-2** 登录头像不刷新 — resolved 2026-04-19 → 详见 docs/bugfix/reviews/BF-0419-2.md
-   ```
-3. **已处理区永久保留**。不做清理，用于将来定位类似问题时回溯。
-
-如果修复过程中有新发现分流进 backlog（P7.5），那些条目是新登记的，保持在待修区。
-
-### 8.2.1 批量最终验收汇总（可选但推荐）
-
-如果本次是 QA 自动闭环或多会话批量修复，AI 必须维护批次汇总文档：
-
-```text
-docs/bugfix/batches/BATCH-YYYY-MM-DD.md
-```
-
-批次汇总只做聚合，不替代单 bug 报告：
-
-```markdown
-# BATCH-YYYY-MM-DD BugFix 批量修复汇总
-
-## 验收入口
-- Frontend: ...
-- Backend: ...
-- 环境一致性: PASS
-
-## 本批次 Bug
-| Bug ID | 标题 | 状态 | 会话/Worktree | QA | 人工验收 | 报告 |
-|---|---|---|---|---|---|---|
-| BF-0425-1 | ... | qa-pass-pending-final-review | ... | PASS | 待填 | ../reviews/BF-0425-1.md |
-
-## 最终人工验收指南
-{{把本批次需要用户走的关键用户流程合并成一条或少数几条验收路线}}
-```
-
-批次汇总用于让用户最后只验收一次；每个 bug 的技术证据仍回到各自 `BF-XX.md`。
-
-### 8.3 写入 Memory（仅当真的有跨会话价值）
-
-判断标准（严格）：
-
-| 值得 | 不值得 |
-|---|---|
-| 通用踩坑模式（如"过滤后计数必须联动"）| 具体代码改动细节 |
-| 新的调试方法论（如"先查进程 cwd"）| 一次性配置修复 |
-| 工具使用技巧 | 特定 bug 的症状描述 |
-
-值得 → 写入 `~/.claude/projects/.../memory/feedback_{name}.md`，并在 MEMORY.md 加索引。
-
-> ⚠️ **不要批量写 memory**。默认**不写**，除非你能说出"这条 memory 在下次会话会触发什么具体行为"。
-
-### 8.4 同类模式扫描（挪到 /forge-review）
-
-同类模式扫描（grep 全代码库找同类 bug）不是本次修复的范围，挪到 `/forge-review` 做。
+1. 如果 bug 来自 backlog，将待修条目移动到“已处理”区，并把链接改到 `docs/archive/raw/bugfix-reviews/{BUG_ID}.md`；已处理区永久保留。
+2. 将活跃 BF 报告从 `docs/bugfix/reviews/{BUG_ID}.md` 移动到 `docs/archive/raw/bugfix-reviews/{BUG_ID}.md`，frontmatter `status` 改为 `archive`，并确认截图链接仍可打开。
+3. 批量修复时维护 `docs/bugfix/batches/BATCH-YYYY-MM-DD.md`，用于最终人工验收汇总；每个 bug 的技术证据仍回到各自 BF 报告。
+4. Memory 默认不写，除非能说明这条经验下次会触发什么具体行为。
+5. 同类模式扫描不在 bugfix 内做，交给 `/forge-review`。
+6. 出口默认建议新会话或 `/clear`、`/compact` 后继续下一个 bug；全部完成则建议 `/forge-review`、`/forge-ship`、`/forge-fupan` 或 `/forge-status`。
 
 ---
 
-## 出口：建议下一步
+## 重要规则速查
 
-P8 完成后，AskUserQuestion：
-
-```
-✅ 本次修复完成（{BUG_ID}）
-
-📊 当前会话状态：
-  - 已完成的 bug：N 个（{BUG_ID 列表}）
-  - 暂存的 worktree：M 个（git worktree list）
-  - Backlog 待修：K 个（P0: a / P1: b / P2: c）
-
-下一步建议（按场景推荐）：
-
-A) 结束会话，下一个 bug 开新会话（强烈推荐）
-   原因：上下文已经被本次修复占据，继续会引发 scope 蔓延。
-   backlog 里 K 条待修，打开新会话说"修 bugfix"即可，我会从 backlog 推荐下一个。
-
-B) 本会话继续修下一个 bug（不推荐，除非明确共因）
-   等价于：立即用 /clear 清上下文，然后回 P2 启动。
-   /compact 也可以，但 /clear 更干净。
-
-C) 暂停修 bug，审查已合并的代码 → /forge-review
-   检查 SQL 安全/竞态条件/枚举完整性等结构性问题。
-
-D) 已合并的 commits 想发布 → /forge-ship
-   更新 CHANGELOG + push + 创建 PR。
-
-E) 想沉淀本会话经验 → /forge-fupan
-   提取知识、诊断 AI/用户协作模式、写复盘文档。
-   （复盘时会自动清理本会话在 .forge/active.md 的登记）
-
-F) 清点所有并行会话 → /forge-status
-   如果你开了多个窗口在修不同 bug，这个命令扫一遍 .forge/active.md，
-   基于 worktree 存在性 + 分支合并状态报告哪些是活跃、哪些是僵尸可清理。
-
-G) 关闭会话 — 没事了
-   ⚠️ 但 .forge/active.md 里本会话的登记还在，下次建议跑 /forge-status 清理。
-
-⚠️ 如果有暂存的 worktree，建议在 review/ship 前先决定它们的去留。
-```
-
-**默认推荐 A**。用户明确偏好："新 bug 默认新会话完成工作，或 /clear /compact 后继续"。
-**走 A) 之前如果用户开了多个并行会话**，AI 可以主动提一句"别忘了也可以用 /forge-status 总览一下其他会话"。
-
----
-
-## AskUserQuestion 格式规范
-
-每次提问结构：
-1. **重新聚焦**：当前项目、分支、正在调查的 BUG_ID
-2. **通俗解释**：高中生能懂的语言
-3. **给出建议**：推荐选项 + 理由
-4. **列出选项**：`A) B) C)`
-
----
-
-## 重要规则
-
-### 单次修复纪律
-
-1. **每次只修 1 bug，或 1-2 经 P4.5 确认共因的 bug**。其余进 `docs/bugfix/backlog.md`。
-2. **每次一个 worktree**，命名 `.worktrees/bf-{MMDD}-{N}`。
-3. **修完不自动合并**。必须等用户填完单 bug 或批次最终验收结论，AI 才能按 Pass 走 P7 合并。
-4. **新发现的 bug / 新需求 / 模糊反馈 → 原 bug Pass 后先问用户是否写入 backlog.md**。要修就开新会话（默认）或用户明确授权本会话重新走 P2-P4。
-5. **会话出口必须建议下一步**，默认推荐新会话或 /clear、/compact。
-
-### 调查纪律
-
-6. **铁律：不做根因分析就不写修复代码。**
-7. **强制读 PRD + ENGINEERING.md + Bugfix 历史 + backlog.md**（会话级一次）。
-8. **根因必须用 5 Whys 因果链向用户解释，用户确认方案后才动手。**
-9. **3 次假设失败 → 停下来质疑架构（或弃用本次尝试开新会话）。**
-10. **绝不说"这应该能修好"**。验证它，证明它。
-11. **修复涉及 >5 个文件 → 必须确认。**
-12. **无法复现就不要修。**
-
-### Bug 修复验收报告纪律（硬性）
-
-13. **P2.5 必须创建或更新 `docs/bugfix/reviews/{BUG_ID}.md`**。没有报告不创建 worktree、不进 P3。
-14. **P5 修复完成后必须更新报告**。根因、修复记录、TDD 红绿证据、人工验收指南缺一不可。
-15. **人工验收指南至少 3 条**，其中至少 1 条边界/异常态。
-16. **AI 不得自行勾选最终结论**。
-17. **没有用户最终结论或批次最终结论不进 P7**，即使 forge-qa 全过。
-17.1. **状态枚举只能使用**：`pending / in-progress / fixed-awaiting-qa / qa-incomplete / qa-failed / qa-pass-pending-user-verification / qa-pass-pending-final-review / qa-pass-user-accepted / blocked-human / resolved / deferred`。
-17.2. **用户问题闭环断言必须存在**。每份报告都要写清：用户原话、最终用户可见结果、证明方式、结论。
-17.3. **配置/开关/数据就绪必须记录**。涉及前端展示、权限边界或数据可见性的 bug，缺少该检查不得进入 QA。
-
-### 自动 QA + 人工验收纪律
-
-18. **P6 明确调用 forge-qa**。不再在 forge-bugfix 内部做 QA。
-19. **forge-qa 全过才进 P6.5 或批次待最终验收状态**。QA 挂了 AI 有界回 P5 继续修，不打扰用户。
-20. **P6 后必须跑报告完整性校验器**：`validate-bugfix-report.py --ready-for-user` 不通过就是 `QA_INCOMPLETE`。
-21. **前端/交互 bug 必须有 Markdown 内嵌 QA 截图**。没有截图、截图路径不存在、环境一致性不是 PASS，都不能交给用户验收。
-22. **P6.5 等用户"验收了"信号**。单 bug 模式收到前不合并、不进 P7、不反复追问；批量模式等待最终验收包。
-23. **用户结论三选一**：Pass / Fail / Pass + 新发现。
-24. **Fail 不接受新问题进来**，只继续修原 bug。
-25. **Pass + 新发现**：先完成当前 bug 的合并/暂存决策，再 P7.4 告知“本次 bug 已完成”，询问是否把新问题更新到文档。
-25.0. **Pass 后的新问题必须走确认门**。无论来自用户反馈、QA 发现，还是 AI 发现的衍生问题，只有用户确认后才能写入 backlog / 报告索引。
-25.0.1. **确认入档后必须给简短接力 prompt**。内容只包括：原 bug 已完成、报告路径、已登记的新编号、建议新会话重新判断范围和根因。
-25.1. **自动闭环最多 3 轮**。第 3 次仍失败，或遇到需求/设计/环境身份疑问，必须 `blocked-human`。
-
-### 同根举证纪律（硬约束）
-
-24. **AI 声称"同根"必须举证**：同一文件的同一函数 / 同一数据字段 / 同一上游依赖。
-25. **举证不足 → 默认独立 bug 写进 backlog**，不并入当前修复。
-
-### worktree 纪律
-
-26. **worktree 创建后如需启动应用，必须先执行 P3.2 Dev Server 契约**。
-27. **项目存在统一入口时必须使用它**：`npm run dev:status` / `npm run dev` / `scripts/dev-stack.sh`，不得裸跑 `uvicorn`、`vite`、`next dev`。
-28. **不提供 "弃用 worktree" 选项**。Fail 走回 P5 继续修；真的要放弃走 P4.4 三振出局。
-29. **多次修复并发允许，但每次独立 worktree + 独立端口**；端口必须来自项目 dev-stack / `.devserver.json` / 状态输出，不能靠猜常见端口。
-29.0. **APP_URL 必须可追溯**：传给浏览器、curl、forge-qa 的 URL 必须能在 dev:status/dev-stack status 中找到对应 cwd。
-29.0.1. **无独立 worktree 不进入 P5**。如果项目无法创建 worktree（磁盘/权限/仓库状态异常），状态改 `blocked-human`，让用户决定，不在主工作区硬修。
-
-### 并行协调纪律（v6.0 新增）
-
-29.1. **P0 必须读 `.forge/active.md`**，把已占用功能域报告给用户；发现僵尸记录建议用户跑 /forge-status 清理。
-29.2. **P2 必须做功能域判重**。同域冲突时优先建议"切去那个会话"，不默认新开窗口。
-29.3. **P3 创建 worktree 成功后立即登记 active.md**，不得拖到修复结束。`$CURRENT_SID` 为空必须停下问用户，不得用占位符登记。
-29.4. **功能域标签必须从 `.forge/active.md` 的"功能域声明"区选**，AI 不得自创新标签；首次使用的项目由 AI 初始化模板 + 用户编辑域列表后才继续。
-29.5. **P7.1 合并前必须跑 `git merge --no-commit --no-ff` 预演**，冲突就回退 + 让用户决策 rebase 或暂存。
-29.6. **合并成功后不清 active.md**，交给 forge-fupan 或 /forge-status 清理。backlog.md 的状态同步改 `resolved` 是 forge-bugfix 的职责。
-29.7. **不得基于时间戳判定"会话已死"**。只认 worktree 存在性 + 分支 merge 状态这两个硬信号。
-
-### Backlog 纪律
-
-30. **新发现分流在用户确认后必须写进 `docs/bugfix/backlog.md`**。不写 TODO.md，不分散到多个文件；用户未确认前不得默默入档。
-31. **"已处理"区永久保留**（用户明确要求，用于以后定位问题时回溯）。
-32. **AI 不得往 backlog 塞"顺手重构"想法**。那种东西写代码注释 `// REFACTOR: xxx`。
-33. **P2 范围推荐必须先扫 backlog**，把待修区的条目作为候选之一。
-
-### 沉淀纪律
-
-34. **每个修复原子提交**。一个 BUG_ID，一个 commit（或一个 commit 组）。
-34.1. **每个 bug 独立 TDD**。前端 bug 可用 Playwright 断言作为 RED/GREEN，不能只靠截图。
-35. **Bug 修复验收报告即历史产出**，不再重复写 bugfix/{日期}.md（可留索引）。
-36. **Memory 默认不写**。除非能说出"这条会触发未来什么具体行为"。
-
-### 完成状态
-
-- **完成** — 根因找到，修复已应用，QA 通过，worktree 已合并/暂存/弃用
-- **完成但有顾虑** — 已修复但无法完全验证（间歇性 Bug、需要线上确认）
-- **阻塞** — 根因不明确，已升级处理
-
-### 升级机制
-
-可以随时停下来说"超出能力"或"对结果没信心"。
-
-**糟糕的修复比不修更糟。** 升级不会被惩罚。
-
-升级格式：
-```
-状态：阻塞 | 需要更多信息
-原因：[1-2 句话]
-已尝试：[做了什么]
-worktree：[路径，建议保留以便其他人接手]
-建议：[用户接下来做什么]
-```
+- 不做根因分析不写代码；无法复现不修；3 次假设失败就停下来质疑架构。
+- 每次只修 1 个 bug，或 1-2 个经 P4.5 确认共因的 bug；其余写入 backlog。
+- 每个 bug 独立 BF 报告、独立 worktree、独立 TDD、独立 commit、独立 QA 回归。
+- P2.5 必须创建/更新活跃报告 `docs/bugfix/reviews/{BUG_ID}.md`；P5 后必须填根因、修复记录、TDD 证据和人工验收指南；P8 结案后必须移动到 archive/raw。
+- P6 必须调用 forge-qa；QA 截图、环境一致性和报告完整性不满足时不得交给用户验收。
+- 没有用户最终结论或批次最终结论不进 P7；用户结论只有 Pass / Fail / Pass + 新发现。
+- Pass 后的新问题必须先确认边界，再询问是否入档；未经用户确认不得写 backlog，也不得顺手修。
+- worktree 创建后如需启动应用，必须走项目统一 dev entrypoint；APP_URL 必须可追溯到正确 cwd/PID/commit。
+- 并行会话必须读写 `.forge/active.md`；功能域标签从声明区选；合并前必须做 `git merge --no-commit --no-ff` 预演。
+- 新发现只进 `docs/bugfix/backlog.md`，不进 TODO；顺手重构想法只写代码注释。

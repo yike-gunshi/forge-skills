@@ -2,7 +2,7 @@
 status: live
 type: reference
 module: forge-doc-policy
-last_updated: 2026-04-28
+last_updated: 2026-06-09
 ---
 
 # CLAUDE.md 引用片段
@@ -43,7 +43,7 @@ frontmatter schema(新文档必填):
 \`\`\`yaml
 ---
 status: live | draft | archive
-type: prd | design | engineering | qa | brainstorm | bugfix | research | plan | guide | reference
+type: prd | design | engineering | qa | brainstorm | bugfix | research | plan | guide | reference | changelog
 module: {模块名} | global
 last_updated: YYYY-MM-DD
 replaces: {old-path} | ~  # 选填
@@ -68,11 +68,10 @@ owner: {team} | ~  # 选填
 
 ### 项目特化规则
 
-（只列本项目特定的细规则。共享规则不在此重复，统一从 SSoT 读取。）
+（只列本项目特定的细规则。共享规则不在此重复，统一从 forge-doc-policy 读取。）
 
-- （示例）docs/bugfix/{date}.md 当日 BF 汇总惯例：跨轮交叉引用，
-  下一轮修复时回填上轮状态变化
-- （示例）docs/优化/ 沉淀已有功能优化讨论：简洁结构化展示思考路径
+- （示例）根级 `docs/PRD.md` / `docs/DESIGN.md` / `docs/ENGINEERING.md` 是当前真相源。
+- （示例）新 bugfix 报告先写 `docs/bugfix/reviews/`，结案后归档到 `docs/archive/raw/bugfix-reviews/`。
 - （在此追加项目特定的 doc 约定，如有）
 ```
 
@@ -93,4 +92,5 @@ owner: {team} | ~  # 选填
 
 | 版本 | 日期 | 变更 |
 |---|---|---|
+| v0.2 | 2026-06-09 | 增加 `changelog` type 和当前真相源 / active bugfix 后归档示例 |
 | v0.1 | 2026-04-28 | 初版，工作区级 + 项目级 + 14 skill 引用模板 |

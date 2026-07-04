@@ -92,7 +92,7 @@ do-dev 传递给 do-qa 的上下文：
 1. 分析项目测试现状（已有测试框架、覆盖率）
 2. 多轮与用户确认测试策略
 3. 如果没有测试框架 → 推荐并安装（vitest/pytest 等）
-4. 创建 QA.md + QA-CHANGELOG
+4. 创建 QA.md；如项目需要历史账本，则写入 docs/CHANGELOG.md 或项目指定 QA 历史入口
 5. 执行首次测试 → 建立 baseline
 
 ### 场景 E：纯后端项目（无 UI）
@@ -177,7 +177,7 @@ Python Playwright，适合复杂 E2E 流程：
 | 检测本地应用 | 扫描 3456/3000/4000/5173/8080 端口 |
 | 确定测试级别 | 快速（5-10min）/ 标准（15-30min）/ 详尽（30-60min）|
 | 确定测试模式 | Diff-aware / Full / Quick / Regression |
-| 定位文档 | PRD.md / ENGINEERING.md / QA.md / QA-CHANGELOG |
+| 定位文档 | README.md / INDEX.md / PRD.md / ENGINEERING.md / QA.md / 相关 Feature Spec / 历史账本 |
 | 检查工作区 | 未提交变更 → 询问 commit/stash/忽略/中止 |
 | 读取 .features/ 状态 | 确认前序依赖（eng）已完成 |
 
@@ -197,7 +197,7 @@ Python Playwright，适合复杂 E2E 流程：
 **创建模式**（无 QA.md）：
 - 分析项目测试现状
 - 多轮确认测试策略
-- 创建 QA.md + QA-CHANGELOG
+- 创建 QA.md；历史结论按项目规则写入 docs/CHANGELOG.md 或指定 QA 历史入口
 
 ### 第2.5步：测试框架引导（如无测试框架）
 
@@ -219,7 +219,7 @@ Python Playwright，适合复杂 E2E 流程：
 ### 第4步：更新 QA 文档
 
 - 更新 QA.md（版本号、测试矩阵、验收清单）
-- 追加 QA-CHANGELOG
+- 追加项目指定 QA 历史账本（如有）
 
 ### 第5步：系统性测试执行
 
@@ -317,7 +317,7 @@ Python Playwright，适合复杂 E2E 流程：
 
 docs/
 ├── QA.md                           # QA 测试文档（持久化）
-└── QA-CHANGELOG.md                 # QA 变更日志
+└── CHANGELOG.md                    # 历史总账；QA 历史可按项目规则进入这里或专门分账
 ```
 
 ---
@@ -368,7 +368,7 @@ do-eng → ENGINEERING.md（实现清单 + 测试矩阵）
 do-qa → QA.md（测试计划 + 结果）→ 交付报告
 ```
 
-do-qa 读取上游所有文档，但只写入 QA.md、QA-CHANGELOG 和 .gstack/qa-reports/。
+do-qa 读取当前入口文档和相关 Feature Spec，只写入 QA.md、项目指定历史账本和 .gstack/qa-reports/。
 
 ### .features/ 状态架构
 

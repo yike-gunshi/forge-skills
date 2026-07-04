@@ -16,6 +16,9 @@ allowed-tools:
 
 > **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
 > `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+> **当前文档加载顺序**：优先审查 `CLAUDE.md`、`docs/README.md`、`docs/INDEX.md`、
+> 根级当前真相源、相关模块附录和 `.features`；`docs/archive/raw/` 只作历史证据，不纳入默认同步。
+> 详细规则见 `skills/_shared/current-doc-loading.md`。
 
 # /forge-doc-release：发布后文档更新
 
@@ -99,10 +102,15 @@ git log <base>..HEAD --oneline
 git diff <base>...HEAD --name-only
 ```
 
-3. 发现仓库中所有文档文件：
+3. 发现仓库中需要同步的当前文档文件：
 
 ```bash
-find . -maxdepth 2 -name "*.md" -not -path "./.git/*" -not -path "./node_modules/*" -not -path "./.gstack/*" -not -path "./.context/*" | sort
+find . -maxdepth 3 -name "*.md" \
+  -not -path "./.git/*" \
+  -not -path "./node_modules/*" \
+  -not -path "./.gstack/*" \
+  -not -path "./.context/*" \
+  -not -path "./docs/archive/raw/*" | sort
 ```
 
 4. 将变更分类为与文档相关的类别：

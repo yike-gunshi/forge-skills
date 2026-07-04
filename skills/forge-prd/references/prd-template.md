@@ -55,7 +55,9 @@
   - **[需修改]** — 需求变更
   - **[vX.Y 新增]** — 本次迭代新增
   - **[vX.Y 修改]** — 本次迭代修改
-#### 3.X.4 Feature Spec（参考 feature-spec-template.md）
+#### 3.X.4 Feature Spec 链接（参考 feature-spec-template.md）
+
+完整 Feature Spec 写入 `.features/{feature-id}/feature-spec.md`。PRD 中只保留本功能的当前事实摘要、验收口径和 spec 链接。
   - 用户流程总览
   - 页面/系统结构（全局→组件）
   - 行为场景（Given/When/Then，每功能点3个：正常/异常/边界）

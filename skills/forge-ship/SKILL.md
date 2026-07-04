@@ -13,6 +13,9 @@ allowed-tools:
 
 > **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
 > `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+> **当前文档加载顺序**：涉及文档更新时，先读项目 `CLAUDE.md`、`docs/README.md`、
+> `docs/INDEX.md` 和相关根级当前真相源；`archive/raw` 只作历史证据。
+> 详细规则见 `skills/_shared/current-doc-loading.md`。
 
 # /forge-ship：发布上线
 
@@ -204,7 +207,7 @@ git diff origin/<基础分支>
 
 ## 第5步：更新 CHANGELOG
 
-如果仓库存在 `CHANGELOG.md`，且本次变更值得未来追溯，则更新。
+如果仓库存在 `CHANGELOG.md`，且本次变更值得未来追溯，则更新。CHANGELOG 只记录发布事实和历史账本；不要把它当作 PRD/DESIGN/ENGINEERING 的当前事实源。
 
 ```bash
 git log origin/<基础分支>..HEAD --oneline --no-merges

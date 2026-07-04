@@ -2,12 +2,25 @@
 status: live
 type: reference
 module: forge-doc-policy
-last_updated: 2026-04-28
+last_updated: 2026-06-09
 ---
 
 # forge-doc-policy CHANGELOG
 
 按时间倒序，最新在上。
+
+---
+
+## v0.2 — 2026-06-09（当前真相源 + archive/raw）
+
+**适配文档系统重构**：
+
+- `doc-paths.md` 改为“根级当前真相源 + 模块附录 + active 工作区 + archive/raw”四层结构。
+- `frontmatter-schema.md` 新增 `type: changelog`，并更新 `brainstorm/research/guide/reference` 示例路径。
+- 明确项目若存在 `docs/modules/doc-system.md`，优先遵守项目级文档系统。
+- 新 bugfix 报告先写 `docs/bugfix/reviews/`，结案后移动到 `docs/archive/raw/bugfix-reviews/`。
+- `docs/讨论/调研/优化/复盘` 变成 legacy 兼容路径；对已采用 archive/raw 的项目不再作为当前写入目标。
+- `docs/DEPLOY.md` 不再默认是生产权威；优先项目 CLAUDE、`docs/modules/ops-runtime.md` 和 `docs/ops/README.md`。
 
 ---
 
@@ -17,7 +30,7 @@ last_updated: 2026-04-28
 
 - 新建 `forge-doc-policy/` skill 目录骨架
 - `SKILL.md` — 元信息 + 装载说明 + 触发关键词 + LLM 强校验铁律
-- `doc-paths.md` — SSoT 三层白名单（粗目录 15 条 + 高频细规则 10 条 + 兜底铁律），含路径合法性快速决策树和反模式清单
+- `doc-paths.md` — 当前真相源三层白名单（粗目录 15 条 + 高频细规则 10 条 + 兜底铁律），含路径合法性快速决策树和反模式清单
 - `frontmatter-schema.md` — 4 必填（status/type/module/last_updated）+ 2 选填（replaces/owner）字段定义，含 10 类 type 枚举和校验规则
 - `claude-md-snippet.md` — 工作区级 + 项目级 + 14 skill 引用模板
 - `scripts/` / `hooks/` / `templates/` 子目录占位，等 Sprint C/E 填充
@@ -33,16 +46,16 @@ last_updated: 2026-04-28
 - ⏳ Sprint E — `scripts/init-project.sh` + `scripts/audit-project.sh` + `templates/`
 
 **Why v0.1 而不是 v1.0**：
-- v0.1 = 骨架 + SSoT 文档完整，但脚本/hook 都是占位
+- v0.1 = 骨架 + 当前真相源文档完整，但脚本/hook 都是占位
 - v1.0 = Sprint A+C+E 全部完成，可作为新项目 day 0 一键启用
-- 项目 CLAUDE.md 引用时锁版本号（如 `@v0.1`），SSoT 改动走 brainstorm worktree → audit-project.sh 跨项目预演 → 没炸再合 main
+- 项目 CLAUDE.md 引用时锁版本号（如 `@v0.1`），当前真相源体系改动走 brainstorm worktree → audit-project.sh 跨项目预演 → 没炸再合 main
 
 ---
 
 ## 设计渊源
 
 本 skill 来自 info2action 项目 brainstorm（共 11 轮，2026-04-28）：
-- 文档：`docs/讨论/文档治理-2026-04-28/2026-04-28-文档治理-需求讨论.md`
+- legacy 证据路径：`docs/讨论/文档治理-2026-04-28/2026-04-28-文档治理-需求讨论.md`
 - 关键决策：D1-D18 见 brainstorm §7 + §10.1
 - 第 8 轮用户补充关键约束："不要只放在 CLAUDE.md 中，我希望它是可以复用的"
 - 第 10 轮砍 hook：改 LLM 强校验自觉路线（追问 1）

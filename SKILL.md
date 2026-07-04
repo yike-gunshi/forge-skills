@@ -21,9 +21,14 @@ echo "项目根目录: $_ROOT"
 
 # 检测文档状态
 echo "--- 文档状态 ---"
+[ -f "$_ROOT/docs/README.md" ] && echo "[DOCS] 发现 docs/README.md"
+[ -f "$_ROOT/docs/INDEX.md" ] && echo "[DOCS] 发现 docs/INDEX.md"
+[ -f "$_ROOT/docs/CHANGELOG.md" ] && echo "[DOCS] 发现历史总账"
+[ -f "$_ROOT/docs/modules/doc-system.md" ] && echo "[DOCS] 发现项目文档系统说明"
+[ -f "$_ROOT/.features/_registry.md" ] && echo "[FEATURES] 发现 Feature 注册表" && sed -n '1,80p' "$_ROOT/.features/_registry.md"
 ls "$_ROOT"/brainstorm-*.md 2>/dev/null && echo "[BRAINSTORM] 发现思考文档（根目录）"
 ls "$_ROOT"/docs/brainstorm-*.md 2>/dev/null && echo "[BRAINSTORM] 发现思考文档（docs/）"
-[ -f "$_ROOT/docs/PRD.md" ] && echo "[PRD] 发现 PRD" && grep -m1 "^## v" "$_ROOT/docs/PRD.md" 2>/dev/null
+[ -f "$_ROOT/docs/PRD.md" ] && echo "[PRD] 发现产品当前真相源"
 [ -f "$_ROOT/docs/DESIGN.md" ] && echo "[DESIGN] 发现 DESIGN.md"
 [ -f "$_ROOT/docs/ENGINEERING.md" ] && echo "[ENGINEERING] 发现 ENGINEERING.md"
 [ -f "$_ROOT/docs/QA.md" ] && echo "[QA] 发现 QA.md"
@@ -60,14 +65,14 @@ git branch --show-current 2>/dev/null
 无任何文档 + 用户没有明确任务
   → "看起来是一个新开始。建议先跑 /forge-brainstorm 理清思路。"
 
-有思考文档，无 PRD
+有思考文档，无 PRD 或无 .features Feature Spec
   → "发现思考文档 [{文件名}]。建议下一步：
-     A) /forge-prd — 将思考转化为正式 PRD
+     A) /forge-prd — 将思考转化为 PRD 当前事实 + .features Feature Spec
      B) /forge-dev — 跳过 PRD，直接进轻量开发模式
      C) /forge-brainstorm — 继续讨论，还没想清楚"
 
-有 PRD，无 DESIGN.md（且项目含前端）
-  → "PRD 就绪（{版本号}），但还没有设计文档。建议：
+有 PRD + Feature Spec，无 DESIGN.md（且项目含前端）
+  → "产品当前事实和 Feature Spec 就绪，但还没有设计文档。建议：
      A) /forge-dev — 启动开发调度（会自动触发设计）
      B) /forge-design — 单独做设计规划"
 

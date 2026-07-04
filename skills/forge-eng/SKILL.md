@@ -5,6 +5,7 @@ description: '工程文档管理与代码实现。管理项目的 ENGINEERING.md
 
 > **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
 > `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+> **当前文档加载契约**：先读项目 `CLAUDE.md`、`docs/README.md`、`docs/INDEX.md` 和 `docs/ENGINEERING.md` 当前真相源；PRD/DESIGN 只读相关章节，长 changelog 和 raw archive 只在追溯历史原因时加载。详见 `../_shared/current-doc-loading.md`。
 
 # /forge-eng：工程文档管理与代码实现 v2
 
@@ -85,7 +86,7 @@ description: '工程文档管理与代码实现。管理项目的 ENGINEERING.md
 1. 定位 PRD：搜索 `{项目目录}/docs/PRD.md`
 2. 定位 DESIGN.md：搜索 `{项目目录}/docs/DESIGN.md`
 3. 定位 RESEARCH.md：搜索 `{项目目录}/docs/*RESEARCH*`（如果 forge-dev 产出了调研报告）
-4. 定位视觉决策索引（如有）：搜索 `.do-dev/visual-decision.md`、`.deliver/visual-decision.md`、`docs/讨论/*/assets/*.meta.json`
+4. 定位视觉决策索引（如有）：优先搜索 `.deliver/visual-decision.md`；legacy 项目才兼容 `.do-dev/visual-decision.md` 或旧 `docs/讨论/*/assets/*.meta.json`
 5. 定位 ENGINEERING.md：
    ```
    搜索模式：
@@ -137,12 +138,12 @@ description: '工程文档管理与代码实现。管理项目的 ENGINEERING.md
 
 ## 第2步：理解现状（迭代模式）
 
-1. 读取 PRD 最新迭代摘要，提取工程相关变更
-2. 读取 DESIGN.md（如有），提取设计约束
+1. 读取 `docs/README.md`、`docs/INDEX.md` 和 `docs/ENGINEERING.md` 当前真相源。
+2. 读取 `docs/PRD.md`、`docs/DESIGN.md` 的相关章节，提取产品和设计约束。
 3. 读取 RESEARCH.md（如有），提取技术调研结论
 4. 读取视觉决策索引（如有），明确哪些 Image 2 / Figma 图只是观感参考，哪些真实截图是验收证据
-5. 读取完整 ENGINEERING.md
-6. 读取 ENGINEERING CHANGELOG（如有），做热点分析
+5. 按需读取相关 `docs/modules/*.md` 或 `docs/ops/*.md`。
+6. 只在需要历史原因时读取 `docs/CHANGELOG.md` 顶部索引和 `ENGINEERING-CHANGELOG.md` 相关段落，不默认扫全文。
 7. 用 Agent(Explore) 扫描项目源码，理解当前架构
 8. 向用户总结当前工程状态，确认理解是否正确
 

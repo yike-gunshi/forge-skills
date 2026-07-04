@@ -20,6 +20,9 @@ allowed-tools:
 
 > **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
 > `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+> **当前文档加载顺序**：编排层先读项目 `CLAUDE.md`、`docs/README.md`、`docs/INDEX.md`、
+> `.features/_registry.md` 和相关根级当前真相源；历史账本只按需追溯。
+> 详细规则见 `skills/_shared/current-doc-loading.md`。
 
 # /forge-deliver v2：端到端交付编排层
 
@@ -239,11 +242,11 @@ git apply .deliver/checkpoints/phase-N-done.patch  # 恢复到阶段 N
 
 2. **调用 forge-prd**
    - 输入：用户需求描述（+ brainstorm 产出，如有）
-   - 指令：让 forge-prd 产出/更新 PRD 和 CHANGELOG
-   - 期望产出：项目中的 PRD.md（或等效文档）已更新
+   - 指令：让 forge-prd 产出/更新 PRD 当前事实、`.features/{feature-id}/feature-spec.md` 和必要 changelog
+   - 期望产出：项目中的 `docs/PRD.md` 仍是当前产品真相源，且本次功能有独立 Feature Spec
 
 3. **收集 forge-prd 产出，写入 .deliver/**
-   - 将 PRD 核心内容（目标、用户故事、功能点、约束条件、项目类型）摘要到 `.deliver/requirement.md`
+   - 将 PRD 当前事实和 Feature Spec 核心内容（目标、用户故事、功能点、约束条件、项目类型、验收场景）摘要到 `.deliver/requirement.md`
    - 确定项目类型：`frontend / backend / fullstack`
 
 4. **产出验证**

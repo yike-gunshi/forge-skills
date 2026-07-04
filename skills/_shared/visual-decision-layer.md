@@ -50,8 +50,9 @@
 
 ## 产物保存约定
 
-- 思考/设计阶段：`docs/讨论/{模块名}/assets/`
-- 普通项目无 `docs/讨论/` 时：`docs/assets/visuals/`
+- 当前项目的可复用视觉资产：`docs/assets/visuals/{模块名}/`
+- brainstorm 原始讨论配图：`docs/archive/raw/discussions/{模块名}/assets/`
+- legacy 项目才沿用：`docs/讨论/{模块名}/assets/`
 - 复盘阶段：`~/claudecode_workspace/记录/复盘/{项目名}/assets/`
 - 文件命名：`{YYYY-MM-DD}-{阶段}-{用途}.png`
 - 同目录保存 prompt：`{同名}.prompt.md`
@@ -76,8 +77,8 @@
 
 ```bash
 python3 {当前 forge skill 目录}/../_shared/generate_image2.py \
-  --prompt-file docs/讨论/{模块名}/assets/{name}.prompt.md \
-  --out docs/讨论/{模块名}/assets/{name}.png \
+  --prompt-file docs/assets/visuals/{模块名}/{name}.prompt.md \
+  --out docs/assets/visuals/{模块名}/{name}.png \
   --size 1536x1024 \
   --quality medium
 ```

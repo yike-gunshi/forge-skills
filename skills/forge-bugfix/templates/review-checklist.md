@@ -3,11 +3,12 @@
 
 这是单个 bug 从发现到关闭的「Bug 修复验收报告」模板。forge-bugfix 在 bug 被登记
 或被领取时复制此模板到 docs/bugfix/reviews/BF-{MMDD}-{N}.md，并随着流程推进持续更新。
+结案后由 forge-bugfix P8 移动到 docs/archive/raw/bugfix-reviews/。
 
 核心规则：
 - 本文件不是修完后才生成的清单，而是单个 bug 的过程案卷。
 - 每个 bug 独立一份报告、独立 worktree、独立 TDD、独立 commit、独立 QA 回归。
-- 路径仍使用 docs/bugfix/reviews/，以兼容既有 backlog 链接和 forge-qa 的 review_doc 参数。
+- 处理中路径使用 docs/bugfix/reviews/，用于 forge-qa 的 review_doc 回填；结案后归档到 docs/archive/raw/bugfix-reviews/，并更新 backlog 链接。
 - 截图保存在 ./assets/{{BUG_ID}}/ 下，并在 Markdown 中用 ![](...) 内嵌展示。
 - QA 只填 QA 相关区域；用户只填「你的验收」和「最终结论」区域。
 - 交给用户验收前，forge-bugfix 必须用 scripts/validate-bugfix-report.py 校验通过。
@@ -40,7 +41,7 @@
 | 发现时间 | {{YYYY-MM-DD HH:MM}} |
 | 发现环境 | {{前端地址 / 后端地址 / commit / branch，如已知}} |
 | 原始描述 | {{用户原话或 QA 发现摘要}} |
-| 关联 Feature Spec / 场景 | {{docs/PRD.md 中的章节或 —}} |
+| 关联 Feature Spec / 场景 | {{.features/{feature-id}/feature-spec.md 中的章节或 —}} |
 | 初始影响范围 | {{影响哪些页面、流程、数据或用户}} |
 
 ### 初始证据

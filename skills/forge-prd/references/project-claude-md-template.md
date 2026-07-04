@@ -24,7 +24,8 @@
 
 #### R1: 无 Feature Spec 不写代码
 
-- 每个功能 SHALL 在 `docs/PRD.md` 中有对应的 Feature Spec 章节
+- 每个功能 SHALL 在 `.features/{feature-id}/feature-spec.md` 中有对应的 Feature Spec
+- `docs/PRD.md` 是产品当前真相源，只吸收已确认且仍有效的产品事实，不长期塞完整 Feature Spec
 - Feature Spec SHALL 包含：用户流程总览、页面/系统结构、Given/When/Then 行为场景、验收检查表
 - 如果用户要求开发但 Feature Spec 不存在，SHALL 提示：「该功能没有 Feature Spec，建议先运行 /forge-prd 生成并确认」
 - 用户明确确认 Feature Spec 后才可进入开发
@@ -85,7 +86,8 @@
 
 ### 文档位置
 
-- PRD（含 Feature Spec）：`docs/PRD.md`
+- PRD 当前真相源：`docs/PRD.md`
+- Feature Spec：`.features/{feature-id}/feature-spec.md`
 - PRD 变更日志：`docs/PRD-CHANGELOG.md`
 - 设计文档：`docs/DESIGN.md`
 - 工程文档：`docs/ENGINEERING.md`

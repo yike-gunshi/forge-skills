@@ -5,6 +5,7 @@ description: '全栈设计规划与文档管理。分级门控体系下，管理
 
 > **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
 > `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+> **当前文档加载契约**：先读项目 `CLAUDE.md`、`docs/README.md`、`docs/INDEX.md` 和 `docs/DESIGN.md` 当前真相源；长 changelog、Image2 历史稿和 raw archive 只在追溯原因时加载。详见 `../_shared/current-doc-loading.md`。
 
 # /forge-design：全栈设计规划与文档管理
 
@@ -31,7 +32,7 @@ description: '全栈设计规划与文档管理。分级门控体系下，管理
 
 **触发条件：**
 - 新项目、新页面、新的独立功能模块
-- 迭代不满触发器命中（同一模块 PRD CHANGELOG ≥ 3 次迭代）
+- 迭代不满触发器命中（历史账本显示同一模块 ≥ 3 次反复迭代）
 
 **流程：** 第0步 → 第1步（创建模式）→ 第2步 → 第3步 → 第4步 → 第5步 → 第6步
 **硬门控：** 第5步评分 < B 必须返工。子模块必须通过与父页面的一致性检查。
@@ -53,7 +54,7 @@ description: '全栈设计规划与文档管理。分级门控体系下，管理
 
 | 触发器 | 条件 | 动作 |
 |--------|------|------|
-| 迭代不满 | PRD CHANGELOG 同一模块 ≥ 3 次迭代 | L2 → L1，强制重新设计 |
+| 迭代不满 | 历史账本显示同一模块 ≥ 3 次反复迭代 | L2 → L1，强制重新设计 |
 | 子模块一致性 | 大需求下的子模块 | 必须读父页面 DESIGN.md，检查一致性 |
 | 评分过低 | L2 评分 < C | L2 → L1，完整重来 |
 
@@ -115,7 +116,7 @@ description: '全栈设计规划与文档管理。分级门控体系下，管理
 
 ### 0.2 门控判定
 
-1. **检查 PRD CHANGELOG**：同一模块是否有 ≥ 3 次迭代记录 → 触发迭代不满升级
+1. **检查历史账本索引**：先读 `docs/CHANGELOG.md` 顶部索引；只有当前模块需要追溯历史时，才读 `PRD-CHANGELOG.md` / `DESIGN-CHANGELOG.md` 的相关段落。
 2. **判断变更类型**：
    - 新项目/新页面/新模块 → **L1**
    - 迭代已有功能/样式微调 → **L2**
@@ -132,11 +133,11 @@ description: '全栈设计规划与文档管理。分级门控体系下，管理
 
 ## 第1步（迭代模式）：理解现状
 
-1. 读取 PRD 最新迭代摘要，提取设计相关变更
-2. 读取完整 DESIGN.md
-3. 读取 DESIGN CHANGELOG（如有），做热点分析
-4. 用 Agent(Explore) 扫描项目前端文件（HTML/CSS/JS），提取实际使用的设计体系
-5. **对比文档 vs 实际**：DESIGN.md 声称的 token 和代码实际使用的是否一致
+1. 读取 `docs/README.md`、`docs/INDEX.md` 和 `docs/DESIGN.md` 当前真相源。
+2. 读取 `docs/PRD.md` 的相关产品边界和相关模块附录。
+3. 仅在需要历史原因时读取 `DESIGN-CHANGELOG.md` 相关段落，不默认扫全文。
+4. 用 Agent(Explore) 扫描项目前端文件（HTML/CSS/JS），提取实际使用的设计体系。
+5. **对比文档 vs 实际**：DESIGN.md 声称的 token 和代码实际使用的是否一致。
 6. 向用户总结当前设计状态，确认理解是否正确
 
 ---

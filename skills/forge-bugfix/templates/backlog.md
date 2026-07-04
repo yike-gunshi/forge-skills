@@ -17,7 +17,8 @@
 编号规则：
 - 每条 bug 编号 BF-{MMDD}-{N}，N 在该日期递增
 - 编号一旦分配，即使条目被删除也不复用
-- 每个 BF 编号都必须有对应的 Bug 修复验收报告：docs/bugfix/reviews/BF-{MMDD}-{N}.md
+- 每个 BF 编号处理时必须有对应的活跃 Bug 修复验收报告：docs/bugfix/reviews/BF-{MMDD}-{N}.md
+- 结案后报告归档到 docs/archive/raw/bugfix-reviews/BF-{MMDD}-{N}.md，backlog 已处理区链接应指向归档路径
 
 优先级规则：
 - P0：阻塞核心流程、高频出现、涉及安全或数据
@@ -94,7 +95,7 @@
 <!-- 按月分节。归档时追加到对应月份。-->
 <!-- 格式：编号 | 描述 | 状态 | 处理日期 | 链接 -->
 <!-- 示例：-->
-<!-- - **BF-0419-3** 登录头像不刷新 — resolved 2026-04-20 → Bug 修复验收报告 docs/bugfix/reviews/BF-0419-3.md -->
+<!-- - **BF-0419-3** 登录头像不刷新 — resolved 2026-04-20 → Bug 修复验收报告 docs/archive/raw/bugfix-reviews/BF-0419-3.md -->
 <!-- - **N-0419-1** 登录页"记住我" — 已通过 /forge-prd 立项为 feature-remember-me -->
 
 ---
@@ -102,11 +103,11 @@
 ## 快速操作提示
 
 - 新建 bug 条目：追加到"🐛 待修 bug"表末尾，分配 BF-{MMDD}-{N} 编号
-- 新建或领取 bug：同步创建 `docs/bugfix/reviews/{BUG_ID}.md` Bug 修复验收报告
+- 新建或领取 bug：同步创建 `docs/bugfix/reviews/{BUG_ID}.md` 活跃 Bug 修复验收报告
 - 开始修某个 bug：把该行 `状态` 改成 `in-progress`，记录领取会话
 - 修完代码：状态改 `fixed-awaiting-qa`
 - QA 失败：状态改 `qa-failed`，回到 bugfix
 - QA 通过但等待批次最终人工验收：状态改 `qa-pass-pending-final-review`
 - 遇到需要用户判断的问题：状态改 `blocked-human`，在报告里写决策卡
-- 用户最终验收通过：把行从"🐛 待修 bug"剪切到"🗄️ 已处理"的对应月份下，附 Bug 修复验收报告链接
+- 用户最终验收通过且修复合并后：把 BF 报告归档到 `docs/archive/raw/bugfix-reviews/`，再把行从"🐛 待修 bug"剪切到"🗄️ 已处理"的对应月份下，附归档报告链接
 - 新需求走立项：把行从"💡 新需求"剪切到"🗄️ 已处理"，附对应 feature 链接
