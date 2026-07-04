@@ -54,7 +54,7 @@ description: 文档落地治理规范。统一管理 docs/ 目录下文档的写
 ### 装载 2：新项目 day 0（Sprint E）
 
 ```bash
-~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/scripts/init-project.sh
+~/.claude/skills/forge-doc-policy/scripts/init-project.sh
 ```
 
 在新项目根跑一次：创建 docs/ 标准骨架 + 拷贝 CLAUDE.md 模板 + 配 .gitignore + 生成 docs/README.md。
@@ -62,7 +62,7 @@ description: 文档落地治理规范。统一管理 docs/ 目录下文档的写
 ### 装载 3：老项目接入审计（Sprint E）
 
 ```bash
-~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/scripts/audit-project.sh
+~/.claude/skills/forge-doc-policy/scripts/audit-project.sh
 ```
 
 在已有项目根跑：检测偏差 + 输出 audit-report.md，用户确认后跑 `--fix` 自动补 frontmatter / 创建缺失目录。

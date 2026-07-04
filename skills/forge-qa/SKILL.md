@@ -30,10 +30,10 @@ allowed-tools:
 ---
 
 > **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
-> `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+> `~/.claude/skills/forge-doc-policy/doc-paths.md`。
 > **当前文档加载顺序**：完整 QA 先读项目 `CLAUDE.md`、`docs/README.md`、`docs/INDEX.md`、
 > `docs/QA.md` 当前验收手册和相关 `.features/{feature-id}/feature-spec.md`；单 bug 回归读取活跃 BF 报告。
-> 详细规则见 `skills/_shared/current-doc-loading.md`。
+> 详细规则见 `~/.claude/skills/_shared/current-doc-loading.md`。
 
 # /forge-qa：QA 验收与测试报告
 

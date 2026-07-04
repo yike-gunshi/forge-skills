@@ -12,10 +12,10 @@ allowed-tools:
 ---
 
 > **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
-> `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+> `~/.claude/skills/forge-doc-policy/doc-paths.md`。
 > **当前文档加载顺序**：涉及文档更新时，先读项目 `CLAUDE.md`、`docs/README.md`、
 > `docs/INDEX.md` 和相关根级当前真相源；`archive/raw` 只作历史证据。
-> 详细规则见 `skills/_shared/current-doc-loading.md`。
+> 详细规则见 `~/.claude/skills/_shared/current-doc-loading.md`。
 
 # /forge-ship：发布上线
 

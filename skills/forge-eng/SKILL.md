@@ -4,8 +4,8 @@ description: '工程文档管理与代码实现。管理项目的 ENGINEERING.md
 ---
 
 > **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
-> `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
-> **当前文档加载契约**：先读项目 `CLAUDE.md`、`docs/README.md`、`docs/INDEX.md` 和 `docs/ENGINEERING.md` 当前真相源；PRD/DESIGN 只读相关章节，长 changelog 和 raw archive 只在追溯历史原因时加载。详见 `../_shared/current-doc-loading.md`。
+> `~/.claude/skills/forge-doc-policy/doc-paths.md`。
+> **当前文档加载契约**：先读项目 `CLAUDE.md`、`docs/README.md`、`docs/INDEX.md` 和 `docs/ENGINEERING.md` 当前真相源；PRD/DESIGN 只读相关章节，长 changelog 和 raw archive 只在追溯历史原因时加载。详见 `~/.claude/skills/_shared/current-doc-loading.md`。
 
 # /forge-eng：工程文档管理与代码实现 v2
 

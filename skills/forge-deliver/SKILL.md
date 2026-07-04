@@ -19,10 +19,10 @@ allowed-tools:
 ---
 
 > **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
-> `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+> `~/.claude/skills/forge-doc-policy/doc-paths.md`。
 > **当前文档加载顺序**：编排层先读项目 `CLAUDE.md`、`docs/README.md`、`docs/INDEX.md`、
 > `.features/_registry.md` 和相关根级当前真相源；历史账本只按需追溯。
-> 详细规则见 `skills/_shared/current-doc-loading.md`。
+> 详细规则见 `~/.claude/skills/_shared/current-doc-loading.md`。
 
 # /forge-deliver v2：端到端交付编排层
 
@@ -274,7 +274,7 @@ git apply .deliver/checkpoints/phase-N-done.patch  # 恢复到阶段 N
 
 1. **调用 forge-design**
    - 输入：指向项目中的 PRD.md
-   - 指令：让 forge-design 产出/更新 DESIGN.md；如涉及前端页面、组件、状态或布局，必须执行 Image 2 视觉稿门禁（见 `../_shared/visual-decision-layer.md`）
+   - 指令：让 forge-design 产出/更新 DESIGN.md；如涉及前端页面、组件、状态或布局，必须执行 Image 2 视觉稿门禁（见 `~/.claude/skills/_shared/visual-decision-layer.md`）
    - 期望产出：项目中的 DESIGN.md 已更新
 
 2. **调用 forge-design-impl**

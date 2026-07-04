@@ -21,11 +21,11 @@ allowed-tools:
 ---
 
 > **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
-> `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+> `~/.claude/skills/forge-doc-policy/doc-paths.md`。
 > **当前文档加载顺序**：先读项目 `CLAUDE.md`、`docs/README.md`、`docs/INDEX.md`、
 > `docs/QA.md` / `docs/ENGINEERING.md` 相关当前真相源，再读活跃 BF 报告和 backlog。
 > 历史 BF 报告在 `docs/archive/raw/bugfix-reviews/`，只作追溯证据。
-> 详细规则见 `skills/_shared/current-doc-loading.md`。
+> 详细规则见 `~/.claude/skills/_shared/current-doc-loading.md`。
 
 # /forge-bugfix：一次一 bug + Bug 修复验收报告
 

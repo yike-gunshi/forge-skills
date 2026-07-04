@@ -4,8 +4,8 @@ description: '全栈设计规划与文档管理。分级门控体系下，管理
 ---
 
 > **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
-> `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
-> **当前文档加载契约**：先读项目 `CLAUDE.md`、`docs/README.md`、`docs/INDEX.md` 和 `docs/DESIGN.md` 当前真相源；长 changelog、Image2 历史稿和 raw archive 只在追溯原因时加载。详见 `../_shared/current-doc-loading.md`。
+> `~/.claude/skills/forge-doc-policy/doc-paths.md`。
+> **当前文档加载契约**：先读项目 `CLAUDE.md`、`docs/README.md`、`docs/INDEX.md` 和 `docs/DESIGN.md` 当前真相源；长 changelog、Image2 历史稿和 raw archive 只在追溯原因时加载。详见 `~/.claude/skills/_shared/current-doc-loading.md`。
 
 # /forge-design：全栈设计规划与文档管理
 
@@ -22,7 +22,7 @@ description: '全栈设计规划与文档管理。分级门控体系下，管理
 ```
 
 全程中文。关键设计决策需用户确认后才能定稿。
-涉及前端页面、组件、状态或布局时，读取 `../_shared/visual-decision-layer.md`，使用 Image 2 作为实现前的视觉预判门禁。
+涉及前端页面、组件、状态或布局时，读取 `~/.claude/skills/_shared/visual-decision-layer.md`，使用 Image 2 作为实现前的视觉预判门禁。
 
 ---
 
@@ -285,7 +285,7 @@ Component Token（组件级）
 **步骤：**
 1. 先完成设计方向、配色、字体、布局约束，避免让 Image 2 替你做设计决策。
 2. 为每张图写明「决策用途」，例如：首页信息密度是否过重、详情页阅读是否舒服、移动端选择控件是否清楚。
-3. 使用 `../_shared/visual-decision-layer.md` 的 UI Prompt 模板生成视觉稿。
+3. 使用 `~/.claude/skills/_shared/visual-decision-layer.md` 的 UI Prompt 模板生成视觉稿。
 4. 将图片、prompt、meta 保存到设计文档同目录的 `assets/` 或 brainstorm 归档目录。
 5. 用户确认后，把确认结果写入 DESIGN.md 的「视觉决策记录」：采用哪张、否掉哪张、为什么。
 6. 如果无法生成图片，保存 prompt pack，并在交付总结中标注「视觉稿未生成，不能进入 design-impl 的视觉实现」。
