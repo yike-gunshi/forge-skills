@@ -40,9 +40,9 @@
 
 - [x] C1. forge-bugfix 瘦身：63KB → 骨架 12.6KB + 4 份阶段手册（含 Mode B 契约单源化）`1a0f65b` ✅ 2026-07-04
 - [x] C2. forge-qa 瘦身：64KB → 骨架 15.4KB + Mode A/B 两份手册 `0422e06` ✅ 2026-07-04
-- [ ] C3. forge-design / forge-dev / forge-brainstorm / forge-prd 瘦身（26–30KB 各个评估；eng 微调；fupan 等 E2、deliver 等 E1）
+- [x] C3. 中型瘦身完成 ✅ 2026-07-04：brainstorm 27.5→17K、prd 26→17.4K、design 30→15.4K、dev 28→20.5K、eng 28→24.9K（各配 references 手册；fupan 等 E2、deliver 等 E1）
 - [x] C4. description 全部压缩到 2-4 行（附带删除总入口过宽触发词"继续"）`0d92b74` ✅ 2026-07-04
-- [ ] C5. 工作区 CLAUDE.md 的 forge 段落（约 200 行）收缩成路由表 + 铁律，流程细节回归 skill 单一出处
+- [x] C5. 工作区 CLAUDE.md Forge 段收缩 206→127 行（R1-R11 一行版速查表；原文备份进 cookbook docs/archive/raw/）✅ 2026-07-04
 - [ ] C6. 实战验证：info2action 下一个真实 bug 走一遍新骨架的 P0-P8 + Mode B（瘦身回归测试）
 
 ### 阶段 3：P2 降门槛（任何项目可用）
