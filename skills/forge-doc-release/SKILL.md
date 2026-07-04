@@ -227,7 +227,7 @@ find . -maxdepth 3 -name "*.md" \
 
 ## 第7步：TODOS.md 清理
 
-如果 TODOS.md 不存在，跳过此步骤。
+如果 TODO.md / TODOS.md 都不存在，跳过此步骤（下文统称 TODOS.md，以项目实际存在的文件为准）。
 
 1. **已完成但未标记的项目：** 将 diff 与未完成的 TODO 项交叉对照。如果 TODO 明确被此分支的变更完成了，移到已完成部分并标注 `**已完成：** vX.Y.Z.W (YYYY-MM-DD)`。保守处理——只标记在 diff 中有明确证据的项目。
 
@@ -281,7 +281,7 @@ git diff <base>...HEAD -- VERSION
 git commit -m "$(cat <<'EOF'
 docs: 更新项目文档
 
-Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+Co-Authored-By: Claude <noreply@anthropic.com>
 EOF
 )"
 ```

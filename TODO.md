@@ -27,13 +27,13 @@
 - [x] A4. 上游 skill 最新版调研 ✅ 2026-07-04 → 审计文档第 5 节（Superpowers v5.1 / gstack 30+ / frontend-design / ui-ux-pro-max v2）
 - [ ] A3. 基于分析文档定稿优化方案清单（哪些做、哪些不做）
 
-### 阶段 1：P0 保命（真源与链接）
+### 阶段 1：P0 保命（真源与链接）✅ 2026-07-04 完成
 
-- [ ] B1. 审查 cookbook 6 周未提交改动（27 文件 +396/−603），分类：该留的提交、该丢的还原
-- [ ] B2. 推送远端，恢复"磁盘 = git = GitHub"三点一致
-- [ ] B3. install.sh 把 `_shared` 加入链接清单，修复 `../_shared/` 断链
-- [ ] B4. 统一跨文件引用锚点（消灭 14 处 `~/claudecode_workspace/...` 绝对路径）
-- [ ] B5. 清理仓库垃圾（__pycache__、.pytest_cache 入 .gitignore）
+- [x] B1. 审查 6 周未提交改动 → 全部是正经工作（doc-policy v0.2 适配 + description 压缩 + bugfix 瘦身 321 行），整体入库 `472b080`；漏提交的 _shared/current-doc-loading.md 一并入库
+- [x] B2. 已推送 origin/main（2273987 → 773c4ac，共 4 个 commit），三点一致恢复
+- [x] B3. install.sh 增加 _shared 链接（install/uninstall/status 三处）`cccec47`，已执行生效
+- [x] B4. 跨 skill 引用统一 `~/.claude/skills/` 锚点 `4925ded`；有意保留：fupan 复盘输出目录（P-24 阶段 4 再议）
+- [x] B5. 勘误：.gitignore 本来就覆盖缓存垃圾，磁盘残留未入库，无需动作（审计 A-3 已修正）
 
 ### 阶段 2：P1 减重（上下文经济学)
 
