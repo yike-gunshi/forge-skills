@@ -151,7 +151,7 @@ D) 其他 — 告诉我你想做什么
 |-------|------|---------|
 | `/forge-brainstorm` | 头脑风暴 | 有想法要讨论时 |
 | `/forge-prd` | PRD 管理 | 需要正式需求文档时 |
-| `/forge-dev` | 开发调度 | 从需求到交付的完整流程 |
+| `/forge-dev` | 开发调度 | 从需求到交付；`--full` 一路到发布（原 forge-deliver 已并入） |
 | `/forge-design` | 设计规划 | 需要 UI/UX 设计时 |
 | `/forge-design-impl` | 设计实现 | 将设计文档转为代码 |
 | `/forge-eng` | 工程实现 | 写代码（含 TDD + Worktree） |
@@ -159,8 +159,7 @@ D) 其他 — 告诉我你想做什么
 | `/forge-bugfix` | Bug 修复 | 系统性调试和修复 |
 | `/forge-review` | PR 审查 | 上线前代码审查 |
 | `/forge-ship` | 发布 | 合并+推送+创建 PR |
-| `/forge-deliver` | 端到端交付 | 全自动从需求到发布 |
-| `/forge-fupan` | 复盘 | 本地 Workbench 学习确认 + 知识沉淀 |
+| `/forge-fupan` | 复盘 | 教训进账本 + 一页纸 + 复发检测（Workbench 是阅览器） |
 | `/forge-status` | 并行会话巡检 | 扫 `.forge/active.md`，按硬信号清理僵尸 |
 
 ---

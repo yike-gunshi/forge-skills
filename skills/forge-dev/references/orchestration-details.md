@@ -6,10 +6,10 @@
 
 ### 状态文件
 
-所有调度产出写入项目根目录的 `.do-dev/` 文件夹：
+所有调度产出写入项目根目录的 `.forge/` 文件夹：
 
 ```
-.do-dev/
+.forge/
 ├── state.json                    # 调度状态（持久化）
 ├── visual-decision.md            # UI/设计相关任务的视觉决策索引（可选）
 ├── checkpoints/
@@ -47,15 +47,15 @@
 自动模式下，每个阶段完成后保存检查点：
 
 ```bash
-mkdir -p .do-dev/checkpoints
-git diff > .do-dev/checkpoints/[phase]-done.patch
-git diff --stat >> .do-dev/checkpoints/[phase]-done.patch.summary
+mkdir -p .forge/checkpoints
+git diff > .forge/checkpoints/[phase]-done.patch
+git diff --stat >> .forge/checkpoints/[phase]-done.patch.summary
 ```
 
 **回退方法（供用户手动使用）：**
 ```bash
 git checkout -- .                                     # 清除当前工作区
-git apply .do-dev/checkpoints/[phase]-done.patch      # 恢复到指定阶段
+git apply .forge/checkpoints/[phase]-done.patch      # 恢复到指定阶段
 ```
 
 ---
@@ -91,13 +91,13 @@ git apply .do-dev/checkpoints/[phase]-done.patch      # 恢复到指定阶段
 | 上线就绪：✅ / ⚠️ / ❌                                             |
 +----------------------------------------------------------------+
 | [自动模式] 检查点：                                                |
-|   .do-dev/checkpoints/design-done.patch                          |
-|   .do-dev/checkpoints/eng-done.patch                             |
-|   .do-dev/checkpoints/qa-done.patch                              |
+|   .forge/checkpoints/design-done.patch                          |
+|   .forge/checkpoints/eng-done.patch                             |
+|   .forge/checkpoints/qa-done.patch                              |
 +================================================================+
 ```
 
-写入 `.do-dev/delivery-report.md`，更新 state.json 所有阶段标记为 `done`。
+写入 `.forge/delivery-report.md`，更新 state.json 所有阶段标记为 `done`。
 
 ### 验收操作清单（必须产出）
 

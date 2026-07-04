@@ -15,7 +15,7 @@ FORCE=0
 
 # All forge skills (subdirectories under skills/)
 SKILLS=(
-  forge-brainstorm forge-bugfix forge-deliver forge-design forge-design-impl
+  forge-brainstorm forge-bugfix forge-design forge-design-impl
   forge-dev forge-doc-policy forge-doc-release forge-eng forge-fupan forge-prd
   forge-qa forge-review forge-ship forge-status
 )

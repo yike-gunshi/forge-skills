@@ -2,7 +2,7 @@
 name: forge-dev
 description: |
   开发调度器：接力 PRD 变更，主上下文只编排，子 skill（design/eng/qa）在独立上下文执行防 context rot；交互 / --auto / --resume 三模式。
-  触发方式：用户说"开始开发"、"实现需求"、"forge-dev"、PRD 更新后进入开发阶段时。
+  触发方式：用户说"开始开发"、"实现需求"、"forge-dev"、PRD 更新后进入开发阶段时；说"端到端交付"、"全自动交付"、"一路到发布"时走 --full 尾段（原 forge-deliver 已退役并入）。
 ---
 
 > **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见
@@ -38,8 +38,8 @@ B=""
 [ -z "$B" ] && [ -x "$HOME/.claude/skills/gstack/browse/dist/browse" ] && B="$HOME/.claude/skills/gstack/browse/dist/browse"
 [ -n "$B" ] && echo "浏览器工具: $B" || echo "浏览器工具: 不可用（QA 将以纯代码模式运行）"
 
-# 检查 .do-dev 状态
-[ -f "$_ROOT/.do-dev/state.json" ] && echo "发现未完成的开发流水线" && cat "$_ROOT/.do-dev/state.json"
+# 检查 .forge 状态
+[ -f "$_ROOT/.forge/dev-state.json" ] && echo "发现未完成的开发流水线" && cat "$_ROOT/.forge/dev-state.json"
 
 # 检查 .features/ 注册表
 [ -f "$_ROOT/.features/_registry.md" ] && echo "发现 Feature 注册表" && cat "$_ROOT/.features/_registry.md"
@@ -136,12 +136,12 @@ ls "$_ROOT"/docs/brainstorm-*.md 2>/dev/null && echo "发现思考文档（docs/
 
 **自动模式特殊规则：**
 - **不 git commit** — 代码改动只存在于工作区
-- **每个阶段结束保存检查点** — `git diff > .do-dev/checkpoints/phase-N-done.patch`
+- **每个阶段结束保存检查点** — `git diff > .forge/checkpoints/phase-N-done.patch`
 - **遇到阻塞不死等** — 记录阻塞原因，跳到下一个可执行阶段，在报告中标注
 
 ### 恢复模式（`--resume`）
 
-读取 `.do-dev/state.json`，从上次中断的阶段继续：
+读取 `.forge/dev-state.json`，从上次中断的阶段继续：
 
 1. 显示当前进度摘要
 2. 通过 AskUserQuestion 确认："上次停在 [阶段名]，要从这里继续吗？"
@@ -342,9 +342,9 @@ ls "$_ROOT"/docs/brainstorm-*.md 2>/dev/null && echo "发现思考文档（docs/
 如果项目类型为 `frontend` 或 `fullstack`，且变更涉及页面、组件、状态或布局：
 
 1. 读取 `~/.claude/skills/_shared/visual-decision-layer.md`，判断是否需要 Image 2、show-widget 或真实截图。
-2. 若 PRD/brainstorm/DESIGN.md 已有视觉稿，汇总到 `.do-dev/visual-decision.md`。
+2. 若 PRD/brainstorm/DESIGN.md 已有视觉稿，汇总到 `.forge/visual-decision.md`。
 3. 调度 `forge-design` 时明确要求完成 Image 2 视觉稿门禁；若无法生成，至少产出 prompt pack 并标注阻塞。
-4. 调度 `forge-eng` / `forge-design-impl` 时传入 `.do-dev/visual-decision.md`，要求实现后用真实截图替换或对比视觉稿。
+4. 调度 `forge-eng` / `forge-design-impl` 时传入 `.forge/visual-decision.md`，要求实现后用真实截图替换或对比视觉稿。
 5. 调度 `forge-qa` 时说明：Image 2 只作为观感参考，pass/fail 仍基于 Feature Spec、DESIGN.md、CSS 断言和真实截图。
 
 ### 产出执行计划
@@ -435,7 +435,7 @@ for wave in waves:
 
 1. **读取产出文档** — 确认文档已正确更新（DESIGN.md / ENGINEERING.md / QA.md）
 2. **读取代码变更** — `git diff --stat` 确认变更范围合理
-3. **保存检查点**（自动模式）：`git diff > .do-dev/checkpoints/[phase]-done.patch`
+3. **保存检查点**（自动模式）：`git diff > .forge/checkpoints/[phase]-done.patch`
 4. **阶段确认**（交互模式）：向用户简要汇报，确认是否继续下一个 wave
 
 ### 阻塞处理
@@ -458,6 +458,19 @@ for wave in waves:
 
 给用户的验收操作按"能直接跑通"标准写（带命令和预期）。
 清单格式见 [references/orchestration-details.md](references/orchestration-details.md)。
+
+## 第6步（可选）：发布尾段（--full）
+
+**默认不执行**。仅当用户明说"一路到发布 / 端到端交付 / --full"时，在第 5 步交付总结经用户确认后继续：
+
+1. 调度 `forge-review`（结构性审查，发现直接修）
+2. 审查通过 → 调度 `forge-ship`（默认 PR only，用户明确要求才 Full ship）
+3. 合并前 → 调度 `forge-doc-release`（文档同步）
+4. 汇总最终交付报告（含 Ship Summary 状态表），更新 `.forge/dev-state.json`
+
+每个尾段环节仍是独立上下文子代理；任何一环失败即停，不带病往下走。
+
+---
 
 ## 单独调用模式
 

@@ -54,7 +54,11 @@
 
 ### 阶段 4：结构性调整（每项单独讨论定案后动手）
 
-- [ ] E1. dev/deliver 合并：保 forge-dev（上下文工程设计），吸收 deliver 的 ship/doc-release 尾段编排，退役 forge-deliver，状态目录统一（消灭 .do-dev/ 与 .deliver/ 并存）
+- [x] E1. dev/deliver 合并 ✅ 2026-07-04（细案经用户确认）：
+  - forge-dev 新增第 6 步可选发布尾段（--full：review→ship→doc-release），默认行为不变
+  - 状态目录统一 `.forge/`（dev-state.json/checkpoints/visual-decision.md），旧 .do-dev/.deliver 只读迁移
+  - forge-deliver 退役归档 `_archive/2026-07-04-forge-deliver-retired/`，install.sh 清单同步，触发词并入 dev
+  - 验证：16 链接 ok、全库无悬空引用、注册表不再出现 deliver
 - [x] E2. fupan v2 重设计 ✅ 2026-07-04（细案经用户确认）：
   - 主产出改为 learnings.jsonl 账本（append-only/置信度/复发检测，参考 gstack /learn+/retro）
   - 一页纸 ≤60 行 + 每次 1 个深度小课；五章模板/流水账/强制配图/网页勾选门禁全部砍掉

@@ -14,9 +14,9 @@ last_updated: 2026-07-04
 ## 先记住这张地图
 
 ```
-角色分工（15 个 skill = 4 类人）
+角色分工（14 个 skill = 4 类人）
 ├── 导航：forge（前台），forge-status（保安）
-├── 项目经理：forge-dev，forge-deliver（自己不干活，只调度）
+├── 项目经理：forge-dev（自己不干活，只调度；--full 可一路到发布）
 ├── 工种：brainstorm → prd → design → design-impl → eng → qa → bugfix → fupan
 └── 守门收尾：review（质检）→ ship（发货）→ doc-release（对账）→ doc-policy（档案室）
 
@@ -142,12 +142,12 @@ last_updated: 2026-07-04
 **什么时候用**："开始开发/实现需求"、PRD 更新后。
 **怎么工作**：Brainstorm 感知 → 读真相源 + Feature Spec 检查 → Discussion 收集你的偏好 → 并行技术调研 → 给出调度建议（该叫哪些工种、什么顺序）→ 用 Agent 工具在**独立上下文**里跑各子 skill（主上下文只调度不干活，防止越聊越傻）→ 汇总交付报告。三模式：交互（3 个硬卡点）/--auto（前置沟通后全自动）/--resume（断点续跑）。
 **规矩**：主上下文不做实现；给子 agent 只传必要文档路径；子 agent 完成后读其产出文档确认，不轻信其口头汇报。
-**产出**：`.do-dev/state.json` 检查点 + 交付总结。
+**产出**：`.forge/dev-state.json` 检查点 + 交付总结（--full 时含 Ship Summary）。
 
-## 15. forge-deliver — 端到端交付（编排器，已定退役方向）
+## 15. forge-deliver — 已退役（2026-07-04）
 
-**一句话**：管得更宽的项目经理（一路编排到 ship + doc-release），与 forge-dev 职责重叠。
-**现状**：实战里 dev 用得多、deliver 用得少，已决策"保 dev、吸收 deliver 尾段、退役 deliver"（见 TODO 阶段 4 E1），动手前会单独出方案确认。
+职责已并入 forge-dev：说"端到端交付 / 一路到发布"即走 dev 的 --full 尾段（review → ship → doc-release）。
+原文件归档在 cookbook `_archive/2026-07-04-forge-deliver-retired/`，可恢复。
 
 ## 16. forge-doc-policy — 文档治理规范
 
