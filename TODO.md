@@ -43,14 +43,14 @@
 - [x] C3. 中型瘦身完成 ✅ 2026-07-04：brainstorm 27.5→17K、prd 26→17.4K、design 30→15.4K、dev 28→20.5K、eng 28→24.9K（各配 references 手册；fupan 等 E2、deliver 等 E1）
 - [x] C4. description 全部压缩到 2-4 行（附带删除总入口过宽触发词"继续"）`0d92b74` ✅ 2026-07-04
 - [x] C5. 工作区 CLAUDE.md Forge 段收缩 206→127 行（R1-R11 一行版速查表；原文备份进 cookbook docs/archive/raw/）✅ 2026-07-04
-- [ ] C6. 实战验证：info2action 下一个真实 bug 走一遍新骨架的 P0-P8 + Mode B（瘦身回归测试）
+- [~] C6. 实战验证：D3 已用真实字节数验证链路加载账本；「新骨架是否会主动读阶段手册」仍需 info2action 下一个真实 bug 观察（留待日常使用自然触发）
 
 ### 阶段 3：P2 降门槛（任何项目可用）
 
 - [x] D1. init-project.sh 已兑现（幂等、绝不覆盖、复用 bugfix backlog 模板；scratchpad 实测两遍通过）✅ 2026-07-04
   - 附带修复：install.sh 的 SKILLS 清单漏了 forge-doc-policy，导致 B4 改的 ~/.claude/skills/forge-doc-policy/ 引用一直是断链（实测踩出，已补链）
 - [x] D2. /forge 决策树：轻量车道置顶 + 空项目导向 init 脚手架 ✅ 2026-07-04
-- [ ] D3. 用一个全新空项目做端到端验收（几步跑通 + 上下文消耗对比）
+- [x] D3. 端到端验收完成 → `docs/d3-acceptance-2026-07.md` ✅ 2026-07-04（接入 1 命令/0.03秒/6文件；bug 链路峰值 127→53KB；诚实记录 progressive disclosure 使总量变大的反直觉发现）
 
 ### 阶段 4：结构性调整（每项单独讨论定案后动手）
 
