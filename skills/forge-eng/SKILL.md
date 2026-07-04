@@ -88,7 +88,7 @@ description: |
 1. 定位 PRD：搜索 `{项目目录}/docs/PRD.md`
 2. 定位 DESIGN.md：搜索 `{项目目录}/docs/DESIGN.md`
 3. 定位 RESEARCH.md：搜索 `{项目目录}/docs/*RESEARCH*`（如果 forge-dev 产出了调研报告）
-4. 定位视觉决策索引（如有）：优先搜索 `.deliver/visual-decision.md`；legacy 项目才兼容 `.do-dev/visual-decision.md` 或旧 `docs/讨论/*/assets/*.meta.json`
+4. 定位视觉决策索引（如有）：优先搜索 `.forge/visual-decision.md`；legacy 项目才兼容旧 `.deliver/` / `.do-dev/` 或旧 `docs/讨论/*/assets/*.meta.json`
 5. 定位 ENGINEERING.md：
    ```
    搜索模式：
@@ -325,184 +325,16 @@ worktree 建好后：① 若项目需要运行应用 → 遵守项目统一 dev 
 禁止自起野端口；② 若测试框架缺失 → 检测并引导初始化。
 **执行前必读 [references/dev-environment.md](references/dev-environment.md)**。
 
-## 第6步：任务拆分与 Wave 规划
+## 第6-7步：任务拆分 + Wave 并行执行（TDD + 验证门）
 
-### 任务拆分原则
+方案确认后进入实现。**执行前必读 [references/wave-execution.md](references/wave-execution.md)**，其中：
+- 第 6 步：把实现拆成原子任务（每个任务独立可验证、可 commit），按依赖关系分 Wave
+- 第 7 步：每个 Wave 内 TDD 红绿循环 + **Verification Gate**——证据先于断言，每个任务跑验证命令读完整输出确认后才 commit
 
-1. **垂直切片优先** — 每个任务端到端完成一个功能
-2. **每个任务足够小** — 通常 1-3 个文件，最多 5 个
-3. **每个任务可独立验证** — 有明确的验证方式
-4. **每个任务有 TDD 级别标注** — 根据文件类型自动判断
-
-### TDD 级别自动判断
-
-```
-项目有测试框架？
-├── 否（且用户拒绝安装）→ 全部任务使用"验证驱动"
-└── 是 → 按任务文件类型判断：
-      ├── *.py / *.go / *.rs / *api* / *service* / *model*  → 严格 TDD
-      ├── *.tsx / *.vue / *.jsx（前端组件）                   → 轻量 TDD
-      ├── *.css / *.scss / *.config.* / *.md / *.json        → 跳过
-      └── Bug 修复（任何类型）                                → 严格 TDD
-```
-
-### 任务定义格式
-
-```markdown
-### Task-{N}: {任务名}
-
-**TDD 级别**: 严格 / 轻量 / 验证驱动 / 跳过
-**类型**: auto | manual
-**依赖**: [Task-X, Task-Y]
-**文件**:
-- {file_path_1} — {做什么改动}
-- {file_path_2} — {做什么改动}
-
-**实现要求**:
-{具体实现指令}
-
-**验证命令**:
-{可执行的验证命令：测试命令 / curl / 浏览器截图 / 脚本}
-
-**完成标准**:
-{什么状态算"做完了"——必须可验证}
-```
-
-### Wave 分组
-
-```
-┌─────────────────────────────────────────────────────────┐
-│  WAVE 1 (并行)              WAVE 2 (并行)      WAVE 3    │
-│  ┌─────────┐ ┌─────────┐   ┌─────────┐        ┌──────┐ │
-│  │ Task-01 │ │ Task-02 │ → │ Task-03 │      → │T-05  │ │
-│  │ 严格TDD │ │ 跳过TDD │   │ 轻量TDD │        │验证  │ │
-│  └─────────┘ └─────────┘   └─────────┘        │驱动  │ │
-│                                                 └──────┘ │
-└─────────────────────────────────────────────────────────┘
-```
-
-**分组规则**：
-- 无依赖或依赖已在前序 wave 完成 → 归入当前 wave
-- 同一 wave 内任务互相不依赖 → 可并行
-- 修改同一文件 → 不同 wave 顺序执行，或合并为一个任务
-
-### 用户确认
-
-通过 AskUserQuestion 展示任务拆分和 wave 规划，包括每个任务的 TDD 级别。
-
----
-
-## 第7步：Wave 并行执行（TDD + Verification Gate）
-
-### 执行方式
-
-**同一 wave 内的任务使用 Agent 工具并行执行**，每个任务在独立上下文中完成。所有 Agent 的工作目录为 worktree 路径。
-
-### 任务执行模板（Agent Prompt）
-
-每个 Agent 收到的完整指令：
-
-```
-你需要在项目 {worktree_path} 中完成以下任务：
-
-任务：{task.name}
-TDD 级别：{task.tdd_level}
-文件：{task.files}
-实现要求：{task.instructions}
-验证命令：{task.verify_command}
-完成标准：{task.done_criteria}
-
-工程上下文：
-- ENGINEERING.md: {eng_doc_path}（如有）
-- DESIGN.md: {design_doc_path}（如有）
-- 视觉决策索引: {visual_decision_path or "无"}（Image 2 只作观感参考，最终以 DESIGN.md、Feature Spec、真实截图和测试为准）
-
-=== 实现流程（根据 TDD 级别） ===
-
-[严格 TDD]
-1. 读取涉及的文件，理解上下文
-2. 写失败测试（测试文件路径随代码文件就近放置）
-3. 运行测试 → 必须看到测试失败（失败原因是功能缺失，不是语法错误）
-4. 写最小实现让测试通过
-5. 运行测试 → 确认通过
-6. 重构（保持测试绿色）
-7. Verification Gate → commit
-
-[轻量 TDD]
-1. 读取涉及的文件
-2. 实现功能
-3. 写关键交互/边界测试（点击、提交、状态切换、空值、超长）
-4. 运行测试 → 确认通过
-5. Verification Gate → commit
-
-[验证驱动]
-1. 读取涉及的文件
-2. 实现功能
-3. 执行验证命令：{task.verify_command}
-4. 读取完整输出，确认结果正确
-5. Verification Gate → commit
-
-[跳过 TDD]
-1. 读取涉及的文件
-2. 实现
-3. Verification Gate → commit
-
-=== Verification Gate（所有级别通用） ===
-
-commit 前必须执行：
-1. 运行验证命令（不截断输出）
-2. 读取完整输出
-3. 检查 exit code
-   - = 0 且输出正确 → 允许 commit
-   - ≠ 0 → 诊断修复 → 重新验证（最多 3 次）
-   - 3 次失败 → 停止，报告失败原因
-
-禁止使用："should work" / "probably fixed" / "seems to pass"
-必须使用："验证通过：{命令} 输出 {结果}，exit code 0"
-
-=== commit 规则 ===
-只修改任务列出的文件（+ 测试文件）
-遵循项目已有的代码风格
-```
-
-### 原子 Git 提交
-
-**每个任务完成验证后立刻创建独立的 git commit。** 不可跳过。
-
-#### 提交格式
-
-```bash
-git add {task_files}
-git commit -m "$(cat <<'EOF'
-{type}({scope}): {task_name}
-
-{一句话描述做了什么}
-
-Task-{N} of Wave-{M}
-验证：{验证命令} → {结果摘要}
-EOF
-)"
-```
-
-**type 规范**：feat / fix / refactor / docs / test / chore
-**scope**：模块名或文件名简写
-
-### Wave 间验证
-
-每个 wave 完成后，进入下一 wave 前：
-
-1. **运行全量验证** — 执行项目测试套件（如果有），确认无回归
-2. **检查冲突** — 确认并行任务没有产生代码冲突
-3. **状态更新** — 更新 `.features/{feature-id}/status.md`（完整模式下）
-
-如果验证失败：
-- 定位失败的任务
-- 启动新 Agent 诊断和修复
-- 修复后创建新 commit：`fix({scope}): resolve {issue} in Task-{N}`
-- **最多 3 次修复尝试**。3 次失败 → 暂停，报告给用户，质疑设计方案
-- 修复成功后继续下一 wave
-
----
+骨架红线（必守，细节见手册）：
+1. 不先写失败测试不写实现（分级 TDD：严格/轻量/验证驱动，按任务风险选）
+2. 不先验证不声称完成——验证命令的实际输出是唯一证据
+3. 每个原子任务一个独立 commit，不打包不相关变更
 
 ## 第8步：必需产出
 

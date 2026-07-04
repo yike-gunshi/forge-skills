@@ -378,74 +378,14 @@ PRD 版本：vX.Y
 
 ## 第4步：Wave 并行调度子技能
 
-用户确认后，按计划执行。**核心变化：使用 Agent 工具在独立上下文中执行每个子 skill。**
+用户确认执行计划后开始调度。**核心机制**：用 Agent 工具在**独立上下文**里跑每个子 skill，
+按依赖关系分 Wave（可并行的同 Wave），主上下文只传必要文档路径、只等结果、不重复子 skill 的活。
 
-### Wave 分组
+**执行前必读 [references/orchestration-details.md](references/orchestration-details.md) 的「第4步调度机制」**——
+含 Wave 分组、Agent prompt 模板、子 skill 完成后的验收（读产出文档不轻信口头汇报）、阻塞处理。
 
-分析子 skill 间的依赖关系，将可并行的分为同一 wave：
-
-```
-Wave 1（可并行）：
-  - forge-design（如需要）— 读取 PRD + RESEARCH.md
-
-Wave 2（依赖 Wave 1）：
-  - forge-eng — 读取 PRD + DESIGN.md + RESEARCH.md
-
-Wave 3（依赖 Wave 2）：
-  - forge-qa — 读取 PRD + ENGINEERING.md + 代码
-```
-
-**注意**：在当前架构中 forge-design → forge-eng → forge-qa 是严格顺序依赖的，所以实际是 3 个 wave 各 1 个 skill。但如果未来有多个并行的 forge-eng 任务（如前端和后端互不依赖），可以归入同一 wave 并行执行。
-
-### 每个子 skill 的调度方式
-
-使用 Agent 工具启动独立上下文：
-
-```python
-# 伪代码示意
-for wave in waves:
-    agents = []
-    for skill in wave.skills:
-        agent = Agent(
-            prompt=f"""
-            你是 {skill.name} 技能，现在执行以下任务：
-
-            项目路径：{project_path}
-            PRD 路径：{prd_path}
-            本次变更：{change_summary}
-            调研报告：{research_path}
-            前序产出：{previous_outputs}
-            用户偏好：{context_path}
-            视觉决策索引：{visual_decision_path or "无"}
-
-            请按照你的 SKILL.md 流程执行。
-            """,
-            subagent_type="general-purpose"
-        )
-        agents.append(agent)
-    # 同一 wave 内的 agent 并行启动
-    # 等待所有 agent 完成后进入下一 wave
-```
-
-### 子 skill 执行后的验收
-
-每个子 skill（Agent）完成后：
-
-1. **读取产出文档** — 确认文档已正确更新（DESIGN.md / ENGINEERING.md / QA.md）
-2. **读取代码变更** — `git diff --stat` 确认变更范围合理
-3. **保存检查点**（自动模式）：`git diff > .forge/checkpoints/[phase]-done.patch`
-4. **阶段确认**（交互模式）：向用户简要汇报，确认是否继续下一个 wave
-
-### 阻塞处理
-
-某个子 skill 执行中遇到问题时：
-- **交互模式**：暂停并通过 AskUserQuestion 询问用户
-  - A) 修正后重试（重新启动 Agent）
-  - B) 跳过此环节继续下一个 wave
-  - C) 中止，保存当前进度
-- **自动模式**：记录阻塞原因，跳到下一个可执行阶段，在交付报告中标注
-
----
+骨架红线：子 agent 完成后必须读其产出文档确认（`git diff --stat` + 读 DESIGN/ENGINEERING/QA.md），
+不轻信返回文本；任何一环阻塞按模式处理（交互问用户 / 自动跳过并标注）。
 
 ## 第5步：汇总交付
 
