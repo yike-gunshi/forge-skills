@@ -145,6 +145,7 @@ install_to_dir() {
   run mkdir -p "$skills_dir"
 
   link_one "$SCRIPT_DIR" "$skills_dir/forge"
+  link_one "$SCRIPT_DIR/skills/_shared" "$skills_dir/_shared"
   for skill in "${SKILLS[@]}"; do
     link_one "$SCRIPT_DIR/skills/$skill" "$skills_dir/$skill"
   done
@@ -171,6 +172,7 @@ uninstall_from_dir() {
   skills_dir="$1"
   echo "Uninstalling forge skills from: $skills_dir"
   remove_one "$skills_dir/forge"
+  remove_one "$skills_dir/_shared"
   for skill in "${SKILLS[@]}"; do
     remove_one "$skills_dir/$skill"
   done
@@ -199,6 +201,7 @@ status_for_dir() {
   skills_dir="$1"
   echo "Status for: $skills_dir"
   status_one "$SCRIPT_DIR" "$skills_dir/forge"
+  status_one "$SCRIPT_DIR/skills/_shared" "$skills_dir/_shared"
   for skill in "${SKILLS[@]}"; do
     status_one "$SCRIPT_DIR/skills/$skill" "$skills_dir/$skill"
   done
