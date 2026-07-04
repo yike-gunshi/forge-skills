@@ -1,0 +1,160 @@
+# forge-design · 从零创建 DESIGN.md 手册
+
+> 由 SKILL.md 骨架按需加载：项目没有 DESIGN.md 时必读。
+
+## 第1步（创建模式）：从零创建 DESIGN.md
+
+### 1.1 产品理解
+
+在做任何设计之前，先理解产品：
+- 这是什么？解决什么问题？
+- 给谁用的？（角色、场景、频率）
+- 成功的体验是什么感觉？（快速、安全、愉悦、专业？）
+- 有没有参考产品？
+
+### 1.2 竞品调研
+
+用 WebSearch 搜索同行业产品的设计语言：
+
+1. 搜索 3-5 个同类产品的截图或设计评测
+2. 提取它们的共性设计模式（布局、配色、交互）
+3. 提取它们的差异化设计元素
+4. 总结为用户：
+   ```
+   竞品设计观察：
+   - [产品A]：[设计特点]，[值得借鉴的点]
+   - [产品B]：[设计特点]，[值得借鉴的点]
+   - [产品C]：[设计特点]，[值得借鉴的点]
+   共性：[共同的设计语言]
+   差异化机会：[可以做不同的地方]
+   ```
+
+### 1.3 美学方向探索（3+ 方案）
+
+给出至少 3 个美学方向，每个包含：
+- **方向名称**：如"精致极简"、"大胆数据"、"温暖人文"
+- **mood 描述**：一段话描述这个方向给人的感受
+- **视觉关键词**：3-5 个词
+- **代表性配色**：主色 + 辅色 + 强调色
+- **代表性字体搭配**：标题字体 + 正文字体
+- **适用场景**：什么时候选这个方向
+- **风险点**：这个方向可能出什么问题
+
+### 1.4 配色方案
+
+使用内嵌数据资源搜索配色建议：
+
+```bash
+python3 {skill_dir}/scripts/search.py "{产品类型} {风格关键词}" --design-system -p "{产品名}"
+```
+
+**配色决策框架（来自 161 个产品类型配色库）：**
+
+| Token | 说明 | 决策规则 |
+|-------|------|---------|
+| Primary | 品牌主色 | 产品类型决定（SaaS→蓝、电商→绿、奢侈→黑金） |
+| Secondary | 辅助色 | 主色的类似色或互补色 |
+| Accent | 强调色 | CTA、通知、重要操作。与主色对比度高 |
+| Background | 页面背景 | 亮色模式 #FAFAFA-#FFFFFF，暗色模式 #0F172A-#1E293B |
+| Surface | 卡片/容器 | 比背景亮/暗一个层级 |
+| Foreground | 主文字 | WCAG AA 4.5:1 对比度 |
+| Muted | 辅助文字 | 比 foreground 低对比度，但 ≥ 3:1 |
+| Border | 边框 | 微妙但可见 |
+| Destructive | 危险操作 | 红色系 |
+
+**配色校验：**
+- WCAG AA：正文 4.5:1，大文本 3:1，UI 组件 3:1
+- 不用纯红/绿组合（8% 男性红绿色盲）
+- 中性色系统一暖或冷——不混用
+- 暗色模式：文本偏白（~#E0E0E0），不是纯白；主色降饱和 10-20%
+
+### 1.5 字体搭配
+
+使用内嵌数据资源搜索字体建议：
+
+```bash
+python3 {skill_dir}/scripts/search.py "{风格关键词}" --domain typography
+```
+
+**字体决策框架（来自 57 组搭配库）：**
+
+| 用途 | 选择标准 |
+|------|---------|
+| 标题字体 | 表达品牌个性。Display/Serif 用于优雅，Geometric Sans 用于现代，Monospace 用于技术 |
+| 正文字体 | 可读性第一。Humanist Sans（Inter/DM Sans）或正文 Serif（Literata/Source Serif） |
+| 代码字体 | Monospace。JetBrains Mono、Fira Code、Source Code Pro |
+
+**字体反面模式（黑名单）：**
+- ❌ Papyrus、Comic Sans、Lobster、Impact、Jokerman
+- ⚠️ Inter/Roboto/Open Sans/Poppins 不是错误，但如果只用它们且不加调整 → 标记为"可能泛用"
+- ⚠️ 超过 3 种字体族 → 标记
+
+**产出：** 向用户展示 2-3 个字体搭配方案，每个附 Google Fonts 链接和视觉描述。
+
+### 1.6 Token 体系架构
+
+采用**三层 Token 架构**：
+
+```
+Primitive Token（原始值）
+  │  具体的值，不含语义
+  │  例：--blue-500: #3B82F6; --space-4: 1rem;
+  ▼
+Semantic Token（语义化）
+  │  表达意图，引用 Primitive
+  │  例：--color-primary: var(--blue-500); --space-component-gap: var(--space-4);
+  ▼
+Component Token（组件级）
+     绑定到具体组件，引用 Semantic
+     例：--button-bg: var(--color-primary); --card-padding: var(--space-component-gap);
+```
+
+**新项目必须定义的 Token 集合：**
+
+| 类别 | 必须定义 |
+|------|---------|
+| 颜色 | primary, secondary, accent, background, surface, foreground, muted, border, destructive, success, warning |
+| 字体 | heading, body, code（字族+字号+字重+行高） |
+| 间距 | 基于 4px 或 8px 比例尺：xs(4), sm(8), md(16), lg(24), xl(32), 2xl(48) |
+| 圆角 | sm(4), md(8), lg(12), xl(16)——层级化，小元素小圆角 |
+| 阴影 | sm, md, lg——层级化 |
+| 断点 | mobile(375), tablet(768), desktop(1024), wide(1440) |
+
+**组件状态定义规范：**
+
+每个交互组件必须定义以下状态：
+- **Default**：静止状态
+- **Hover**：鼠标悬停（桌面端）
+- **Active/Pressed**：按下中
+- **Focus-visible**：键盘焦点（必须有，不能 outline:none）
+- **Disabled**：不可用（降低透明度 + cursor:not-allowed）
+- **Loading**：加载中（骨架屏或 spinner）
+
+### 1.7 多轮确认
+
+- 第1轮：展示竞品调研 + 3+ 美学方向 → 用户选择方向
+- 第2轮：展示配色方案 + 字体搭配 → 用户确认
+- 第3轮：展示 Token 体系 + 页面布局线框图 → 用户确认
+- 第4轮：生成 1-3 张 Image 2 视觉稿（桌面端/移动端/关键状态）→ 用户确认实际观感
+- 第5轮：关键交互方案 → 用户确认
+
+### 1.7.1 Image 2 视觉稿门禁
+
+**触发：** L1 完整设计必做；L2 只在视觉变化影响观感、信息密度或布局判断时做；L3 不做。
+
+**步骤：**
+1. 先完成设计方向、配色、字体、布局约束，避免让 Image 2 替你做设计决策。
+2. 为每张图写明「决策用途」，例如：首页信息密度是否过重、详情页阅读是否舒服、移动端选择控件是否清楚。
+3. 使用 `~/.claude/skills/_shared/visual-decision-layer.md` 的 UI Prompt 模板生成视觉稿。
+4. 将图片、prompt、meta 保存到设计文档同目录的 `assets/` 或 brainstorm 归档目录。
+5. 用户确认后，把确认结果写入 DESIGN.md 的「视觉决策记录」：采用哪张、否掉哪张、为什么。
+6. 如果无法生成图片，保存 prompt pack，并在交付总结中标注「视觉稿未生成，不能进入 design-impl 的视觉实现」。
+
+### 1.8 产出 DESIGN.md 初稿
+
+参考 [references/design-template.md](references/design-template.md)
+
+### 1.9 新建 DESIGN CHANGELOG
+
+---
+
