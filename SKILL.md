@@ -160,7 +160,9 @@ D) 其他 — 告诉我你想做什么
 | `/forge-review` | PR 审查 | 上线前代码审查 |
 | `/forge-ship` | 发布 | 合并+推送+创建 PR |
 | `/forge-fupan` | 复盘 | 教训进账本 + 一页纸 + 复发检测（Workbench 是阅览器） |
+| `/forge-doc-release` | 发布后文档同步 | ship 之后让文档对齐现实 |
 | `/forge-status` | 并行会话巡检 | 扫 `.forge/active.md`，按硬信号清理僵尸 |
+| `/forge-doc-policy` | 文档治理规范 | 文档放哪的规则源头 + 新项目脚手架 |
 
 ---
 

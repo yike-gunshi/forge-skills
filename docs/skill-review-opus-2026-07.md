@@ -159,3 +159,29 @@ owner: opus-4.8-independent-review
 - 精读 forge-bugfix（骨架 + 4 本 references 全部）、forge-qa（骨架 + mode-b-regression 全文 + mode-a/test-dimensions 抽样）、forge-fupan（骨架 + schema/template 结构）、forge（总入口全文）、forge-eng/forge-dev（骨架标题级结构）
 - 全仓 grep 验证：references 存在性、锚点可达性、forge-deliver/gstack/browse/do-dev 悬空引用、frontmatter 完整性、变量作用域连续性
 - 评分尺来源：Anthropic 官方 skill-creator（在线取得成功）
+
+---
+
+## ⑦ 复验（2026-07-04，批次 1-5 修复后，独立核对最新 main）
+
+HEAD `eccfd33`。逐项独立核对（不轻信描述）：
+
+| 上轮问题 | 复验结论 | 证据 |
+|---|---|---|
+| P0-1 README forge-deliver | ✅ **已关闭** | 现存 3 处均合法：退役说明（README:114）、历史分析文档链接（:299）、`_archive/` 树节点（:332）。数字统一为"14 个"，全链路指向 `/forge-dev --full` |
+| P0-2 eng/dev 超 500 行 | ⚠️ **基本关闭（eng 差 5 行）** | forge-dev 458 ✅；**forge-eng 505**，仍差 5 行踩线。第6-7步已外移 wave-execution.md（184 行），stub 保留红线+指针，切分边界干净、无跨文件断层 |
+| P1-1 gstack/browse 悬空 | ✅ **已清零到允许例外** | 仅剩 fupan schema 的"设计参考 gstack /learn"（允许的设计出处）+ bugfix review-checklist:163 的"若改用 …/gstack/… 写明原因"（fallback 提示，非依赖）。forge-eng 两个 reference、forge-dev 探针、bugfix p6-p7 优先级表均已清 |
+| P1-2 旧 docs/README.md | ✅ **已删除** | `find skills -type d -name docs` 为空；do-qa/do-bugfix/do-dev 命名全清 |
+| P1-3 doc-policy 宣传未建脚本 | ❌ **未关闭** | 本轮未处理。description 仍写"init-project.sh / audit-project.sh"，锚点 `:65` 仍指向不存在的 audit-project.sh，`:91` 仍"提示走 audit-project.sh"。脚本目录只有 init-project.sh |
+| P2-1 test-dimensions 无 TOC | ✅ **已关闭（未拆分但有效）** | 顶部新增 10 维度导航表 + "1900+ 行不要整读、只跳读 test-spec 用到的维度" + 锚点跳读指引；10 个锚点 `[console]…[async-content]` 在正文均真实存在（每个 3-4 处）。文件仍是单块 64KB，但导航+锚点让选择性读取可行，非纯治标 |
+
+**切分边界评估**：eng/dev 二次骨架化未制造新断层。wave-execution.md 顶部声明加载前置（"完成第5步进入实现阶段必读"），内容自足（任务拆分/TDD 级别/Wave 执行全在内），骨架 stub 保留三条红线摘要 + 明确指针。dev 的调度机制并入 orchestration-details.md（303 行）同理干净。
+
+**test-dimensions 导航真伪**：真能按需跳读——导航表锚点与正文标记一一对应，且明确指示"搜锚点跳读、多数项目只用 3-6 维"。属实质改善，非治标。
+
+**新评级：B+**（上轮 B-）。两个 P0 实质关闭、P1 清理彻底、渐进披露短板补齐。未升 A- 仅因两处遗留：forge-eng 505 踩线、doc-policy 宣传幻影脚本。
+
+**仍未关闭（按严重度）**：
+1. 🟠 **forge-doc-policy 宣传/锚点未建的 audit-project.sh**（P1-3，本轮遗漏）——description 是常驻元数据，会让 AI 建议用户跑一个不存在的脚本。改法：description 只留 init-project.sh，audit/backfill/build-index 锚点标"（规划中）"。
+2. 🟡 **forge-eng 505 行**，仍差 5 行过 500 硬线。可把第8步"必需产出"模板段或 Summary/Test Plan 样例外移即可达标。
+3. 🟡 **总入口 SKILL "完整 Skill 清单"仍漏 doc-policy / doc-release**（上轮 P2-2，未处理）——补两行或改标题。

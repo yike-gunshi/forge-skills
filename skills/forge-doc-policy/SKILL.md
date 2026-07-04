@@ -1,6 +1,6 @@
 ---
 name: forge-doc-policy
-description: 文档落地治理规范。统一管理 docs/ 目录下文档的写时约束、读时索引、生命周期标记。提供当前真相源白名单（doc-paths.md）+ frontmatter schema + 新老项目装载脚本（init-project.sh / audit-project.sh）。所有 forge-* skill 的文档落地路径以本 skill 的 doc-paths.md 为准。触发方式：用户说"文档治理"、"文档放哪"、"docs 目录乱了"、"forge-doc-policy"、AI 准备创建任意 .md 或新目录前的自查。
+description: 文档落地治理规范。统一管理 docs/ 目录下文档的写时约束、读时索引、生命周期标记。提供当前真相源白名单（doc-paths.md）+ frontmatter schema + 新项目一键脚手架（init-project.sh，已就绪）。所有 forge-* skill 的文档落地路径以本 skill 的 doc-paths.md 为准。触发方式：用户说"文档治理"、"文档放哪"、"docs 目录乱了"、"forge-doc-policy"、AI 准备创建任意 .md 或新目录前的自查。
 ---
 
 # /forge-doc-policy：文档落地治理规范
@@ -32,8 +32,8 @@ description: 文档落地治理规范。统一管理 docs/ 目录下文档的写
 | `frontmatter-schema.md` | frontmatter 字段定义（4 必填 + 2 选填） | ✅ v0.2 |
 | `claude-md-snippet.md` | 项目 CLAUDE.md 复制粘贴的引用段 | ✅ v0.2 |
 | `CHANGELOG.md` | 版本号 + 演进记录 | ✅ v0.2 |
-| `scripts/init-project.sh` | 新项目 day 0 一键脚手架 | ✅ 2026-07-04 |
-| `scripts/audit-project.sh` | 老项目接入兼容性审计 | ⏳ Sprint E |
+| `scripts/init-project.sh` | 新项目 day 0 一键脚手架 | ✅ 2026-07-04 已就绪 |
+| `scripts/audit-project.sh` | 老项目接入兼容性审计 | ⏳ 规划中（未实现，勿引导用户运行） |
 | `scripts/backfill-frontmatter.sh` | 批量 AI 回填 frontmatter | ⏳ Sprint C1 |
 | `scripts/build-index.sh` | 扫 frontmatter 生成 docs/INDEX.md | ⏳ Sprint C2 |
 | `hooks/post-stop-update-index.sh` | Stop hook 触发 INDEX 更新 | ⏳ Sprint C2 |
@@ -51,7 +51,7 @@ description: 文档落地治理规范。统一管理 docs/ 目录下文档的写
 
 **Why**：第 10 轮决策砍掉 PreToolUse hook，改 LLM 强校验自觉路线。规则源头在本 skill，所有项目通过引用读取。
 
-### 装载 2：新项目 day 0（Sprint E）
+### 装载 2：新项目 day 0（✅ 已就绪）
 
 ```bash
 ~/.claude/skills/forge-doc-policy/scripts/init-project.sh
@@ -59,13 +59,12 @@ description: 文档落地治理规范。统一管理 docs/ 目录下文档的写
 
 在新项目根跑一次：创建 docs/ 标准骨架 + 拷贝 CLAUDE.md 模板 + 配 .gitignore + 生成 docs/README.md。
 
-### 装载 3：老项目接入审计（Sprint E）
+### 装载 3：老项目接入审计（⏳ 规划中，脚本未实现）
 
-```bash
-~/.claude/skills/forge-doc-policy/scripts/audit-project.sh
-```
-
-在已有项目根跑：检测偏差 + 输出 audit-report.md，用户确认后跑 `--fix` 自动补 frontmatter / 创建缺失目录。
+`audit-project.sh` 尚未实现。当前老项目接入用手动方式：
+- 新项目脚手架能力已在 `init-project.sh`（幂等，绝不覆盖已有文件），老项目也可安全跑一遍补齐缺失骨架
+- frontmatter 缺失、目录偏差暂时人工按 `doc-paths.md` 白名单核对
+不要向用户建议运行 audit-project.sh——它还不存在。
 
 ---
 
@@ -88,7 +87,7 @@ description: 文档落地治理规范。统一管理 docs/ 目录下文档的写
 |---|---|
 | "文档治理" / "forge-doc-policy" | 进入本 skill，按用户具体诉求路由（查白名单 / 装载 / 审计） |
 | "文档放哪" / "这个文档应该放哪" | 读 `doc-paths.md` 给路径建议 |
-| "docs 目录乱了" / "想清理文档" | 提示走 `audit-project.sh`（Sprint E 后可用） |
+| "docs 目录乱了" / "想清理文档" | 按 `doc-paths.md` 白名单人工核对（audit-project.sh 规划中，未实现） |
 | AI 准备创建任意 .md 或新目录 | 自查 `doc-paths.md` 三层白名单（LLM 强校验铁律） |
 
 ---
@@ -108,4 +107,4 @@ description: 文档落地治理规范。统一管理 docs/ 目录下文档的写
 - **v0.2**（2026-06-09）适配根级当前真相源、模块附录、active bugfix 后归档和 archive/raw 结构。
 - **v0.1**（2026-04-28）骨架 + 文档规则源头 + claude-md-snippet（Sprint A.1）
 - 后续版本演进见 `CHANGELOG.md`
-- 项目 CLAUDE.md 引用时**锁版本号**（如 `forge-doc-policy@v0.2`），规则改动走独立 worktree → audit-project.sh 跨项目预演 → 没炸再合 main
+- 项目 CLAUDE.md 引用时**锁版本号**（如 `forge-doc-policy@v0.2`），规则改动走独立 worktree → 在关联项目手动核对影响 → 没炸再合 main
