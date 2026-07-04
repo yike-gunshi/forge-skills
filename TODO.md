@@ -55,7 +55,13 @@
 ### 阶段 4：结构性调整（每项单独讨论定案后动手）
 
 - [ ] E1. dev/deliver 合并：保 forge-dev（上下文工程设计），吸收 deliver 的 ship/doc-release 尾段编排，退役 forge-deliver，状态目录统一（消灭 .do-dev/ 与 .deliver/ 并存）
-- [ ] E2. forge-fupan 重设计：去公式化，以「提升用户能力」为核心目标重构；Workbench 降级为可选组件；先精读 gstack 最新版 /learn 和 /retro 做参考（用户反馈：每次都开但效果不好）
+- [x] E2. fupan v2 重设计 ✅ 2026-07-04（细案经用户确认）：
+  - 主产出改为 learnings.jsonl 账本（append-only/置信度/复发检测，参考 gstack /learn+/retro）
+  - 一页纸 ≤60 行 + 每次 1 个深度小课；五章模板/流水账/强制配图/网页勾选门禁全部砍掉
+  - 回放钩子接入 bugfix P1 + eng 理解现状（闭环：产条目→开工回放→复盘验复发），端到端实测通过
+  - 试点迁移：近 5 篇复盘蒸馏 12 条入账本（跨篇复现的「ship 状态链验收」置信度 9）
+  - 踩坑沉淀：账本必须紧凑 JSON（grep 契约），已写进 schema 铁律
+  - 子项 3 Workbench 阅览器改造：UI 草图待用户确认后实施（用户要求保留并优化）
 - [x] E3. P-31：qa/bugfix 两侧 gstack/browse 引擎引用全部移除（.gstack/ 报告目录名保留兼容存量）✅ 2026-07-04
 - [ ] E4. 上游增量融合批次：Superpowers v5 的对抗性 spec 审查 + 子代理模型路由；frontend-design 最新反 AI 模板清单；ui-ux-pro-max 数据文件同步（原则：引用不内嵌，先瘦身后融合）
 
