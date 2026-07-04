@@ -47,8 +47,9 @@
 
 ### 阶段 3：P2 降门槛（任何项目可用）
 
-- [ ] D1. `/forge-init` 一键脚手架：状态文件 + 项目 CLAUDE.md 引用段一条命令铺好（兑现 doc-policy 的 init-project.sh）
-- [ ] D2. `/forge` 决策树增加小改动轻量车道
+- [x] D1. init-project.sh 已兑现（幂等、绝不覆盖、复用 bugfix backlog 模板；scratchpad 实测两遍通过）✅ 2026-07-04
+  - 附带修复：install.sh 的 SKILLS 清单漏了 forge-doc-policy，导致 B4 改的 ~/.claude/skills/forge-doc-policy/ 引用一直是断链（实测踩出，已补链）
+- [x] D2. /forge 决策树：轻量车道置顶 + 空项目导向 init 脚手架 ✅ 2026-07-04
 - [ ] D3. 用一个全新空项目做端到端验收（几步跑通 + 上下文消耗对比）
 
 ### 阶段 4：结构性调整（每项单独讨论定案后动手）

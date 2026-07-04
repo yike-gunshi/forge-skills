@@ -60,9 +60,20 @@ git branch --show-current 2>/dev/null
 
 ### 第2步：状态判断 + 推荐
 
-根据检测结果，按以下决策树判断：
+根据检测结果，按以下决策树判断。**轻量车道优先于其他规则**：
 
 ```
+⚡ 轻量车道：用户描述的是小改动（预估 < 半小时，且不碰类型定义/API 格式/枚举/数据结构）
+  → "小改动建议走轻量车道，跳过 PRD/设计仪式：
+     A) /forge-eng 轻量模式 — 直接实现（自验 + 提交前检查仍然要做）
+     B) /forge-bugfix — 如果本质是修问题
+     C) 走完整流程 — 如果实际影响面比看起来大（拿不准就选这个）"
+
+完全空项目（无 docs/、无 .features/）
+  → "建议先跑一次脚手架铺好状态文件：
+     ~/.claude/skills/forge-doc-policy/scripts/init-project.sh
+     然后 /forge-brainstorm 或 /forge-prd 开始。"
+
 无任何文档 + 用户没有明确任务
   → "看起来是一个新开始。建议先跑 /forge-brainstorm 理清思路。"
 

@@ -26,10 +26,10 @@ last_updated: 2026-06-09
 ## 文档治理（forge-doc-policy）
 
 本工作区遵循 forge-doc-policy 规范。完整白名单 + 兜底规则:
-~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md
+~/.claude/skills/forge-doc-policy/doc-paths.md
 
 frontmatter schema(新文档必填):
-~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/frontmatter-schema.md
+~/.claude/skills/forge-doc-policy/frontmatter-schema.md
 
 ### LLM 强校验铁律（每次创建 .md / 新目录前必须执行）
 
@@ -64,7 +64,7 @@ owner: {team} | ~  # 选填
 本项目遵循 forge-doc-policy 规范。规则源头见
 `~/claudecode_workspace/CLAUDE.md` 「文档治理」段，
 完整白名单见
-`~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+`~/.claude/skills/forge-doc-policy/doc-paths.md`。
 
 ### 项目特化规则
 
@@ -83,7 +83,7 @@ owner: {team} | ~  # 选填
 
 ```markdown
 > **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter 见
-> `~/claudecode_workspace/工具/forge-cookbook/skills/forge-doc-policy/doc-paths.md`。
+> `~/.claude/skills/forge-doc-policy/doc-paths.md`。
 ```
 
 ---

@@ -155,7 +155,7 @@ last_updated: 2026-07-04
 **什么时候用**："文档放哪"、"docs 乱了"，以及每个 AI 创建 .md 前的自查。
 **怎么工作**：三份核心文件——doc-paths.md（路径白名单：当前真相源/模块附录/active 工作区/archive）、frontmatter-schema.md（4 必填字段）、claude-md-snippet.md（项目 CLAUDE.md 的 3 行引用段）。强校验走"LLM 自觉 + 违规才问"，刻意不用 hook（会误伤打断，用户会关掉）。
 **规矩**：14 个 forge skill 顶部都引用它；规则改动锁版本号、走 worktree 预演。
-**待兑现**：init-project.sh（新项目一键脚手架）等 6 个配套脚本规划了未实现。
+**附属**：init-project.sh（新项目一键脚手架，✅ 2026-07-04 已兑现）；audit-project.sh 等其余脚本仍待实现。
 
 ## 17. _shared — 共享层（非 skill）
 

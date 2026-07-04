@@ -32,7 +32,7 @@ description: 文档落地治理规范。统一管理 docs/ 目录下文档的写
 | `frontmatter-schema.md` | frontmatter 字段定义（4 必填 + 2 选填） | ✅ v0.2 |
 | `claude-md-snippet.md` | 项目 CLAUDE.md 复制粘贴的引用段 | ✅ v0.2 |
 | `CHANGELOG.md` | 版本号 + 演进记录 | ✅ v0.2 |
-| `scripts/init-project.sh` | 新项目 day 0 一键脚手架 | ⏳ Sprint E |
+| `scripts/init-project.sh` | 新项目 day 0 一键脚手架 | ✅ 2026-07-04 |
 | `scripts/audit-project.sh` | 老项目接入兼容性审计 | ⏳ Sprint E |
 | `scripts/backfill-frontmatter.sh` | 批量 AI 回填 frontmatter | ⏳ Sprint C1 |
 | `scripts/build-index.sh` | 扫 frontmatter 生成 docs/INDEX.md | ⏳ Sprint C2 |
