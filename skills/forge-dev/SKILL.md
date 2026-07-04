@@ -95,6 +95,7 @@ ls "$_ROOT"/docs/brainstorm-*.md 2>/dev/null && echo "发现思考文档（docs/
 
 **关键约束**：
 - 每个 Agent 调用只执行一个子 skill
+- **模型路由**（Superpowers v5 实践）：机械型子任务（跑测试、批量重命名、模板填充）给 Agent 传 `model: sonnet` 用便宜模型；判断型子任务（架构、设计、审查）保持默认模型，不降级
 - 不要在主上下文中重复子 skill 的工作
 - 子 agent 完成后，读取其产出文档确认结果，而非依赖其返回的文本
 - **传递 Feature Spec**：如果 `.features/{feature-id}/feature-spec.md` 存在，SHALL 将其路径和关键内容（行为场景 + 验收检查表）传递给 forge-eng 和 forge-qa 子 agent

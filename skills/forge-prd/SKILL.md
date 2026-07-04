@@ -245,6 +245,13 @@ description: |
 
 **门禁不变**：Feature Spec 需用户确认后才可进开发；每个功能点至少 3 种异常态
 （空态/错误态/降级态，涉本地存储加陈旧态），异常态的 Then 必须写明确 UI 行为。
+
+**交给用户前先跑四点自审**（Superpowers v5 Spec Self-Review，约 30 秒抓 4-5 个问题）：
+1. 占位符扫描——还有 TBD/TODO/含糊需求吗？有就先补
+2. 内部一致性——章节之间打架吗？结构和功能描述对得上吗？
+3. 范围检查——一个实现计划装得下吗？装不下就拆
+4. 歧义检查——哪条需求能读出两种意思？选定一种写死
+自审改完再给用户确认；用户要求修改后必须重跑自审。
 生成细则必读 [references/prd-details.md](references/prd-details.md)；模板用 [references/feature-spec-template.md](references/feature-spec-template.md)。
 ## 第3.6步：生成/更新项目 CLAUDE.md
 

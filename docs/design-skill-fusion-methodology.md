@@ -60,9 +60,9 @@ forge-design（调度 + 门控 + 文档管理）
 
 | Skill | 当前版本 | 最后审查日期 | 下次审查触发条件 |
 |-------|---------|------------|----------------|
-| design-consultation | 1.0.0 | 2026-03-26 | gstack 更新时 |
-| ui-ux-pro-max | — | 2026-03-26 | search.py 或数据文件变更时 |
-| frontend-design | — | 2026-03-26 | SKILL.md 内容变更时 |
+| design-consultation | 1.0.0 | 2026-07-04 | gstack 更新时 |
+| ui-ux-pro-max | v2.x | 2026-07-04（现有 8 个 CSV 与上游逐一一致；上游新增 8 个数据域需连引擎升级，暂缓另立项） | search.py 或数据文件变更时 |
+| frontend-design | — | 2026-07-04（增量融合：新禁令 6 条 + 美学锚定法进 design-impl/create-mode） | SKILL.md 内容变更时 |
 | plan-design-review | 2.0.0 | 2026-03-26 | gstack 更新时 |
 | ckm-design-system | 1.0.0 | 2026-03-26 | references/ 下文件变更时 |
 | ckm-ui-styling | 1.0.0 | 2026-03-26 | references/ 下文件变更时 |

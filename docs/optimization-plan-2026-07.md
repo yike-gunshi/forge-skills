@@ -107,7 +107,7 @@ forge-dev 吸收 deliver 的 Phase 5-7（发布/文档/验收编排），deliver
 该引擎本地已丢失，引用悬空。删掉这个选项，保留 browser-use / Playwright / 纯代码三档。若未来想要再从 garrytan/gstack 重装（那是 5 分钟的事）。
 - 你的决定：
 
-### D-11 上游增量融合批次（瘦身完成后执行）
+### D-11 上游增量融合批次（瘦身完成后执行）✅ 已执行（数据域扩展暂缓另立项）
 
 按审计第 5 节：Superpowers v5 的对抗性 spec 审查清单（进 forge-prd）+ 子代理模型路由（进 forge-dev，省钱）；frontend-design 最新反 AI 模板清单对照更新；ui-ux-pro-max 数据 CSV 增量同步。原则不变：引用不内嵌。
 - 你的决定：

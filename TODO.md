@@ -67,7 +67,11 @@
   - 踩坑沉淀：账本必须紧凑 JSON（grep 契约），已写进 schema 铁律
   - 子项 3 Workbench 阅览器改造 ✅ 2026-07-04：账本+文档双页（UI 草图经确认），/api/learnings 上线，勾选门禁路由退役，实测通过
 - [x] E3. P-31：qa/bugfix 两侧 gstack/browse 引擎引用全部移除（.gstack/ 报告目录名保留兼容存量）✅ 2026-07-04
-- [ ] E4. 上游增量融合批次：Superpowers v5 的对抗性 spec 审查 + 子代理模型路由；frontend-design 最新反 AI 模板清单；ui-ux-pro-max 数据文件同步（原则：引用不内嵌，先瘦身后融合）
+- [x] E4. 上游增量融合 ✅ 2026-07-04：
+  - Superpowers v5 四点 Spec 自审 → forge-prd 第 3.5 步（占位符/一致性/范围/歧义）
+  - 子代理模型路由 → forge-dev 上下文工程（机械任务 sonnet、判断任务不降级）
+  - frontend-design 新禁令 6 条 + 美学锚定法 → design-impl / design create-mode
+  - ui-ux-pro-max：现有 8 个 CSV 与上游逐一核对一致；上游新增 8 个数据域（motion/icons/google-fonts 等）需连引擎升级，暂缓另立项（减法原则）
 
 ## 决策记录
 
