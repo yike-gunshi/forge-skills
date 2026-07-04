@@ -3,11 +3,6 @@ import { createRoot } from 'react-dom/client';
 import { marked } from 'marked';
 import './styles.css';
 
-const DEPTHS = [
-  { value: '了解', hint: '知道它是什么' },
-  { value: '表达', hint: '会用关键词指挥 AI' },
-  { value: '复现', hint: '能复述和自己做一遍' },
-];
 const SHANGHAI_TIME_ZONE = 'Asia/Shanghai';
 const SHANGHAI_DATE_FORMATTER = new Intl.DateTimeFormat('zh-CN', {
   timeZone: SHANGHAI_TIME_ZONE,
@@ -18,6 +13,13 @@ const SHANGHAI_DATE_FORMATTER = new Intl.DateTimeFormat('zh-CN', {
   minute: '2-digit',
   hourCycle: 'h23',
 });
+
+const DOMAIN_LABELS = {
+  'ai-collab': 'AI 协作',
+  tech: '技术',
+  product: '产品',
+  expression: '表达',
+};
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -137,272 +139,163 @@ function renderMarkdown(content, headingItems) {
   return sanitize(marked.parse(content || '', { renderer }));
 }
 
-function normalizeQuoteItems(items = []) {
-  return items
-    .map((item) => {
-      if (typeof item === 'string') {
-        return { quote: item, issue: '', suggestion: '' };
-      }
-      return {
-        quote: item?.quote || item?.text || '',
-        issue: item?.issue || item?.reason || '',
-        suggestion: item?.suggestion || item?.better_prompt || '',
-      };
-    })
-    .filter((item) => item.quote);
-}
-
-function StatusPill({ status, active }) {
-  const label = active ? '当前' : {
-    pending_selection: '待确认',
-    submitted: '已提交',
-    consumed: '已生成',
-    failed: '失败',
-  }[status] || status;
-  return <span className={`status status-${status || 'unknown'} ${active ? 'status-current' : ''}`}>{label}</span>;
-}
-
 function App() {
-  const [tasks, setTasks] = useState([]);
-  const [reviews, setReviews] = useState([]);
-  const [selectedTaskId, setSelectedTaskId] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [lastRefreshedAt, setLastRefreshedAt] = useState(() => new Date().toISOString());
   const path = window.location.pathname;
-
-  async function refresh() {
-    setError('');
-    setLoading(true);
-    try {
-      const [taskData, reviewData] = await Promise.all([api('/api/tasks'), api('/api/reviews')]);
-      const nextTasks = taskData.tasks || [];
-      setTasks(nextTasks);
-      setReviews(reviewData.reviews || []);
-      setLastRefreshedAt(new Date().toISOString());
-      setSelectedTaskId((current) => {
-        if (current && nextTasks.some((task) => task.id === current)) return current;
-        const active = nextTasks.find((task) => task.active) || nextTasks.find((task) => task.status === 'pending_selection');
-        return active ? active.id : '';
-      });
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    refresh();
-  }, []);
+  const [tab, setTab] = useState('ledger');
 
   if (path.startsWith('/review/')) {
     return <ReviewDetail reviewId={decodeURIComponent(path.replace('/review/', ''))} />;
   }
 
-  const selectedTask = tasks.find((task) => task.id === selectedTaskId) || null;
-
   return (
     <main className="app-shell">
-      <TopBar loading={loading} lastRefreshedAt={lastRefreshedAt} onRefresh={refresh} />
-      {error && <div className="inline-error">加载失败：{error}</div>}
-      {tasks.length > 0 && (
-        <section className="panel task-section">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">待确认事项</p>
-              <h1>复盘任务队列</h1>
-            </div>
-            <span className="mono">{countLabel(tasks.length, '个任务')}</span>
-          </div>
-          <TaskQueue tasks={tasks} selectedTaskId={selectedTaskId} onSelect={setSelectedTaskId} />
-          {selectedTask && <TaskForm key={selectedTask.id} task={selectedTask} onSubmitted={refresh} />}
-        </section>
-      )}
-      <HistorySection reviews={reviews} />
+      <TopBar tab={tab} onTab={setTab} />
+      {tab === 'ledger' ? <LedgerSection /> : <ReviewsSection />}
     </main>
   );
 }
 
-function TopBar({ loading, lastRefreshedAt, onRefresh }) {
+function TopBar({ tab, onTab }) {
   return (
     <header className="topbar">
       <div>
-        <p className="eyebrow">本地知识桌面</p>
+        <p className="eyebrow">复盘阅览器</p>
         <h1>Fupan Workbench</h1>
       </div>
-      <div className="topbar-actions">
-        <span className="mono time-chip">上海时间 {formatDate(lastRefreshedAt)}</span>
-        <span className="mono">127.0.0.1</span>
-        <button className="button button-secondary" onClick={onRefresh} disabled={loading}>
-          刷新状态
+      <nav className="tab-bar" aria-label="页面切换">
+        <button className={`tab-button ${tab === 'ledger' ? 'tab-active' : ''}`} onClick={() => onTab('ledger')}>
+          📒 教训账本
         </button>
-      </div>
+        <button className={`tab-button ${tab === 'reviews' ? 'tab-active' : ''}`} onClick={() => onTab('reviews')}>
+          📄 复盘文档
+        </button>
+      </nav>
     </header>
   );
 }
 
-function TaskQueue({ tasks, selectedTaskId, onSelect }) {
-  return (
-    <div className="task-queue">
-      {tasks.map((task) => (
-        <button
-          className={`queue-row ${task.id === selectedTaskId ? 'queue-row-active' : ''}`}
-          key={task.id}
-          onClick={() => onSelect(task.id)}
-        >
-          <StatusPill status={task.status} active={task.active} />
-          <span className="queue-title">{task.summary || task.project || task.id}</span>
-          <span className="queue-project">{task.project}</span>
-          <span className="mono">{formatDate(task.created_at)}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
+function LedgerSection() {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
+  const [query, setQuery] = useState('');
+  const [project, setProject] = useState('');
+  const [domain, setDomain] = useState('');
+  const [minConfidence, setMinConfidence] = useState(0);
+  const [showAll, setShowAll] = useState(false);
+  const [expandedLine, setExpandedLine] = useState(null);
 
-function TaskForm({ task, onSubmitted }) {
-  const initialTopics = useMemo(
-    () =>
-      (task.topics || []).map((topic) => ({
-        id: topic.id,
-        title: topic.title,
-        selected: topic.selected !== false,
-        depth: DEPTHS.some((item) => item.value === topic.depth) ? topic.depth : '表达',
-      })),
-    [task],
-  );
-  const [topics, setTopics] = useState(initialTopics);
-  const [feedback, setFeedback] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
-  const readOnly = task.status !== 'pending_selection';
-  const selectedCount = topics.filter((topic) => topic.selected).length;
-  const expressionIssueQuotes = normalizeQuoteItems(task.expression_issue_quotes || task.expression_issues || []);
-  const issueQuoteSet = new Set(expressionIssueQuotes.map((item) => item.quote));
-  const contextQuestions = (task.user_questions || []).filter((question) => !issueQuoteSet.has(question));
-  const hasQuoteBox = expressionIssueQuotes.length > 0 || contextQuestions.length > 0;
+  useEffect(() => {
+    api('/api/learnings').then(setData).catch((err) => setError(err.message));
+  }, []);
 
-  function updateTopic(id, patch) {
-    setTopics((current) => current.map((topic) => (topic.id === id ? { ...topic, ...patch } : topic)));
-  }
+  const rows = useMemo(() => {
+    if (!data) return [];
+    const keyword = query.trim().toLowerCase();
+    return (data.learnings || []).filter((row) => {
+      if (!showAll && row.effective_status !== 'active') return false;
+      if (project && row.project !== project) return false;
+      if (domain && row.domain !== domain) return false;
+      if ((row.confidence || 0) < minConfidence) return false;
+      if (keyword && !`${row.key} ${row.insight}`.toLowerCase().includes(keyword)) return false;
+      return true;
+    });
+  }, [data, query, project, domain, minConfidence, showAll]);
 
-  async function submit(event) {
-    event.preventDefault();
-    setMessage('');
-    setSubmitting(true);
-    try {
-      await api(`/api/tasks/${encodeURIComponent(task.id)}/selection`, {
-        method: 'POST',
-        body: JSON.stringify({
-          topics,
-          feedback,
-        }),
-      });
-      setMessage('已提交，AI 会继续读取这次选择。');
-      onSubmitted();
-    } catch (err) {
-      setMessage(`提交失败：${err.message}`);
-    } finally {
-      setSubmitting(false);
-    }
-  }
+  if (error) return <div className="inline-error">账本读取失败：{error}</div>;
+  if (!data) return <EmptyState text="正在读取账本。" />;
+
+  const counts = data.counts || {};
 
   return (
-    <form className="current-task" onSubmit={submit}>
-      <div className="current-task-header">
+    <section className="panel ledger-section">
+      <div className="section-heading">
         <div>
-          <p className="eyebrow">当前任务</p>
-          <h2>{task.summary || '待确认复盘'}</h2>
+          <p className="eyebrow">learnings.jsonl · 复利资产</p>
+          <h1>教训账本</h1>
         </div>
-        <StatusPill status={task.status} active={task.active} />
+        <span className="mono">
+          {countLabel(counts.active || 0, '条活跃')} / {countLabel(counts.total || 0, '条总计')}
+        </span>
       </div>
-      {hasQuoteBox && (
-        <div className="question-box">
-          {expressionIssueQuotes.length > 0 && (
-            <section className="quote-group quote-group-issue">
-              <p className="small-title">表达待优化原话</p>
-              <p className="quote-note">AI 从本次会话自行判断，把影响沟通效率的原话完整摘出来。</p>
-              <ul className="quote-list">
-                {expressionIssueQuotes.map((item, index) => (
-                  <li key={`${item.quote}-${index}`}>
-                    <blockquote>{item.quote}</blockquote>
-                    {item.issue && <p className="quote-meta">问题：{item.issue}</p>}
-                    {item.suggestion && <p className="quote-meta">下次可以说：{item.suggestion}</p>}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-          {contextQuestions.length > 0 && (
-            <section className="quote-group">
-              <p className="small-title">{expressionIssueQuotes.length ? '背景原话摘录' : '用户原话摘录'}</p>
-              {contextQuestions.map((question, index) => (
-                <p className="quote-line" key={`${question}-${index}`}>{question}</p>
-              ))}
-            </section>
-          )}
-        </div>
-      )}
-      <div className="topic-grid">
-        {(task.topics || []).map((topic) => {
-          const draft = topics.find((item) => item.id === topic.id) || {};
-          return (
-            <article className={`topic-card ${draft.selected ? 'topic-card-selected' : ''}`} key={topic.id}>
-              <label className="topic-check">
-                <input
-                  type="checkbox"
-                  checked={!!draft.selected}
-                  disabled={readOnly}
-                  onChange={(event) => updateTopic(topic.id, { selected: event.target.checked })}
-                />
-                <span>{topic.title}</span>
-              </label>
-              <p>{topic.plain_explanation || '这个知识点需要你确认是否要学。'}</p>
-              <p className="muted">{topic.why_relevant || '它和本次复盘有关。'}</p>
-              <div className="topic-card-actions">
-                <div className="recommend">推荐：{topic.recommended_depth || '表达'}</div>
-                <div className="segmented" aria-label={`${topic.title} 学习深度`}>
-                  {DEPTHS.map((depth) => (
-                    <button
-                      type="button"
-                      key={depth.value}
-                      className={draft.depth === depth.value ? 'selected' : ''}
-                      disabled={readOnly || !draft.selected}
-                      title={depth.hint}
-                      onClick={() => updateTopic(topic.id, { depth: depth.value })}
-                    >
-                      {depth.value}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </article>
-          );
-        })}
-      </div>
-      <label className="feedback-label">
-        <span>补充反馈</span>
-        <textarea
-          rows="3"
-          disabled={readOnly}
-          value={task.selection?.feedback || feedback}
-          placeholder="例如：React 从零讲，不要假设我懂；API 限流我想学到能自己判断方案。"
-          onChange={(event) => setFeedback(event.target.value)}
+      <div className="ledger-filters">
+        <input
+          className="ledger-search"
+          type="search"
+          placeholder="🔍 搜索键名或洞察…"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
         />
-      </label>
-      {message && <div className={message.startsWith('提交失败') ? 'inline-error' : 'inline-success'}>{message}</div>}
-      <div className="form-footer">
-        <span className="muted">已选择 {readOnly ? task.selection?.topics?.filter((topic) => topic.selected).length || 0 : selectedCount} 个知识点</span>
-        <button className="button button-primary" disabled={readOnly || submitting || selectedCount === 0} type="submit">
-          {readOnly ? '已提交' : submitting ? '提交中' : '提交学习选择'}
-        </button>
+        <select value={project} onChange={(event) => setProject(event.target.value)}>
+          <option value="">全部项目</option>
+          {(counts.projects || []).map((name) => (
+            <option key={name} value={name}>{name}</option>
+          ))}
+        </select>
+        <select value={domain} onChange={(event) => setDomain(event.target.value)}>
+          <option value="">全部能力域</option>
+          {(counts.domains || []).map((name) => (
+            <option key={name} value={name}>{DOMAIN_LABELS[name] || name}</option>
+          ))}
+        </select>
+        <select value={minConfidence} onChange={(event) => setMinConfidence(Number(event.target.value))}>
+          <option value={0}>置信度不限</option>
+          <option value={7}>≥ 7</option>
+          <option value={8}>≥ 8</option>
+          <option value={9}>≥ 9</option>
+        </select>
+        <label className="ledger-showall">
+          <input type="checkbox" checked={showAll} onChange={(event) => setShowAll(event.target.checked)} />
+          <span>含已取代</span>
+        </label>
       </div>
-    </form>
+      {rows.length ? (
+        <div className="ledger-list">
+          {rows.map((row) => {
+            const expanded = expandedLine === row._line;
+            return (
+              <article
+                className={`ledger-row ${expanded ? 'ledger-row-expanded' : ''} ${row.effective_status !== 'active' ? 'ledger-row-stale' : ''}`}
+                key={row._line}
+                onClick={() => setExpandedLine(expanded ? null : row._line)}
+              >
+                <div className="ledger-row-main">
+                  <span className={`confidence-badge confidence-${row.confidence >= 9 ? 'high' : row.confidence >= 7 ? 'mid' : 'low'}`}>
+                    {row.confidence || '?'}
+                  </span>
+                  <strong className="ledger-key">{row.key}</strong>
+                  <span className={`domain-tag domain-${row.domain || 'unknown'}`}>{DOMAIN_LABELS[row.domain] || row.domain}</span>
+                  <span className="mono ledger-project">{row.project}</span>
+                </div>
+                <p className={`ledger-insight ${expanded ? '' : 'ledger-insight-clamp'}`}>{row.insight}</p>
+                {expanded && (
+                  <div className="ledger-meta">
+                    <span>来源：{row.evidence || '—'}</span>
+                    <span>记录于 {formatDate(row.ts)}</span>
+                    <span>状态：{row.effective_status === 'active' ? '✅ 活跃' : `⏸ ${row.effective_status}`}</span>
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <EmptyState text={counts.total ? '没有匹配的条目，试试放宽筛选。' : '账本还是空的——做一次 /forge-fupan 复盘就有了。'} />
+      )}
+    </section>
   );
 }
 
-function HistorySection({ reviews }) {
+function ReviewsSection() {
+  const [reviews, setReviews] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    api('/api/reviews').then((data) => setReviews(data.reviews || [])).catch((err) => setError(err.message));
+  }, []);
+
+  if (error) return <div className="inline-error">加载失败：{error}</div>;
+  if (!reviews) return <EmptyState text="正在读取复盘列表。" />;
+
   return (
     <section className="panel history-section">
       <div className="section-heading">

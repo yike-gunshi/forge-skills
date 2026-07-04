@@ -9,8 +9,7 @@ CURRENT_DIR = Path(__file__).resolve().parent
 if str(CURRENT_DIR) not in sys.path:
     sys.path.insert(0, str(CURRENT_DIR))
 
-from review_index import ReviewIndex
-from task_store import list_tasks, read_task, submit_selection
+from review_index import ReviewIndex, default_review_root
 
 try:
     from __init__ import WORKBENCH_VERSION
@@ -44,27 +43,42 @@ def create_app(workbench_home=None, review_root=None, repo_path=None, skill_path
             "static_ready": index_html.exists(),
         }
 
-    @app.get("/api/tasks")
-    def api_tasks():
-        return {"tasks": list_tasks(root=root)}
+    ledger_path = Path(review_root).expanduser() / "learnings.jsonl" if review_root else Path(default_review_root()) / "learnings.jsonl"
 
-    @app.get("/api/tasks/{task_id}")
-    def api_task(task_id):
-        try:
-            return read_task(task_id, root=root)
-        except KeyError:
-            raise HTTPException(status_code=404, detail="task_not_found")
-        except Exception as exc:
-            raise HTTPException(status_code=400, detail=str(exc))
-
-    @app.post("/api/tasks/{task_id}/selection")
-    def api_submit_selection(task_id, payload: dict):
-        try:
-            return submit_selection(task_id, payload, root=root)
-        except KeyError:
-            raise HTTPException(status_code=404, detail="task_not_found")
-        except Exception as exc:
-            raise HTTPException(status_code=400, detail=str(exc))
+    @app.get("/api/learnings")
+    def api_learnings():
+        """读取 learnings.jsonl 账本（fupan v2 主产出）。同 key 取最新 ts，旧条目标 superseded。"""
+        if not ledger_path.exists():
+            return {"learnings": [], "counts": {}, "ledger_path": str(ledger_path)}
+        rows = []
+        for line_no, line in enumerate(ledger_path.read_text(encoding="utf-8").splitlines(), 1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+                row["_line"] = line_no
+                rows.append(row)
+            except Exception:
+                continue  # 坏行跳过，不让一行脏数据拖垮整个账本
+        latest_by_key = {}
+        for row in rows:
+            key = row.get("key", "")
+            if key not in latest_by_key or (row.get("ts") or "") >= (latest_by_key[key].get("ts") or ""):
+                latest_by_key[key] = row
+        for row in rows:
+            explicit = row.get("status") or "active"
+            row["effective_status"] = explicit if explicit != "active" else (
+                "active" if latest_by_key.get(row.get("key", "")) is row else "superseded"
+            )
+        counts = {
+            "total": len(rows),
+            "active": sum(1 for r in rows if r["effective_status"] == "active"),
+            "projects": sorted({r.get("project", "") for r in rows if r.get("project")}),
+            "domains": sorted({r.get("domain", "") for r in rows if r.get("domain")}),
+        }
+        rows.sort(key=lambda r: (r["effective_status"] != "active", -(r.get("confidence") or 0), r.get("ts") or ""))
+        return {"learnings": rows, "counts": counts, "ledger_path": str(ledger_path)}
 
     @app.get("/api/reviews")
     def api_reviews():
