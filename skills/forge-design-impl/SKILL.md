@@ -1,6 +1,8 @@
 ---
 name: forge-design-impl
-description: '设计实现：将 DESIGN.md 转化为代码。反AI模板编码、shadcn/ui组件推荐、Token驱动样式、CSS优先修改、原子提交。读取 Image 2/Figma 视觉稿作观感参考，最终以真实截图和 CSS 断言验证。从 forge-design 接力，或 forge-eng 调用。触发方式：用户说"实现设计"、"forge-design-impl"、设计文档确认后需要写代码时使用。'
+description: |
+  设计实现：把 DESIGN.md 转成代码，只改样式不改逻辑；CSS 优先、Token 驱动、反 AI 模板、原子提交，以真实截图和 CSS 断言验证。
+  触发方式：用户说"实现设计"、"forge-design-impl"、设计文档确认后需要写代码时。
 ---
 
 > **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见

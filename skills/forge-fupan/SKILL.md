@@ -1,6 +1,8 @@
 ---
 name: forge-fupan
-description: 协作复盘与知识沉淀。在完成一段工作后，先启动本地 Fupan Workbench 让用户确认想学的知识点和深度，再按选择调研并生成结构化复盘文档，重点沉淀表达优化、行为诊断、领域知识、AI 协作改进和可执行 TLDR；每个展开的知识模块默认强尝试生成一张 Image 2 学习图，失败时保存 prompt pack 并明确标注待生成。触发方式：用户说"总结知识"、"学习总结"、"复盘"、"可视化复盘"、"/forge-fupan"时使用。
+description: |
+  协作复盘与知识沉淀：启动本地 Workbench 让用户确认想学的知识点和深度，按选择调研，产出复盘文档和 Image 2 学习图。
+  触发方式：用户说"总结知识"、"学习总结"、"复盘"、"可视化复盘"、"/forge-fupan"。
 ---
 
 > **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见

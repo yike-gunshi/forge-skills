@@ -1,24 +1,9 @@
 ---
 name: forge-qa
 description: |
-  QA 验收与测试报告。纯验收模式：测试+报告，不修代码。
-  两种调用模式：
-    Mode A（完整 QA）：test-spec 生成 → 10 维度 Playwright 断言引擎 → 智能分析。
-    Mode B（单 bug 修复回归）：配合 forge-bugfix 的 P6 调用，读取 docs/bugfix/reviews/BF-XX.md，
-      针对 Bug 修复验收报告里的人工验收指南跑自动化测试，把逐步截图、深度断言、
-      前后端环境身份校验回填到报告。QA 全过 → 单 bug 模式进 P6.5，批量模式进入
-      qa-pass-pending-final-review；QA 有挂 → 通知 forge-bugfix 有界回 P5。
-  核心原则：断言引擎模式，每个测试必须有 pass/fail，不允许 catch 吞错误；
-  浏览器验收必须使用调用方传入或 dev-status 输出的 app_url，不猜 localhost 端口。
-  在 Codex 环境中，如果 Browser Use 插件可用，前端页面/交互验收优先使用
-  browser-use:browser 的 Codex in-app browser 采集用户视角截图和 DOM 证据；
-  Computer Use 只作为 browser-use 不可用或非浏览器桌面应用场景的兜底。
-  在功能开发后的 QA 自动闭环中，forge-qa 发现 bug 时必须产出结构化 bug 信息，
-  供 forge-bugfix 创建 BF 报告并独立 worktree/TDD 修复。
-  支持多种测试引擎：browser-use:browser、Playwright、gstack/browse、纯代码。
-  触发方式：
-    Mode A：用户说"测试"、"QA"、"forge-qa"、forge-dev 调度器调用
-    Mode B：forge-bugfix 的 P6 调用（传入 review_doc 路径）
+  QA 纯验收（只测不修）：Mode A 完整验收（test-spec → 10 维度断言引擎 → 报告 + User Gate）；Mode B 供 forge-bugfix P6 调用做单 bug 回归并回填 BF 报告。
+  铁律：每个测试必须有 pass/fail 和深层断言；console.error 零容忍；不猜端口，只用传入的 app_url。
+  触发方式：Mode A 用户说"测试"、"QA"、"forge-qa"或 forge-dev 调度；Mode B 由 forge-bugfix P6 调用（传 review_doc）。
 allowed-tools:
   - Bash
   - Read

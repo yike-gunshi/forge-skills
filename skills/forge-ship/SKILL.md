@@ -1,6 +1,8 @@
 ---
 name: forge-ship
-description: Use when a reviewed feature or fix branch in a worktree needs to be shipped through PR into the remote base branch and, when requested, synchronized back to the local base-branch worktree.
+description: |
+  发布上线：PR only（建 PR 即停）或 Full ship（合并 PR + 同步本地基础分支）；测试失败不发布、不 force push，状态汇报严格区分提交/推送/合并/部署。
+  触发方式：用户说"ship"、"发布"、"合并上线"、"发 PR"。
 allowed-tools:
   - Bash
   - Read

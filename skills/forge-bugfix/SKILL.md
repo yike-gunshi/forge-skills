@@ -1,12 +1,9 @@
 ---
 name: forge-bugfix
 description: |
-  系统性 Bug 调查与修复。一次修一个 bug，强制根因分析、独立 worktree、独立 TDD、原子 commit、Bug 修复验收报告和 forge-qa 回归。
-  支持多会话并行协调：通过 `.forge/active.md` 登记、功能域判重、合并前 merge 预演避免撞车；启动应用时优先使用项目统一 dev entrypoint，避免端口抢占或测到旧服务。
-  在 Codex 环境中，前端复现和修复后自验优先使用 browser-use:browser；Computer Use 仅作兜底。
-  铁律：不做根因分析不写代码；没有 Bug 修复验收报告不算完；新发现禁止顺手修，原 bug Pass 后先确认边界再分流到 backlog。
-  流程：P0 环境/active.md 探测 → P1 读 PRD/ENG/Bugfix 历史 → P2 定范围 → P2.5 建报告 → P3 worktree 复现 → P4 根因/5 Whys → P5 TDD 修复 → P6 forge-qa 验收 → P7 Pass/Fail/新发现分流 → P8 沉淀。
-  触发方式：用户说"bugfix"、"反馈个问题"、"修这个 bug"、"这里有问题"、"为什么不对"、"排查一下"、"investigate"、"forge-bugfix"，或用户报告错误、异常行为、功能失效时使用。
+  系统性 Bug 修复流水线（P0-P8）：一次修一个，强制根因分析、独立 worktree、TDD、双层验收报告、forge-qa 回归；多会话经 .forge/active.md 防撞车。
+  铁律：不做根因分析不写代码；新发现禁止顺手修；没有用户最终结论不合并。
+  触发方式：用户说"bugfix"、"反馈个问题"、"修这个 bug"、"这里有问题"、"为什么不对"、"排查一下"、"investigate"、"forge-bugfix"，或报告错误、异常行为、功能失效时。
 allowed-tools:
   - Bash
   - Read

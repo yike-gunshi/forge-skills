@@ -1,6 +1,8 @@
 ---
 name: forge-prd
-description: '产品诊断与 PRD 迭代管理器。用户描述遇到的问题或需求，skill 诊断根因（产品设计缺陷/实现偏离/PRD遗漏）、审查模块健康度、设计方案、挑战假设、必要时反驳需求，最终更新 PRD 和 CHANGELOG。支持从零创建 PRD、迭代已有 PRD，并记录前端/全栈需求的视觉决策需求（Image 2/Figma/真实截图）。触发方式：用户说"更新PRD"、"调整需求"、"迭代PRD"、"forge-prd"、描述产品问题、需要修改项目产品需求时使用。'
+description: |
+  产品诊断与 PRD 迭代：诊断根因（设计缺陷/实现偏离/PRD 遗漏），必要时反驳需求，更新 PRD 并生成带异常态门禁的 Feature Spec。
+  触发方式：用户说"更新PRD"、"调整需求"、"迭代PRD"、"forge-prd"、描述产品问题、需要修改产品需求时。
 ---
 
 > **文档落地路径**：遵循 forge-doc-policy 规范。完整白名单 + frontmatter schema 见

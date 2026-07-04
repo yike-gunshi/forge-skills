@@ -1,12 +1,8 @@
 ---
 name: forge-deliver
 description: |
-  端到端交付纯编排层。自身不实现任何业务逻辑，通过调用 forge-* 子 Skill 完成交付：
-  forge-brainstorm → forge-prd → forge-design → forge-design-impl → forge-eng →
-  forge-qa → forge-review → forge-ship → forge-doc-release。
-  管理 .deliver/ 状态目录、state.json 检查点、子 Skill 间的文档传递。
-  两种模式：--auto（前置沟通后全自动）、交互模式（关键节点暂停确认）。
-  支持 --resume 从检查点恢复。
+  端到端交付纯编排层：调用 forge-* 子 skill 从需求一路编排到发布和文档，.deliver/state.json 检查点，支持 --auto / --resume。
+  触发方式：用户说"forge-deliver"、"端到端交付"、"全自动交付"。
 allowed-tools:
   - Bash
   - Read

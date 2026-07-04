@@ -1,12 +1,8 @@
 ---
 name: forge-status
 description: |
-  查看并清理 .forge/active.md 里登记的并行会话记录。扫描所有"进行中"条目，
-  基于硬信号（worktree 目录是否存在、分支是否已合并到 main）判断哪些是僵尸记录，
-  列清单 → 用户一次 y/n 确认 → 批量清理。
-  不使用时间戳、不使用启发式"超过 N 小时算失联"，完全依赖 git / 文件系统现实状态。
-  触发方式：用户说"forge 状态"、"看下谁在跑"、"清理 worktree"、"forge-status"、
-  新会话启动 forge-bugfix / forge-prd / forge-eng 时 P0 阶段主动调用（只读模式）。
+  并行会话巡检：扫 .forge/active.md，按硬信号（worktree 是否存在、分支是否已合并）判僵尸，一次确认批量清理并联动 backlog；不用时间戳启发式。
+  触发方式：用户说"forge 状态"、"看下谁在跑"、"清理 worktree"、"forge-status"；bugfix/prd/eng 启动时只读巡检。
 allowed-tools:
   - Bash
   - Read
