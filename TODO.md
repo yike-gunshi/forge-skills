@@ -73,6 +73,13 @@
   - frontend-design 新禁令 6 条 + 美学锚定法 → design-impl / design create-mode
   - ui-ux-pro-max：现有 8 个 CSV 与上游逐一核对一致；上游新增 8 个数据域（motion/icons/google-fonts 等）需连引擎升级，暂缓另立项（减法原则）
 
+### 阶段 5：独立评审后续（Opus 4.8 评审 B-，2026-07-04）
+
+- [x] 批次 1-3 无争议清理：README 重写 deliver 段/数字对齐、eng+dev+bugfix 的 gstack/browse 清零、删古董 docs/README ✅
+- [x] 批次 4：eng 673→505 行、dev 518→458 行二次骨架化（Wave 执行/调度细则外移）✅
+- [x] 批次 5：test-dimensions.md 加维度导航表 + 按需跳读指引 ✅
+- [ ] 遗留（评审建议但本轮未做）：test-dimensions 按维度拆 10 文件（当前靠导航表跳读缓解，拆分收益/成本待评估）
+
 ## 决策记录
 
 | 日期 | 决策 | 原因 |
