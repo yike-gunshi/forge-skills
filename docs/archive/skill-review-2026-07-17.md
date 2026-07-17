@@ -107,3 +107,9 @@
 - 15/15 frontmatter 合法，description 全部含"做什么 + 何时触发"。
 
 复测遗留的可选项（下轮再议）：forge-eng（399）与 forge-brainstorm（382）仍是最大两个文件，可继续瘦身但已合规。
+
+## 七、第二轮瘦身（同日追记，复测遗留项清零）
+
+复测遗留项与两份报告中未进 F 清单的次级建议当日一并清零：eng 399→275（四章审查细则/交付模板下沉）、doc-release 347→156（新建 release-details 手册，告别零 references）、brainstorm 382→315（提问集下沉 question-banks）、design 337→312（认知模式压缩为 4 条自检项）、design-impl 210→201（shadcn 常识表删除）、prd 343→332（双流程图二选一）、doc-policy 历史叙事收敛。
+
+**最终账**：15 个 SKILL.md 总量 4429 → 3449 行（**-22.1%**），最大文件 492 → 332；全库 SKILL.md → references 指针零断链。明确不做的项维持原决策：test-dimensions 不物理拆分（2026-07-04 用户拍板）、audit-project.sh 维持"未来能力"暂缓（减法原则）。

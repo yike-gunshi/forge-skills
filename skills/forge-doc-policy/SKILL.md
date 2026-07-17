@@ -44,7 +44,7 @@ description: 文档落地治理规范。统一管理 docs/ 目录下文档的写
 
 每个项目的 `CLAUDE.md`（项目根 / `~/claudecode_workspace/CLAUDE.md`）加 3 行引用段，详见 `claude-md-snippet.md`。
 
-**Why**：第 10 轮决策砍掉 PreToolUse hook，改 LLM 强校验自觉路线。规则源头在本 skill，所有项目通过引用读取。
+**Why**：规则源头在本 skill，所有项目通过引用读取，不复制副本。
 
 ### 装载 2：新项目 day 0（✅ 已就绪）
 
@@ -70,7 +70,7 @@ description: 文档落地治理规范。统一管理 docs/ 目录下文档的写
 3. **合规处理** — 在白名单内 → 静默写入，不打断用户
 4. **铁律** — 违反 1-3 的写入即视为 bug，用户报告后 AI 必须立即移动文件 + 在 memory 加 feedback
 
-**Why 不上 PreToolUse hook**：第 10 轮 brainstorm 决策（追问 1）— Hook 误伤会让用户频繁被打断，3 次就会自己关掉，反而失效。LLM 自觉 + 违规才问 = 更友好且对 forge skill 已有约束的补强。
+**Why 不上 PreToolUse hook**：Hook 误伤会让用户频繁被打断，3 次就会自己关掉，反而失效。LLM 自觉 + 违规才问 = 更友好且对 forge skill 已有约束的补强。（决策渊源见 CHANGELOG）
 
 ---
 

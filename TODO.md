@@ -101,6 +101,16 @@
 
 成果：15 个 SKILL.md 总量 4429→3876 行（-12.5%），最大文件从 492 降到 399，全部脱离 500 行红线。
 
+### 阶段 7：第二轮瘦身（复测遗留项）✅ 2026-07-17 完成
+
+- [x] eng 399→275（四章审查/从零创建/交付模板下沉，worktree 块与手册去重）✅
+- [x] doc-release 347→156（新建 references/release-details.md，零 references 状态终结）✅
+- [x] brainstorm 382→315（提问集下沉 references/question-banks.md）✅
+- [x] design 337→312 + design-impl 210→201（认知模式压缩、资源节合并、shadcn 常识表删除）✅
+- [x] prd 343→332（双流程图二选一）；doc-policy 历史叙事收敛 ✅
+
+最终账：总量 4429→3449（-22.1%），最大文件 332；指针零断链。明确不做：test-dimensions 拆分（已定档）、audit-project.sh（维持未来能力）。
+
 ## 决策记录
 
 | 日期 | 决策 | 原因 |

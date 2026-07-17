@@ -100,6 +100,9 @@ Worktree 就绪：
   路径：{full-path}
   分支：{branch-name}
   基线测试：{通过 N 个 / 无测试框架}
+  Backend URL：{如已启动则填写；未启动则写 未启动}
+  Frontend URL：{如已启动则填写；未启动则写 未启动}
+  APP_URL：{供浏览器/QA 使用的 URL；来自 dev:status，不得猜}
   准备开始实现 {feature-name}
 ```
 

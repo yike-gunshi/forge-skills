@@ -108,16 +108,7 @@ description: |
 
 ### 组件选择指导
 
-如果项目使用 shadcn/ui 或类似组件库：
-
-| 组件类别 | 推荐组件 | 使用场景 |
-|----------|---------|---------|
-| **表单** | Input, Select, Textarea, Checkbox, Radio, Switch, Slider | 数据输入 |
-| **布局** | Card, Separator, Tabs, Accordion, Collapsible | 内容组织 |
-| **叠加层** | Dialog, Sheet, Popover, Tooltip, HoverCard | 辅助信息 |
-| **反馈** | Alert, Toast, Progress, Skeleton | 状态反馈 |
-| **导航** | NavigationMenu, Breadcrumb, Pagination, Command | 导航系统 |
-| **展示** | Table, Badge, Avatar, Calendar | 数据展示 |
+组件选型遵循 shadcn/ui 官方分类，按需查官方文档。
 
 **无障碍要求：**
 - 所有交互组件必须键盘可操作

@@ -8,6 +8,21 @@
 
 ## [Unreleased]
 
+## [v2026.07.17.2] — 2026-07-17（第二轮瘦身：复测遗留项清零）
+
+### Changed
+- **forge-eng 399→275**：四章审查细则/从零创建流程移入 engineering-template（278→340），第 9 步交付模板移入 wave-execution（184→218），第 5.5 步 worktree 块与手册去重合并；范围挑战/方案设计/必需产出三块判断逻辑保留在骨架。
+- **forge-doc-release 347→156**：告别"零 references"，第 1-9 步细则移入新建 `references/release-details.md`（275 行，含按需跳读导航），骨架保留铁律 + 9 步摘要。
+- **forge-brainstorm 382→315**：Phase 1 四模式提问全文 + Phase 4 Pushback 模板移入新建 `references/question-banks.md`（89 行），骨架留主题摘要 + "逐字使用原文问法"指针。
+- **forge-design 337→312**："设计师认知模式"12 条压缩为 4 条可检查自检要点，原文与设计批评话术移入 create-mode.md（171→199）；末尾重复"资源"节并入"数据资源"表。
+- **forge-design-impl 210→201**：删除 shadcn 组件分类常识表。
+- **forge-prd 343→332**："流程总览"文字版与 ASCII 交互流程图二选一（留图），修复"CEO 角色扮演"表述随 ask 规范单源化一并消失。
+- **forge-doc-policy**：装载说明中的"第 10 轮决策"历史叙事收敛（渊源指向 CHANGELOG）。
+
+### Evidence
+- 15 个 SKILL.md 总量 3876→3449 行；对比迭代起点 4429 行**累计 -22.1%**。最大文件 prd 332（迭代前最大 eng 492）。
+- 新指针全部命中目标小节，全库 SKILL.md → references 零断链（grep 全量核验）。
+
 ## [v2026.07.17.1] — 2026-07-17（对标审查整改 F1-F12 全量落地）
 
 ### Changed
