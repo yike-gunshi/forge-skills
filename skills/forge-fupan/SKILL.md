@@ -110,7 +110,7 @@ grep -rl "session:" "$_FUPAN_DIR/$_PROJECT" 2>/dev/null | head -3
 ## Workbench（复盘阅览器，按需启动）
 
 Workbench 定位是**浏览工具**，不再是复盘流程的门禁：
-- 用户想浏览历史复盘/账本时说"打开复盘工作台"再启动（`workbench/launcher.py`）
+- 用户想浏览历史复盘/账本时说"打开复盘工作台"再启动（`~/.claude/skills/forge/tools/fupan-workbench/launcher.py`，workbench 应用位于仓库 `tools/` 下，不随 skill 加载）
 - 阅览器为账本+文档双页结构（`/api/learnings` 提供账本数据），2026-07-04 改造完成
 
 ## 深度分析（可选路径）

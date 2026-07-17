@@ -32,7 +32,7 @@
 - Markdown 图片渲染为可点击 zoom 控件，通过 React lightbox 放大查看。
 - 详情页知识地图独立组件化，使用编号列表替代左侧大块标签。
 - `forge-fupan/SKILL.md` 文档结构要求新增末尾 `TLDR`，位于全文最后。
-- 前端构建产物继续输出到 `skills/forge-fupan/workbench/static/`。
+- 前端构建产物继续输出到 `tools/fupan-workbench/static/`（2026-07-17 起 workbench 迁至 `tools/`）。
 
 ### v2026.04.24-fupan-workbench — Fupan Workbench 本地交互式复盘学习工作台
 

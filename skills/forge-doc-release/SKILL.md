@@ -4,6 +4,7 @@ description: |
   发布后文档更新。读取所有项目文档，与 diff 交叉对照，
   更新 README/ARCHITECTURE/CONTRIBUTING/CLAUDE.md 使之匹配已发布内容，
   润色 CHANGELOG 语气，清理 TODOS，可选地更新 VERSION。
+  触发方式：用户说"更新文档"、"文档同步"、"forge-doc-release"，或 forge-ship 之后、PR 合并之前由 forge-dev --full 调度。
 allowed-tools:
   - Bash
   - Read
@@ -31,13 +32,7 @@ echo "当前分支: $_BRANCH"
 
 ---
 
-## AskUserQuestion 格式规范
-
-每次提问结构：
-1. **重新聚焦**：当前项目、分支、正在审查的文档
-2. **通俗解释**：高中生能懂的语言描述问题
-3. **给出建议**：推荐选项 + 完整度评分
-4. **列出选项**：`A) B) C)` + 工作量估算
+> 提问格式与批量策略见 `~/.claude/skills/_shared/interaction-protocol.md`。
 
 ---
 

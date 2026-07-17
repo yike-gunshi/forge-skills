@@ -120,7 +120,7 @@ owner: yike-gunshi
 
 ## 老文档批量回填策略（Sprint C1）
 
-200+ 个 `docs/*.md` 中活文档约 50-80 份。回填脚本 `scripts/backfill-frontmatter.sh`：
+200+ 个 `docs/*.md` 中活文档约 50-80 份。回填脚本 `scripts/backfill-frontmatter.sh`（规划中，未实现，见 CHANGELOG Roadmap）：
 
 1. 扫所有 `.md`，跳过已有 frontmatter 的
 2. 对每个文件提取标题 + 前 50 行内容 + 文件路径作为上下文

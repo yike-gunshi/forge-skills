@@ -8,6 +8,25 @@
 
 ## [Unreleased]
 
+## [v2026.07.17.1] — 2026-07-17（对标审查整改 F1-F12 全量落地）
+
+### Changed
+- **共享层单源化**：新增 `_shared/interaction-protocol.md`（AskUserQuestion 格式 + 全体系统一批量策略：≤3 单独问、>3 同类批量）与 `_shared/feature-status-protocol.md`（状态标记 + 通用操作规则）；8 个 skill 的 ask 规范副本、design/eng/qa 的状态表副本全部改为一行引用，根治副本漂移。
+- **三大 skill 二次瘦身**：forge-ship 488→286 行（第 9-11 步细节移 `references/merge-and-sync.md`，info2action 专属命令去除）；forge-eng 492→399 行（第 10 步 bash 归 worktree-guide、口号区压缩、铁律单点化）；forge-dev 458→326 行（灰区表/RESEARCH 模板/--auto 细则/前置脚本下沉 orchestration-details.md）。
+- **forge-qa 去伪存真**：313→244 行，删除不可运行的伪 bash 模式判断块（保留判定优先级表 + 入口校验规则），Codex 特异内容移入"环境适配"说明。
+- **workbench 迁出 skill 包**：`skills/forge-fupan/workbench/` → `tools/fupan-workbench/`（skill 目录不再承载 41MB 应用），启动路径经 forge 根 symlink 保持可用。
+- **可移植性**：forge-status 端口表与 tmux 关键词去 info2action 化；active.md 登记方表述收窄为与现实一致（仅 forge-bugfix 登记）。
+- **doc-paths 白名单增补**：`docs/{版本号}-CONTEXT/RESEARCH.md`（forge-dev 管理）转正。
+- **doc-policy 反 future-outline**：未实现脚本/模板从 SKILL.md 文件清单表移入其 CHANGELOG Roadmap 节，删除三处防御性"勿引导运行"文本。
+
+### Added
+- **`evals/trigger-cases.md`**：33 条触发/不触发/易混淆路由用例（含 forge-review 与内置 code-review/verify 消歧），description 变更后人工回归。
+- **四份大 reference 补导航**：mode-a-execution（1006 行）、p6-p7、p3-p5、thinking-doc-template 顶部按需跳读表。
+- forge-review / forge-doc-release 的 description 补触发方式。
+
+### Evidence
+- 15 个 SKILL.md 总量 4429→3876 行（-12.5%），最大文件 492→399，全部脱离 500 行红线；skill-creator 标准复测报告见本次提交说明。
+
 ## [v2026.07.17] — 2026-07-17（外部对标审查 + 一致性修复）
 
 ### Added

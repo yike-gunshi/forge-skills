@@ -1,6 +1,6 @@
 # forge-dev · 编排细则手册
 
-> 由 SKILL.md 骨架按需加载。含：state.json 状态管理与 --resume 恢复、汇总交付报告格式、验收操作清单、Feature 状态管理操作。
+> 由 SKILL.md 骨架按需加载。含：state.json 状态管理与 --resume 恢复、前置检测脚本、第-1步问法文案、第1步灰区识别表、第2步 RESEARCH.md 模板、第3步执行计划展示模板、--auto 模式细则、汇总交付报告格式、验收操作清单、Feature 状态管理操作、第4步 Wave 调度机制。
 
 ## 状态管理
 
@@ -60,6 +60,156 @@ git apply .forge/checkpoints/[phase]-done.patch      # 恢复到指定阶段
 
 ---
 
+## 前置检测脚本（SKILL.md「前置脚本」全文）
+
+```bash
+_BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
+_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+echo "当前分支: $_BRANCH"
+echo "项目根目录: $_ROOT"
+
+# 检测项目环境
+[ -f "$_ROOT/package.json" ] && echo "检测到: Node.js 项目" && cat "$_ROOT/package.json" | head -5
+[ -f "$_ROOT/requirements.txt" ] && echo "检测到: Python 项目"
+[ -f "$_ROOT/go.mod" ] && echo "检测到: Go 项目"
+[ -f "$_ROOT/Cargo.toml" ] && echo "检测到: Rust 项目"
+[ -f "$_ROOT/Makefile" ] && echo "检测到: Makefile"
+
+# 检查浏览器工具（QA 阶段可能需要）
+command -v npx >/dev/null 2>&1 && npx playwright --version >/dev/null 2>&1 && echo "浏览器工具: Playwright 可用" || echo "浏览器工具: Playwright 不可用（QA 将用 browser-use 或纯代码模式）"
+
+# 检查 .forge 状态
+[ -f "$_ROOT/.forge/dev-state.json" ] && echo "发现未完成的开发流水线" && cat "$_ROOT/.forge/dev-state.json"
+
+# 检查 .features/ 注册表
+[ -f "$_ROOT/.features/_registry.md" ] && echo "发现 Feature 注册表" && cat "$_ROOT/.features/_registry.md"
+
+# 检查 brainstorm 思考文档
+ls "$_ROOT"/brainstorm-*.md 2>/dev/null && echo "发现思考文档（根目录）"
+ls "$_ROOT"/docs/brainstorm-*.md 2>/dev/null && echo "发现思考文档（docs/）"
+```
+
+---
+
+## 第-1步问法文案（Brainstorm 感知）
+
+```
+检查项目文档状态：
+├── 有 PRD → 正常进入第0步
+├── 无 PRD，有思考文档 →
+│     AskUserQuestion:
+│       "发现思考文档 [{文件名}]，但没有正式 PRD 和 .features Feature Spec。建议：
+│        A) /forge-prd — 将思考转化为正式 PRD + Feature Spec（推荐）
+│        B) 轻量模式 — 跳过 PRD，直接基于思考文档进入开发（⚠️ 无验收锚点）
+│        C) /forge-brainstorm — 思考还不够充分，继续讨论"
+├── 无 PRD，无思考文档 →
+│     AskUserQuestion:
+│       "没有发现 PRD 或思考文档。建议：
+│        A) /forge-brainstorm — 先讨论一下需求再开发
+│        B) /forge-prd — 直接从零创建 PRD
+│        C) 轻量模式 — 直接告诉我要做什么，跳过文档"
+└── 用户选择轻量模式 → 跳过第0-2步，直接进入第3步（调度建议）
+```
+
+---
+
+## 第1步：灰区识别表（Discussion）
+
+根据变更内容的类型，自动识别需要讨论的灰区：
+
+| 变更类型 | 需要讨论的灰区 |
+|---------|--------------|
+| 视觉功能 | 布局偏好、信息密度、交互方式、空状态处理、动效风格 |
+| API / CLI | 返回格式、错误码设计、参数命名、详细程度、版本策略 |
+| 内容系统 | 内容结构、语气风格、深度层级、内容流转 |
+| 数据处理 | 分组标准、去重策略、命名规则、例外处理 |
+| 组织型任务 | 目录结构、文件命名、模块划分、配置管理 |
+
+---
+
+## 第2步：RESEARCH.md 模板
+
+```markdown
+# 技术调研报告 — vX.Y
+
+## 调研时间：YYYY-MM-DD
+## 调研范围：[本次 PRD 变更摘要]
+
+### 一、技术方案推荐
+[推荐的技术方案、库选择、版本兼容性]
+
+### 二、架构模式推荐
+[推荐的架构模式、数据流设计、模块划分]
+
+### 三、风险与坑点
+[已知坑点、规避策略、边界情况]
+
+### 四、可复用资产
+[项目中已有的可复用模块/函数/模式、需要重构的部分]
+
+### 五、综合建议
+[基于以上四个维度的综合推荐方案]
+```
+
+---
+
+## 第3步：执行计划展示模板
+
+通过 AskUserQuestion 向用户展示：
+
+```
+项目：[项目名]
+PRD 版本：vX.Y
+项目类型：[frontend / backend / fullstack]
+本次变更：[变更摘要]
+
+调研摘要：
+- 技术方案：[RESEARCH.md 中的推荐方案]
+- 风险提示：[RESEARCH.md 中的关键坑点]
+
+建议执行计划：
+1. /forge-design — [需要设计的内容摘要]
+2. /forge-eng — [需要实现的内容摘要]
+3. /forge-qa — [需要测试的内容摘要]
+
+推荐：按上述顺序执行，因为 [理由]。
+预计影响：[N 个文件]
+```
+
+选项：
+- A) 按建议顺序执行全部
+- B) 跳过某个环节（指定跳过哪个）
+- C) 只执行其中一个（指定哪个）
+- D) 调整顺序或内容
+
+---
+
+## --auto 模式细则
+
+### 前置沟通（1-2 轮，必须）
+
+执行任何阶段之前，先完成前置沟通。这不是可选的。
+
+**第1轮（必选）— 需求对齐：**
+通过 AskUserQuestion 确认：
+- "我理解你要做的是 [复述需求]，对吗？"
+- "项目类型判断：[frontend / backend / fullstack]"（决定是否跳过设计）
+- "我的方案大纲是：[1-3 句话概括方案方向]"
+- "预计影响 [N 个文件 / 新建 N 个文件]"
+
+**第2轮（按需）— 依赖确认：**
+只在以下情况触发：
+- 检测到需要外部依赖（API key、数据库、第三方服务）
+- 需求存在歧义（多种理解方式）
+- 项目结构复杂（多个入口、微服务架构）
+
+**前置沟通完毕后：** 全自动执行，不再暂停。
+
+### 特殊规则
+
+- **不 git commit** — 代码改动只存在于工作区
+- **每个阶段结束保存检查点** — 操作见上文「状态管理 · 检查点保存」
+- **遇到阻塞不死等** — 记录阻塞原因，跳到下一个可执行阶段，在报告中标注；处理分支见下文「第4步 · 阻塞处理」
 
 ---
 
@@ -152,19 +302,7 @@ E) /forge — 不确定，让 Forge 帮我判断
 
 ## Feature 状态管理（.features/ 架构）
 
-### 核心原则
-
-**领域文档只存内容，不存运行状态。** 所有运行状态集中在 `.features/{feature-id}/status.md`，按 feature 隔离，支持多会话并行。
-
-### 状态标记协议
-
-| 标记 | 含义 |
-|------|------|
-| `[⏳ 待处理]` | 已规划，未开始 |
-| `[🔄 进行中]` | 当前正在执行 |
-| `[✅ 已完成]` | 执行完成 |
-| `[❌ 失败]` | 执行失败，需干预 |
-| `[⏸️ 暂停]` | 等待用户确认或外部依赖 |
+> 状态标记与通用操作规则见 `~/.claude/skills/_shared/feature-status-protocol.md`。
 
 ### 调度器的状态管理职责
 

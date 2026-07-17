@@ -11,6 +11,20 @@ last_updated: 2026-06-09
 
 ---
 
+## Roadmap（规划中，均未实现——不要引导用户运行）
+
+| 能力 | 说明 |
+|---|---|
+| `scripts/audit-project.sh` | 老项目接入兼容性审计 |
+| `scripts/backfill-frontmatter.sh` | 批量 AI 回填 frontmatter（Sprint C1） |
+| `scripts/build-index.sh` | 扫 frontmatter 生成 docs/INDEX.md（Sprint C2） |
+| `hooks/post-stop-update-index.sh` | Stop hook 触发 INDEX 更新（Sprint C2） |
+| `templates/docs-skeleton/` + `CLAUDE.md.tmpl` + `.gitignore.tmpl` | 标准骨架与模板（Sprint E） |
+
+> 2026-07-17 起，未实现项从 SKILL.md 文件清单表移到这里（消除 future-outline-vs-build 反模式）。
+
+---
+
 ## v0.2 — 2026-06-09（当前真相源 + archive/raw）
 
 **适配文档系统重构**：

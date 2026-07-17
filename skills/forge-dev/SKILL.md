@@ -19,32 +19,9 @@ description: |
 
 ## 前置脚本（每次先运行）
 
-```bash
-_BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
-_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-echo "当前分支: $_BRANCH"
-echo "项目根目录: $_ROOT"
-
-# 检测项目环境
-[ -f "$_ROOT/package.json" ] && echo "检测到: Node.js 项目" && cat "$_ROOT/package.json" | head -5
-[ -f "$_ROOT/requirements.txt" ] && echo "检测到: Python 项目"
-[ -f "$_ROOT/go.mod" ] && echo "检测到: Go 项目"
-[ -f "$_ROOT/Cargo.toml" ] && echo "检测到: Rust 项目"
-[ -f "$_ROOT/Makefile" ] && echo "检测到: Makefile"
-
-# 检查浏览器工具（QA 阶段可能需要）
-command -v npx >/dev/null 2>&1 && npx playwright --version >/dev/null 2>&1 && echo "浏览器工具: Playwright 可用" || echo "浏览器工具: Playwright 不可用（QA 将用 browser-use 或纯代码模式）"
-
-# 检查 .forge 状态
-[ -f "$_ROOT/.forge/dev-state.json" ] && echo "发现未完成的开发流水线" && cat "$_ROOT/.forge/dev-state.json"
-
-# 检查 .features/ 注册表
-[ -f "$_ROOT/.features/_registry.md" ] && echo "发现 Feature 注册表" && cat "$_ROOT/.features/_registry.md"
-
-# 检查 brainstorm 思考文档
-ls "$_ROOT"/brainstorm-*.md 2>/dev/null && echo "发现思考文档（根目录）"
-ls "$_ROOT"/docs/brainstorm-*.md 2>/dev/null && echo "发现思考文档（docs/）"
-```
+检测：当前分支与项目根目录、项目环境（Node / Python / Go / Rust / Makefile）、Playwright 可用性、
+`.forge/dev-state.json` 未完成流水线、`.features/_registry.md` 注册表、brainstorm 思考文档。
+脚本全文见 [references/orchestration-details.md](references/orchestration-details.md)「前置检测脚本」。
 
 ---
 
@@ -113,29 +90,9 @@ ls "$_ROOT"/docs/brainstorm-*.md 2>/dev/null && echo "发现思考文档（docs/
 
 ### 自动模式（`--auto`）
 
-**前置沟通（1-2 轮，必须）：**
-
-执行任何阶段之前，先完成前置沟通。这不是可选的。
-
-**第1轮（必选）— 需求对齐：**
-通过 AskUserQuestion 确认：
-- "我理解你要做的是 [复述需求]，对吗？"
-- "项目类型判断：[frontend / backend / fullstack]"（决定是否跳过设计）
-- "我的方案大纲是：[1-3 句话概括方案方向]"
-- "预计影响 [N 个文件 / 新建 N 个文件]"
-
-**第2轮（按需）— 依赖确认：**
-只在以下情况触发：
-- 检测到需要外部依赖（API key、数据库、第三方服务）
-- 需求存在歧义（多种理解方式）
-- 项目结构复杂（多个入口、微服务架构）
-
-**前置沟通完毕后：** 全自动执行，不再暂停。
-
-**自动模式特殊规则：**
-- **不 git commit** — 代码改动只存在于工作区
-- **每个阶段结束保存检查点** — `git diff > .forge/checkpoints/phase-N-done.patch`
-- **遇到阻塞不死等** — 记录阻塞原因，跳到下一个可执行阶段，在报告中标注
+执行任何阶段之前，必须先完成前置沟通（第1轮需求对齐必选，第2轮依赖确认按需触发）；沟通完毕后全自动执行，不再暂停。
+特殊规则：**不 git commit**（改动只在工作区）、每个阶段结束保存 patch 检查点、遇阻不死等（跳到可执行阶段并在报告中标注）。
+两轮沟通的问题清单与细则见 [references/orchestration-details.md](references/orchestration-details.md)「--auto 模式细则」。
 
 ### 恢复模式（`--resume`）
 
@@ -150,12 +107,7 @@ ls "$_ROOT"/docs/brainstorm-*.md 2>/dev/null && echo "发现思考文档（docs/
 
 ---
 
-## AskUserQuestion 格式规范
-
-1. **重新聚焦**：当前项目、正在调度的开发任务。（1-2句）
-2. **通俗解释**：用简单语言说清接下来要做什么。
-3. **给出推荐**：推荐的执行计划和理由。
-4. **列出选项**：可调整的执行方案。
+> 提问格式与批量策略见 ~/.claude/skills/_shared/interaction-protocol.md。
 
 ---
 
@@ -166,25 +118,13 @@ ls "$_ROOT"/docs/brainstorm-*.md 2>/dev/null && echo "发现思考文档（docs/
 
 ## 第-1步：Brainstorm 感知
 
-在读取 PRD 之前，先检查项目是否有 PRD 和思考文档：
+在读取 PRD 之前，先检查项目文档状态：
+- **有 PRD** → 正常进入第0步
+- **无 PRD，有思考文档** → AskUserQuestion 三选一：A) /forge-prd 转正式 PRD + Feature Spec（推荐） B) 轻量模式直接开发（⚠️ 无验收锚点） C) /forge-brainstorm 继续讨论
+- **无 PRD，无思考文档** → AskUserQuestion 三选一：A) /forge-brainstorm 先讨论 B) /forge-prd 从零创建 C) 轻量模式跳过文档
+- **用户选轻量模式** → 跳过第0-2步，直接进入第3步（调度建议）
 
-```
-检查项目文档状态：
-├── 有 PRD → 正常进入第0步
-├── 无 PRD，有思考文档 →
-│     AskUserQuestion:
-│       "发现思考文档 [{文件名}]，但没有正式 PRD 和 .features Feature Spec。建议：
-│        A) /forge-prd — 将思考转化为正式 PRD + Feature Spec（推荐）
-│        B) 轻量模式 — 跳过 PRD，直接基于思考文档进入开发（⚠️ 无验收锚点）
-│        C) /forge-brainstorm — 思考还不够充分，继续讨论"
-├── 无 PRD，无思考文档 →
-│     AskUserQuestion:
-│       "没有发现 PRD 或思考文档。建议：
-│        A) /forge-brainstorm — 先讨论一下需求再开发
-│        B) /forge-prd — 直接从零创建 PRD
-│        C) 轻量模式 — 直接告诉我要做什么，跳过文档"
-└── 用户选择轻量模式 → 跳过第0-2步，直接进入第3步（调度建议）
-```
+完整问法文案见 [references/orchestration-details.md](references/orchestration-details.md)「第-1步问法文案」。
 
 ---
 
@@ -235,15 +175,9 @@ ls "$_ROOT"/docs/brainstorm-*.md 2>/dev/null && echo "发现思考文档（docs/
 
 ### 灰区识别
 
-根据变更内容的类型，自动识别需要讨论的灰区：
-
-| 变更类型 | 需要讨论的灰区 |
-|---------|--------------|
-| 视觉功能 | 布局偏好、信息密度、交互方式、空状态处理、动效风格 |
-| API / CLI | 返回格式、错误码设计、参数命名、详细程度、版本策略 |
-| 内容系统 | 内容结构、语气风格、深度层级、内容流转 |
-| 数据处理 | 分组标准、去重策略、命名规则、例外处理 |
-| 组织型任务 | 目录结构、文件命名、模块划分、配置管理 |
+根据变更内容的类型（视觉功能 / API·CLI / 内容系统 / 数据处理 / 组织型任务）自动识别需要讨论的灰区，
+如布局偏好、返回格式、命名规则、目录结构等。
+完整灰区识别表见 [references/orchestration-details.md](references/orchestration-details.md)「第1步：灰区识别表」。
 
 ### 执行方式
 
@@ -290,30 +224,8 @@ ls "$_ROOT"/docs/brainstorm-*.md 2>/dev/null && echo "发现思考文档（docs/
 
 ### 产出
 
-汇总为 `RESEARCH.md`：
-
-```markdown
-# 技术调研报告 — vX.Y
-
-## 调研时间：YYYY-MM-DD
-## 调研范围：[本次 PRD 变更摘要]
-
-### 一、技术方案推荐
-[推荐的技术方案、库选择、版本兼容性]
-
-### 二、架构模式推荐
-[推荐的架构模式、数据流设计、模块划分]
-
-### 三、风险与坑点
-[已知坑点、规避策略、边界情况]
-
-### 四、可复用资产
-[项目中已有的可复用模块/函数/模式、需要重构的部分]
-
-### 五、综合建议
-[基于以上四个维度的综合推荐方案]
-```
-
+汇总为 `RESEARCH.md`（五节：技术方案推荐 / 架构模式推荐 / 风险与坑点 / 可复用资产 / 综合建议），
+全文模板见 [references/orchestration-details.md](references/orchestration-details.md)「第2步：RESEARCH.md 模板」。
 保存到 `{项目目录}/docs/{版本号}-RESEARCH.md`，传递给 forge-design 和 forge-eng。
 
 ---
@@ -347,32 +259,9 @@ ls "$_ROOT"/docs/brainstorm-*.md 2>/dev/null && echo "发现思考文档（docs/
 
 ### 产出执行计划
 
-通过 AskUserQuestion 向用户展示：
-
-```
-项目：[项目名]
-PRD 版本：vX.Y
-项目类型：[frontend / backend / fullstack]
-本次变更：[变更摘要]
-
-调研摘要：
-- 技术方案：[RESEARCH.md 中的推荐方案]
-- 风险提示：[RESEARCH.md 中的关键坑点]
-
-建议执行计划：
-1. /forge-design — [需要设计的内容摘要]
-2. /forge-eng — [需要实现的内容摘要]
-3. /forge-qa — [需要测试的内容摘要]
-
-推荐：按上述顺序执行，因为 [理由]。
-预计影响：[N 个文件]
-```
-
-选项：
-- A) 按建议顺序执行全部
-- B) 跳过某个环节（指定跳过哪个）
-- C) 只执行其中一个（指定哪个）
-- D) 调整顺序或内容
+通过 AskUserQuestion 展示：项目 / PRD 版本 / 项目类型、变更与调研摘要、建议执行计划（design → eng → qa 各环节内容与推荐理由）、预计影响文件数。
+选项：A) 按建议顺序执行全部 B) 跳过某个环节 C) 只执行其中一个 D) 调整顺序或内容。
+展示模板全文见 [references/orchestration-details.md](references/orchestration-details.md)「第3步：执行计划展示模板」。
 
 ---
 
@@ -429,30 +318,9 @@ PRD 版本：vX.Y
 
 ## 重要规则
 
-### 上下文工程规则
-- **子 skill 必须在独立上下文执行** — 使用 Agent 工具启动，不在主会话中直接执行
-- **只传递必要信息** — 文档路径 + 变更摘要 + 用户偏好，不传递主会话的完整历史
-- **主上下文保持精简** — 调度器只做编排和汇总，不做具体实现
-- **验收在主上下文完成** — 读取子 agent 的产出文档做最终确认
+上下文工程与自动模式的原则见正文对应章节，不在此复述。
 
-### 调度规则
 - **半自动调度** — 列出建议，用户确认后再执行，不自动跳过任何环节
-- **上下文传递** — 确保每个子技能能读到前序产出（通过文件路径传递，非上下文传递）
 - **不重复工作** — 如果某个领域文档已经是最新（版本号与 PRD 一致），提示跳过
-- **状态文件实时更新** — 每次阶段状态变更都写 state.json
-
-### 自动模式规则
-- **前置沟通不可省略** — 自动模式的"自动"是沟通完毕后的执行自动，不是跳过沟通
-- **绝不 git commit** — 代码改动只在工作区，检查点用 patch 保存
-- **遇阻不死等** — 记录阻塞原因，跳到可执行阶段，在报告中标注
-
-### 质量规则
-- **不引入安全漏洞** — 每次修改都检查 OWASP Top 10
-- **不破坏现有功能** — 修改现有代码前先读懂上下文
-- **遵循项目已有风格** — 缩进、命名、目录结构与项目保持一致
 - **一个想法，一个交付** — 不要在一次流水线中塞入多个不相关的功能
-
-### 设计规则（仅 frontend/fullstack）
-- **避免 AI 模板痕迹** — 不用紫色渐变、三列功能网格、千篇一律的 SaaS 布局
-- **遵循现有设计体系** — 如果项目已有样式，新功能必须一致
-- **响应式不是可选的** — 所有新 UI 必须适配移动端
+- **视觉反模板** — 清单以 forge-design-impl 的 2026-07 增量清单为准，本文件不复制

@@ -59,6 +59,7 @@ last_updated: 2026-06-09
 | `docs/bugfix/backlog.md` | bug 任务池 | 当前任务入口，长期保留 |
 | `docs/bugfix/reviews/BF-{MMDD}-{N}.md` | 正在处理的 bug 验收报告 | `status: draft`；结案后归档到 raw |
 | `docs/plans/{YYYY-MM-DD}-{topic}.md` | 跨轮执行计划 | 只放仍可执行的计划 |
+| `docs/{版本号}-CONTEXT.md` / `docs/{版本号}-RESEARCH.md` | forge-dev 调度产物（上下文摘要、技术调研） | forge-dev 管理；对应迭代结项后归档到 archive/raw |
 
 Bug 报告结案规则：QA 和用户验收通过、修复合并后，移动到 `docs/archive/raw/bugfix-reviews/`，改为 `status: archive`，并更新 backlog 链接。
 

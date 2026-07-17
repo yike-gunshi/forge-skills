@@ -32,8 +32,6 @@ allowed-tools:
 
 永远区分这些状态：代码已提交、分支已推送、PR 已创建、PR 已合并、远程 main 已更新、本地 main 已同步、ECS 已部署。除非真的执行部署并验证运行态，否则不要说线上已更新。
 
----
-
 ## 前置脚本
 
 每次先运行：
@@ -50,48 +48,20 @@ git remote -v
 - B) 只同步本地 main
 - C) 停止
 
----
-
-## AskUserQuestion 格式规范
-
-每次提问结构：
-1. **重新聚焦**：当前项目、分支、当前步骤
-2. **通俗解释**：说清楚这个选择会改变什么
-3. **给出建议**：推荐选项 + 一句话原因
-4. **列出选项**：`A) B) C)`
-
----
+> 提问格式与批量策略见 ~/.claude/skills/_shared/interaction-protocol.md。
 
 ## 第0步：确定 Ship 模式和基础分支
 
-先确定模式：
-
-```bash
-# 根据用户措辞判断；不确定时询问
-# PR only: 只创建/更新 PR
-# Full ship: PR 合并后同步本地基础分支
-```
+先根据用户措辞判断模式（PR only / Full ship），不确定时询问。
 
 确定基础分支：
 
 ```bash
-# 1. 如果已有 PR，读取 PR base
-gh pr view --json baseRefName -q .baseRefName 2>/dev/null
-
-# 2. 没有 PR，则读取仓库默认分支
-gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null
-
-# 3. 都失败则回退到 main
+gh pr view --json baseRefName -q .baseRefName 2>/dev/null                   # 1. 已有 PR 则读 PR base
+gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null  # 2. 否则读仓库默认分支；都失败回退 main
 ```
 
-记录：
-- 当前分支
-- 基础分支
-- ship 模式
-- 当前 HEAD
-- `origin/<基础分支>` HEAD
-
----
+记录：当前分支、基础分支、ship 模式、当前 HEAD、`origin/<基础分支>` HEAD。
 
 ## 第0.5步：生产写面授权门
 
@@ -107,8 +77,6 @@ gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null
 把清单**一次性**列给用户请求点名授权，不要逐次撞权限门。同时给出用户可预置进 `.claude/settings.local.json` 的 allow 规则（如 `Bash(ssh root@HOST *)`、`Bash(./scripts/deploy.sh*)`），并说明：AI 代改 settings 会被反自授权设计拦截，这几条只能用户亲手加。
 
 本轮没有仓库外写面就记录"无写面"跳过。中途被拦时按账本"被拦即换路勿重试"处理，禁止原样重试同一命令。
-
----
 
 ## 第1步：安全检查
 
@@ -126,29 +94,9 @@ git log origin/<基础分支>..HEAD --oneline
 - B) 交互式选择文件
 - C) 停下来，让我处理
 
-不要自动加入无关文件。特别注意构建产物，如 `frontend-react/tsconfig.app.tsbuildinfo`。
+不要自动加入无关文件。特别注意构建产物和缓存文件（如 tsbuildinfo、`__pycache__`）。
 
-如果是 Full ship，提前定位本地基础分支 worktree，但此时不要修改它：
-
-```bash
-_BASE=<基础分支>
-_MAIN_CWD=$(git worktree list --porcelain | awk -v branch="refs/heads/${_BASE}" '
-  BEGIN { RS=""; FS="\n" }
-  $0 ~ "branch " branch {
-    for (i=1; i<=NF; i++) {
-      if ($i ~ /^worktree /) {
-        sub(/^worktree /, "", $i)
-        print $i
-      }
-    }
-  }
-')
-echo "$_MAIN_CWD"
-```
-
-如果找不到本地基础分支 worktree，记录“未找到”，不要自动创建，除非用户明确要求。
-
----
+如果是 Full ship，提前定位本地基础分支 worktree（定位命令见 references/merge-and-sync.md 第11步），但此时不要修改它。找不到就记录“未找到”，不要自动创建，除非用户明确要求。
 
 ## 第2步：同步基础分支到当前功能分支
 
@@ -166,31 +114,11 @@ git merge origin/<基础分支> --no-edit
 4. 解决后重新运行关键测试。
 5. 冲突未解决前停止 ship。
 
----
-
 ## 第3步：运行项目验证
 
 不要使用 `npm test || yarn test || ... || echo "未找到测试命令"` 这种链式命令，它会吞掉真实失败。
 
-先识别项目可用命令：
-
-```bash
-test -f package.json && cat package.json
-test -f frontend-react/package.json && cat frontend-react/package.json
-test -f pyproject.toml && sed -n '1,160p' pyproject.toml
-test -f pytest.ini && cat pytest.ini
-```
-
-优先运行与本次改动相关、项目历史已验证的命令。对于 info2action 常见组合：
-
-```bash
-INFO2ACTION_CLUSTER_BACKEND=sqlite uv run pytest tests/test_summary_writer.py -q
-cd frontend-react && npx vitest run <相关测试文件>
-cd frontend-react && npm run lint
-cd frontend-react && npm run build
-python3 -m py_compile <相关 Python 文件>
-git diff --check
-```
+优先运行项目 CLAUDE.md 或项目验证脚本中已记录的测试命令；没有记录时按项目类型探测（npm test / pytest / go test 等），优先运行与本次改动相关的测试。
 
 如果测试失败：
 1. 分析是否与本次改动相关。
@@ -202,8 +130,6 @@ git diff --check
 - A) 为本次改动补基础测试（推荐）
 - B) 只做静态检查和人工验证
 - C) 停止
-
----
 
 ## 第4步：发布前 diff 审查
 
@@ -222,8 +148,6 @@ git diff origin/<基础分支>
 
 发现问题先修复或询问，不要带病 push。
 
----
-
 ## 第5步：更新 CHANGELOG
 
 如果仓库存在 `CHANGELOG.md`，且本次变更值得未来追溯，则更新。CHANGELOG 只记录发布事实和历史账本；不要把它当作 PRD/DESIGN/ENGINEERING 的当前事实源。
@@ -240,33 +164,15 @@ git log origin/<基础分支>..HEAD --oneline --no-merges
 - C) major
 - D) 不升级
 
----
-
 ## 第6步：最终提交
-
-暂存本次相关文件：
 
 ```bash
 git add <本次相关文件>
-git status --short
-```
-
-确认无关文件未暂存后提交：
-
-```bash
+git status --short   # 确认无关文件未暂存
 git commit -m "<type>: <summary>"
 ```
 
-如果已经有提交且只有 CHANGELOG/VERSION 变更，可单独提交：
-
-```bash
-git add CHANGELOG.md VERSION
-git commit -m "chore: update changelog"
-```
-
-提交后记录 commit SHA。
-
----
+如果已经有提交且只有 CHANGELOG/VERSION 变更，可单独提交一条 `chore: update changelog`。提交后记录 commit SHA。
 
 ## 第7步：推送当前分支
 
@@ -288,8 +194,6 @@ git log --left-right --graph --oneline HEAD...origin/<当前分支>
 
 不要 force push，除非用户明确要求且确认影响范围。
 
----
-
 ## 第8步：创建或更新 PR
 
 先检查是否已有 PR：
@@ -301,11 +205,7 @@ gh pr view --json number,url,state,baseRefName,headRefName 2>/dev/null
 如果没有 PR，创建：
 
 ```bash
-gh pr create \
-  --title "<PR标题>" \
-  --body "<PR描述>" \
-  --base <基础分支> \
-  --head <当前分支>
+gh pr create --title "<PR标题>" --body "<PR描述>" --base <基础分支> --head <当前分支>
 ```
 
 PR 描述必须包含：
@@ -319,130 +219,37 @@ PR 创建后记录 PR URL。
 
 如果模式是 **PR only**，到这里停止，并输出当前状态。
 
----
-
 ## 第9步：PR 合并前检查
 
-Full ship 必须检查 PR 是否可以合并：
+目的：Full ship 合并前确认 PR 状态可合并（OPEN、非 draft、无冲突、checks 通过、review 满足）。
 
-```bash
-gh pr view <PR编号> --json number,url,state,isDraft,mergeable,mergeStateStatus,statusCheckRollup,reviewDecision,baseRefName,headRefName
-```
+红线：
+- `statusCheckRollup` 为空时只能说“无远程 checks”，不能说“CI 已通过”。
+- 有 failed check 或冲突时停止；不绕过 review 和保护规则。
 
-规则：
-- `state` 必须是 `OPEN`。
-- `isDraft` 必须是 `false`。
-- `mergeable=CONFLICTING` 时停止。
-- `mergeable=UNKNOWN` 时等待片刻并重查；仍 UNKNOWN 则说明 GitHub 尚未计算完成，不要强行合并。
-- `statusCheckRollup` 为空时，只能说“无远程 checks”，不能说“CI 已通过”。
-- 有 failed check 时停止并列出失败项。
-- 有 pending check 时优先等待：
-
-```bash
-gh pr checks <PR编号> --watch
-```
-
-如果 `reviewDecision` 表示需要 review，按仓库规则停止或询问用户，不绕过保护规则。
-
----
+执行细节必读 references/merge-and-sync.md。
 
 ## 第10步：合并 PR 以更新远程基础分支
 
-确认 PR 可合并后，根据仓库约定选择 merge 方式。
+目的：按仓库约定的 merge 方式合并 PR，更新远程基础分支并记录新 SHA。
 
-默认推荐 merge commit，因为它保留分支提交历史，并且本地基础分支若曾快进到功能分支，也更容易继续快进到远程 merge commit：
+红线：
+- 合并失败时停在 PR 合并阶段，不绕过 review、CI、权限或保护规则。
+- 不 force push。
 
-```bash
-gh pr merge <PR编号> --merge --delete-branch=false
-```
-
-如果仓库约定 squash 或 rebase，先确认：
-
-```bash
-gh pr merge <PR编号> --squash --delete-branch=false
-gh pr merge <PR编号> --rebase --delete-branch=false
-```
-
-合并失败时：
-1. 输出失败原因。
-2. 不绕过 review、CI、权限或保护规则。
-3. 不 force push。
-4. 停在 PR 合并阶段。
-
-合并后：
-
-```bash
-git fetch origin <基础分支> --quiet
-git rev-parse origin/<基础分支>
-```
-
-记录远程基础分支新 SHA。
-
----
+执行细节必读 references/merge-and-sync.md。
 
 ## 第11步：同步本地基础分支 worktree
 
-只从 `origin/<基础分支>` 同步本地基础分支。不要用功能分支直接覆盖本地 main。
+目的：把本地基础分支 worktree 快进到 `origin/<基础分支>`。
 
-如果第1步没找到本地基础分支 worktree，重新查找：
+红线：
+- 只从 `origin/<基础分支>` 同步，不要用功能分支直接覆盖本地 main。
+- 禁止 `git reset --hard`、`git checkout --`、静默覆盖用户未提交文件；脏工作区或分叉时停止询问。
+- worktree 找不到时报告，不自动创建。
+- 本地 HEAD 与 `origin/<基础分支>` 一致后，才能说“本地基础分支已同步”。
 
-```bash
-_BASE=<基础分支>
-_MAIN_CWD=$(git worktree list --porcelain | awk -v branch="refs/heads/${_BASE}" '
-  BEGIN { RS=""; FS="\n" }
-  $0 ~ "branch " branch {
-    for (i=1; i<=NF; i++) {
-      if ($i ~ /^worktree /) {
-        sub(/^worktree /, "", $i)
-        print $i
-      }
-    }
-  }
-')
-```
-
-如果仍找不到：
-- 报告“未找到本地 `<基础分支>` worktree”。
-- 不自动创建。
-
-如果找到，先检查：
-
-```bash
-git -C "$_MAIN_CWD" fetch origin "$_BASE" --quiet
-git -C "$_MAIN_CWD" status --short --branch
-git -C "$_MAIN_CWD" rev-list --left-right --count "origin/${_BASE}...HEAD"
-```
-
-处理规则：
-- 有未提交变更：列出文件，询问，不自动覆盖。
-- 本地基础分支有未推送提交或与远程分叉：停止并解释，不自动 reset。
-- 干净且可快进：执行
-
-```bash
-git -C "$_MAIN_CWD" merge --ff-only "origin/${_BASE}"
-```
-
-如果用户选择 stash：
-- 必须使用带名字的 stash。
-- 如有 untracked 文件，说明是否包含 `-u`。
-- stash 后再同步。
-- 同步完成后不要自动 pop，除非用户明确要求。
-
-禁止：
-- `git reset --hard`
-- `git checkout --`
-- 静默覆盖用户未提交文件
-
-同步后验证：
-
-```bash
-git -C "$_MAIN_CWD" rev-parse HEAD
-git rev-parse "origin/${_BASE}"
-```
-
-两者一致，才能说“本地基础分支已同步到远程基础分支”。
-
----
+执行细节必读 references/merge-and-sync.md。
 
 ## 第12步：发布完成总结
 
@@ -473,16 +280,7 @@ git rev-parse "origin/${_BASE}"
 ECS/线上部署未执行。本次 ship 只表示代码进入远程基础分支，并同步了本地基础分支。
 ```
 
----
-
 ## 重要规则
 
 - **先 review，后 ship**：`forge-ship` 默认用于 review 后的发布，不替代完整 code review。
-- **先同步基础分支，后发布**：功能分支必须先吸收最新 `origin/<基础分支>`。
-- **测试失败不发布**：除非用户明确确认失败与本次改动无关。
-- **不要假绿**：禁止用会吞失败的链式测试命令。
 - **PR 是远程 main 的入口**：需要进入远程 main 的代码必须通过 PR merge。
-- **本地 main 以 origin/main 为权威**：PR 合并后再同步本地 main。
-- **保护用户未提交变更**：本地 main 有脏文件时，不自动 reset、checkout 或覆盖。
-- **发布不等于部署**：ship 不代表 ECS 已更新；部署要单独执行并验证。
-- **不要 force push**：除非用户明确要求，并且当前在功能分支上。

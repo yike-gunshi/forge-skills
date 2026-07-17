@@ -3,6 +3,8 @@ name: forge-review
 description: |
   上线前 PR 审查。分析当前分支与基础分支的 diff，检查 SQL 安全、竞态条件、
   LLM 信任边界、枚举完整性等测试捕获不到的结构性问题。发现问题直接修复。
+  触发方式：用户说"review"、"审查代码"、"上线前检查"、"forge-review"，或 forge-dev --full 调度。
+  与内置 code-review/verify 的分工：forge 工作流内的上线前结构性审查用本 skill；用户点名 /code-review 或 /verify 时用对应内置 skill。
 allowed-tools:
   - Bash
   - Read
@@ -30,13 +32,7 @@ echo "当前分支: $_BRANCH"
 
 ---
 
-## AskUserQuestion 格式规范
-
-每次提问结构：
-1. **重新聚焦**：当前项目、分支、正在审查的内容
-2. **通俗解释**：高中生能懂的语言，说清楚"做什么"
-3. **给出建议**：`推荐：选择[X]，因为[一句话原因]`，标注完整度
-4. **列出选项**：`A) B) C)` + 工作量估算
+> 提问格式与批量策略见 `~/.claude/skills/_shared/interaction-protocol.md`。
 
 ---
 

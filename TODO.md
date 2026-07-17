@@ -82,22 +82,24 @@
 - [x] 决定不拆 test-dimensions（2026-07-04 用户拍板）：导航表已解决「不必整读」，物理拆分收益不抵 10 文件维护+交叉引用成本
 - [ ] 未来能力（非本轮）：真正实现 audit-project.sh（老项目接入审计）
 
-### 阶段 6：外部对标审查遗留项（2026-07-17，每项单独讨论定案后动手）
+### 阶段 6：外部对标审查遗留项 ✅ 2026-07-17 全部落地（用户授权整批推进）
 
-> 来源：skill-creator + yao-meta-skill 三路对标审查，报告见 `docs/archive/skill-review-2026-07-17.md`。事实性问题当日已修；以下为改 skill 结构/行为的项，待用户逐项确认。
+> 来源：skill-creator + yao-meta-skill 三路对标审查，报告见 `docs/archive/skill-review-2026-07-17.md`。
 
-- [ ] F1. AskUserQuestion 格式规范提取 `_shared/interaction-protocol.md`（8 skill 重复约 1600 字符，已漂移）；顺带统一 eng"逐条提问"vs review"批量提问"的矛盾策略
-- [ ] F2. forge-ship 拆 references + 删 info2action 专属命令（488 行贴红线 + 过拟合）
-- [ ] F3. forge-eng 第 10 步 bash 归 worktree-guide + 砍"工程思维框架"口号区（492 行贴红线）
-- [ ] F4. forge-dev 灰区表/RESEARCH 模板/--auto 细则下沉 orchestration-details.md + 删"检查 OWASP Top 10"等越权规则（458 行）
-- [ ] F5. forge-qa 删 43-85 行伪 bash 模式判断块（判定表已覆盖）+ Codex 特异内容移环境适配说明
-- [ ] F6. 状态标记协议表提取 `_shared/feature-status-protocol.md`（design/eng 全文重复）
-- [ ] F7. fupan workbench 迁出 skill 目录（41MB 应用污染包边界，建议 `tools/fupan-workbench/`）
-- [ ] F8. 各 skill 尾部"重要规则/速查"去重（合计约 2500 字符复述）
-- [ ] F9. 最小触发评估 `evals/trigger-cases.md` + 补 doc-release/review 的 description 触发方式 + forge-review vs 内置 code-review 路由消歧
-- [ ] F10. >300 行 references 补 TOC（mode-a-execution 1006 行必须）；doc-policy ⏳ 未实现项移出清单表
-- [ ] F11. 定案：forge-status 宣称 prd/eng 登记 active.md 但实际仅 bugfix 登记 —— 补登记步骤 or 收窄表述？
-- [ ] F12. 定案：forge-dev 的 `docs/{版本号}-CONTEXT/RESEARCH.md` 落点不在 doc-paths 白名单 —— 白名单增补 or 改落点？
+- [x] F1. AskUserQuestion 规范提取 `_shared/interaction-protocol.md`，8 skill 改一行引用；批量策略统一为"≤3 单独问，>3 同类批量"（消除 eng/review 矛盾）✅
+- [x] F2. forge-ship 488→286 行：第 9-11 步细节移 `references/merge-and-sync.md`；info2action 专属命令替换为"项目 CLAUDE.md 已记录命令优先"✅
+- [x] F3. forge-eng 492→399 行：第 10 步 bash 归 worktree-guide、口号区压缩为 3 条可执行工程原则、铁律单点化 ✅
+- [x] F4. forge-dev 458→326 行：灰区表/RESEARCH 模板/--auto 细则/前置脚本/展示模板下沉 orchestration-details.md（303→453 行）；OWASP 等越权规则删除 ✅
+- [x] F5. forge-qa 313→244 行：伪 bash 模式判断块改为优先级表+入口校验散文；Codex 内容移"环境适配"说明 ✅
+- [x] F6. 状态标记协议提取 `_shared/feature-status-protocol.md`，design/eng/qa 改引用+各自特有动作 ✅
+- [x] F7. workbench 迁至 `tools/fupan-workbench/`（git mv 19 文件），fupan SKILL.md 启动路径改经 forge 根 symlink，.gitignore 同步 ✅
+- [x] F8. brainstorm/bugfix/ship/dev/eng 尾部速查去重，只留正文未覆盖条目 ✅
+- [x] F9. `evals/trigger-cases.md`（17 触发 + 6 不触发 + 10 易混淆）；doc-release/review 补触发方式；review description 写明与内置 code-review/verify 分工 ✅
+- [x] F10. mode-a-execution/p6-p7/p3-p5/thinking-doc-template 四份补导航（+60 行纯新增）；doc-policy ⏳ 项移入其 CHANGELOG Roadmap 节 ✅
+- [x] F11. 定案：收窄表述——active.md 登记方仅 forge-bugfix（description/哲学/模式表三处同步）；顺带 status 端口表去 info2action 化 ✅
+- [x] F12. 定案：白名单增补——doc-paths 新增 `docs/{版本号}-CONTEXT/RESEARCH.md` 行（forge-dev 管理，结项归档 archive/raw）✅
+
+成果：15 个 SKILL.md 总量 4429→3876 行（-12.5%），最大文件从 492 降到 399，全部脱离 500 行红线。
 
 ## 决策记录
 

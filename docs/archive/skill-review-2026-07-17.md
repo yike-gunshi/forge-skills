@@ -93,3 +93,17 @@
 | 10 | >300 行 references 补 TOC（mode-a-execution 1006 行必须；p6-p7、p3-p5、thinking-doc-template 同查）；doc-policy ⏳ 项移出清单表进 CHANGELOG | 按需跳读；消 future-outline 反模式 |
 
 预估 #1-#8 落地后 SKILL.md 总量减约 8-9%，全部为零执行损失删减。
+
+---
+
+## 六、整改落地与复测（同日追记）
+
+用户授权后 F1-F12 当日全量落地（见 TODO 阶段 6 与 CHANGELOG v2026.07.17.1）。skill-creator 标准复测结果：**A-**。
+
+- 行数：eng 492→399、ship 488→286、dev 458→326、qa 313→244；15 个 SKILL.md 总量 4429→3876（-12.5%），top3 为 eng 399 / brainstorm 382 / doc-release 347，全部远离 500 行红线。
+- 重复：SKILL.md 层 8 处 ask 规范复制→0，3 处状态表复制→0（复测在 reference 层又揪出 2 处残留，已改一行引用）。
+- 断链：全量指针核验零断链（复测发现 doc-policy 概览表 2 个未实现脚本引用与 1 处相对路径写法，已修）。
+- 可移植性：skills/ 内 info2action 特异内容清零（仅剩账本示例数据与历史记录中的合理提及）。
+- 15/15 frontmatter 合法，description 全部含"做什么 + 何时触发"。
+
+复测遗留的可选项（下轮再议）：forge-eng（399）与 forge-brainstorm（382）仍是最大两个文件，可继续瘦身但已合规。

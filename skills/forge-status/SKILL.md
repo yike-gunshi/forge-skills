@@ -2,7 +2,7 @@
 name: forge-status
 description: |
   并行会话巡检：扫 .forge/active.md，按硬信号（worktree 是否存在、分支是否已合并）判僵尸，一次确认批量清理并联动 backlog；不用时间戳启发式。
-  触发方式：用户说"forge 状态"、"看下谁在跑"、"清理 worktree"、"forge-status"；bugfix/prd/eng 启动时只读巡检。
+  触发方式：用户说"forge 状态"、"看下谁在跑"、"清理 worktree"、"forge-status"；forge-bugfix 启动时只读巡检。
 allowed-tools:
   - Bash
   - Read
@@ -19,7 +19,7 @@ allowed-tools:
 
 **只读扫描 + 一次确认 + 硬信号判定。**
 
-- 多会话并行的心跳文件是 `.forge/active.md`，由 forge-bugfix / forge-prd / forge-eng 在领取任务时追加、由 forge-fupan 在会话结束时清理
+- 多会话并行的心跳文件是 `.forge/active.md`，当前由 forge-bugfix 在领取任务时追加（P2/P3 之后登记）、由 forge-fupan 在会话结束时清理
 - 但人会漏复盘、会话会崩掉、worktree 可能被手动删，导致 active.md 里残留"僵尸"记录
 - 本 skill 专治僵尸：扫一遍表 → 按硬信号判活/死 → 让你确认后清理
 
@@ -43,7 +43,7 @@ allowed-tools:
 | 模式 | 调用方 | 行为 |
 |---|---|---|
 | **交互清理**（默认）| 用户说 `/forge-status` / "看下 forge 状态" / "清理 worktree" | 扫 → 报告 → 问 y/n → 清理 |
-| **只读巡检** | forge-bugfix / forge-prd / forge-eng 的 P0 阶段自动调用 | 扫 → 只报告"当前有 N 个活跃会话，其中 M 个疑似僵尸"，不清理 |
+| **只读巡检** | forge-bugfix 的 P0 阶段自动调用 | 扫 → 只报告"当前有 N 个活跃会话，其中 M 个疑似僵尸"，不清理 |
 
 调用方通过自然语言区分：
 - 用户直接触发 → 走交互清理
@@ -128,9 +128,10 @@ find "$_ROOT" "$_ROOT/.worktrees" -name .devserver.json -print 2>/dev/null | whi
   cat "$f" 2>/dev/null
 done
 
-tmux ls 2>/dev/null | grep -E "dev|frontend|backend|info2action" || true
+tmux ls 2>/dev/null | grep -E "dev|frontend|backend" || true
 
-for port in 3000 3001 3456 3567 3568 3600 5173 8000 8080 8100; do
+# 常见 dev 端口兜底；项目自定义端口以项目 CLAUDE.md / dev:status 为准
+for port in 3000 3001 5173 8000 8080; do
   PID=$(lsof -ti :"$port" -sTCP:LISTEN 2>/dev/null | head -1)
   if [ -n "$PID" ]; then
     CWD=$(lsof -p "$PID" 2>/dev/null | awk '$4=="cwd"{print $9}')

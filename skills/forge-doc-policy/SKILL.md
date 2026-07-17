@@ -18,28 +18,23 @@ description: 文档落地治理规范。统一管理 docs/ 目录下文档的写
 | 层级 | 痛点 | 本 skill 提供 |
 |---|---|---|
 | 写时约束 | AI 创建文档时落到错位置（forge skill 部分约束 + CLAUDE.md 表不全 + 直接对话完全无约束） | `doc-paths.md` 三层白名单 + LLM 强校验铁律 |
-| 读时索引 | 文档分散，找不到最新信息 | `frontmatter-schema.md` + `scripts/build-index.sh` 自动生成 `docs/INDEX.md` |
-| 生命周期 | 不带元数据，分不清活/死文档 | `frontmatter-schema.md` 必填字段 + `scripts/backfill-frontmatter.sh` 批量回填 |
+| 读时索引 | 文档分散，找不到最新信息 | `frontmatter-schema.md`（索引自动生成脚本规划中，见 CHANGELOG Roadmap） |
+| 生命周期 | 不带元数据，分不清活/死文档 | `frontmatter-schema.md` 必填字段（批量回填脚本规划中，见 CHANGELOG Roadmap） |
 
 ---
 
-## 文件清单
+## 文件清单（仅列已实现的文件）
 
-| 文件 | 作用 | 状态 |
-|---|---|---|
-| `SKILL.md` | 本文件，元信息和装载说明 | ✅ v0.2 |
-| `doc-paths.md` | 当前真相源、模块附录、active 工作区、archive 白名单 | ✅ v0.2 |
-| `frontmatter-schema.md` | frontmatter 字段定义（4 必填 + 2 选填） | ✅ v0.2 |
-| `claude-md-snippet.md` | 项目 CLAUDE.md 复制粘贴的引用段 | ✅ v0.2 |
-| `CHANGELOG.md` | 版本号 + 演进记录 | ✅ v0.2 |
-| `scripts/init-project.sh` | 新项目 day 0 一键脚手架 | ✅ 2026-07-04 已就绪 |
-| `scripts/audit-project.sh` | 老项目接入兼容性审计 | ⏳ 规划中（未实现，勿引导用户运行） |
-| `scripts/backfill-frontmatter.sh` | 批量 AI 回填 frontmatter | ⏳ Sprint C1 |
-| `scripts/build-index.sh` | 扫 frontmatter 生成 docs/INDEX.md | ⏳ Sprint C2 |
-| `hooks/post-stop-update-index.sh` | Stop hook 触发 INDEX 更新 | ⏳ Sprint C2 |
-| `templates/docs-skeleton/` | docs/ 标准目录骨架 | ⏳ Sprint E |
-| `templates/CLAUDE.md.tmpl` | 项目级 CLAUDE.md 模板 | ⏳ Sprint E |
-| `templates/.gitignore.tmpl` | 文档治理相关 .gitignore 规则 | ⏳ Sprint E |
+| 文件 | 作用 |
+|---|---|
+| `SKILL.md` | 本文件，元信息和装载说明 |
+| `doc-paths.md` | 当前真相源、模块附录、active 工作区、archive 白名单 |
+| `frontmatter-schema.md` | frontmatter 字段定义（4 必填 + 2 选填） |
+| `claude-md-snippet.md` | 项目 CLAUDE.md 复制粘贴的引用段 |
+| `CHANGELOG.md` | 版本号 + 演进记录 + 规划中的能力（Roadmap） |
+| `scripts/init-project.sh` | 新项目 day 0 一键脚手架（幂等，绝不覆盖） |
+
+规划中但未实现的脚本/模板（audit-project.sh、build-index.sh 等）见 `CHANGELOG.md` 的 Roadmap 节，不出现在本清单，避免被误引导执行。
 
 ---
 
@@ -59,12 +54,10 @@ description: 文档落地治理规范。统一管理 docs/ 目录下文档的写
 
 在新项目根跑一次：创建 docs/ 标准骨架 + 拷贝 CLAUDE.md 模板 + 配 .gitignore + 生成 docs/README.md。
 
-### 装载 3：老项目接入审计（⏳ 规划中，脚本未实现）
+### 装载 3：老项目接入（手动方式）
 
-`audit-project.sh` 尚未实现。当前老项目接入用手动方式：
-- 新项目脚手架能力已在 `init-project.sh`（幂等，绝不覆盖已有文件），老项目也可安全跑一遍补齐缺失骨架
-- frontmatter 缺失、目录偏差暂时人工按 `doc-paths.md` 白名单核对
-不要向用户建议运行 audit-project.sh——它还不存在。
+- `init-project.sh` 幂等且绝不覆盖已有文件，老项目也可安全跑一遍补齐缺失骨架
+- frontmatter 缺失、目录偏差人工按 `doc-paths.md` 白名单核对
 
 ---
 
@@ -87,7 +80,7 @@ description: 文档落地治理规范。统一管理 docs/ 目录下文档的写
 |---|---|
 | "文档治理" / "forge-doc-policy" | 进入本 skill，按用户具体诉求路由（查白名单 / 装载 / 审计） |
 | "文档放哪" / "这个文档应该放哪" | 读 `doc-paths.md` 给路径建议 |
-| "docs 目录乱了" / "想清理文档" | 按 `doc-paths.md` 白名单人工核对（audit-project.sh 规划中，未实现） |
+| "docs 目录乱了" / "想清理文档" | 按 `doc-paths.md` 白名单人工核对 |
 | AI 准备创建任意 .md 或新目录 | 自查 `doc-paths.md` 三层白名单（LLM 强校验铁律） |
 
 ---
