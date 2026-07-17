@@ -93,6 +93,23 @@ gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null
 
 ---
 
+## 第0.5步：生产写面授权门
+
+> 账本"权限.生产操作点名授权清单"复发 5 次后的固化（2026-07-17）。
+
+开工前枚举本轮全部**仓库外写面**。判断标准：动作对象不在本仓库工作区内，就是写面。常见：
+
+- self-PR merge / 删远程分支
+- 部署（ssh / scp / 重启服务 / 改服务器 .env）
+- 数据库写（迁移、pg_cron、生产数据修改）
+- 第三方账号写（X List、飞书、发布平台）
+
+把清单**一次性**列给用户请求点名授权，不要逐次撞权限门。同时给出用户可预置进 `.claude/settings.local.json` 的 allow 规则（如 `Bash(ssh root@HOST *)`、`Bash(./scripts/deploy.sh*)`），并说明：AI 代改 settings 会被反自授权设计拦截，这几条只能用户亲手加。
+
+本轮没有仓库外写面就记录"无写面"跳过。中途被拦时按账本"被拦即换路勿重试"处理，禁止原样重试同一命令。
+
+---
+
 ## 第1步：安全检查
 
 检查当前 worktree：
