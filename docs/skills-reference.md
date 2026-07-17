@@ -8,7 +8,7 @@ last_updated: 2026-07-04
 # Forge 技能手册（人话版）
 
 > 每个 skill 一份档案：它是干嘛的、什么时候找它、内部怎么走、守什么规矩、吃什么吐什么。
-> 想看每个 skill 当前的问题清单和优化计划 → `docs/skill-audit-2026-07.md`（审计）+ `docs/optimization-plan-2026-07.md`（方案确认单）。
+> 想看每个 skill 当前的问题清单和优化计划 → `docs/archive/skill-audit-2026-07.md`（审计）+ `docs/optimization-plan-2026-07.md`（方案确认单）。
 > 本版 2026-07-04 全量重写：补齐 forge 总入口/brainstorm/doc-policy，清除 cn-retro、cn-doc-release 等改名残留。
 
 ## 先记住这张地图

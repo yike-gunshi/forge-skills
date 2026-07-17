@@ -284,7 +284,7 @@ cd forge-skills
 | [architecture.md](docs/architecture.md) | 架构设计 — 上下文工程、分层架构、状态管理 |
 | [workflow-guide.md](docs/workflow-guide.md) | 工作流 — 场景选择、最佳实践、常见问题 |
 | [skills-reference.md](docs/skills-reference.md) | 技能手册 — 每个 Skill 的完整机制和产出 |
-| [openspec-research.md](docs/openspec-research.md) | OpenSpec 调研 — Given/When/Then 思想来源 |
+| [openspec-research.md](docs/archive/openspec-research.md) | OpenSpec 调研 — Given/When/Then 思想来源 |
 | [glossary.md](docs/glossary.md) | 术语词典 — 关键概念中英对照 |
 
 <details>
@@ -292,11 +292,11 @@ cd forge-skills
 
 | 文档 | 内容 |
 |------|------|
-| [external-tools-analysis.md](docs/external-tools-analysis.md) | 外部工具分析 — Superpowers/gstack/CKM 能力拆解 |
-| [superpowers-comparison.md](docs/superpowers-comparison.md) | Superpowers 对照 — 融合对比与完成状态 |
+| [external-tools-analysis.md](docs/archive/external-tools-analysis.md) | 外部工具分析 — Superpowers/gstack/CKM 能力拆解 |
+| [superpowers-comparison.md](docs/archive/superpowers-comparison.md) | Superpowers 对照 — 融合对比与完成状态 |
 | [design-skill-fusion-methodology.md](docs/design-skill-fusion-methodology.md) | 设计 Skill 融合方法论 |
-| [design-skill-audit-report.md](docs/design-skill-audit-report.md) | 设计 Skill 审计报告 |
-| [forge-deliver-analysis.md](docs/forge-deliver-analysis.md) | forge-deliver 重写分析 — v1 vs v2 对比 |
+| [design-skill-audit-report.md](docs/archive/design-skill-audit-report.md) | 设计 Skill 审计报告 |
+| [forge-deliver-analysis.md](docs/archive/forge-deliver-analysis.md) | forge-deliver 重写分析 — v1 vs v2 对比 |
 
 </details>
 

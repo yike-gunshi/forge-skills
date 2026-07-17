@@ -265,4 +265,4 @@ git worktree remove .worktrees/feat-dark-mode
 
 **双层互补**：`.features/` 管逻辑状态，Worktree 管代码隔离。
 
-详见 [superpowers-comparison.md](superpowers-comparison.md) 中的融合建议。
+详见 [superpowers-comparison.md](archive/superpowers-comparison.md) 中的融合建议。

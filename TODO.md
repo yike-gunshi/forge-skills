@@ -1,7 +1,7 @@
 # Forge 体系优化项目 — 目标与任务清单
 
 > 创建于 2026-07-04。协作模式：AI 分析 → 用户学习 → AI 提方案 → 用户确认 → AI 落地。
-> 详细分析文档：`docs/skill-audit-2026-07.md`
+> 详细分析文档：`docs/archive/skill-audit-2026-07.md`
 
 ## 目标
 
@@ -19,7 +19,7 @@
 
 ### 阶段 0：深度分析（进行中）
 
-- [x] A1. 逐 skill 详细分析 → `docs/skill-audit-2026-07.md`（15 个 skill + 总入口 + _shared，30 个编号问题 P-01~P-30）✅ 2026-07-04
+- [x] A1. 逐 skill 详细分析 → `docs/archive/skill-audit-2026-07.md`（15 个 skill + 总入口 + _shared，30 个编号问题 P-01~P-30）✅ 2026-07-04
 - [x] A2. 用户回答 3 个待定问题 ✅ 2026-07-04：
   - forge-design Python 脚本 → 用户授权 AI 定夺 → **保留**（流程正经入口 + 不占上下文的正确模式）
   - dev vs deliver → **用户实际用 dev** → 合并方向定为：保 dev、吸收 deliver 的发布/文档尾段、退役 deliver
