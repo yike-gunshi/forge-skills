@@ -13,12 +13,14 @@ ACTION="install"
 DRY_RUN=0
 FORCE=0
 
-# All forge skills (subdirectories under skills/)
-SKILLS=(
-  forge-brainstorm forge-bugfix forge-design forge-design-impl
-  forge-dev forge-doc-policy forge-doc-release forge-eng forge-fupan forge-prd
-  forge-qa forge-review forge-ship forge-status
-)
+# All forge skills: auto-discovered under skills/ (must contain SKILL.md; _* dirs excluded)
+SKILLS=()
+for _d in "$SCRIPT_DIR"/skills/*/; do
+  _name="$(basename "$_d")"
+  case "$_name" in _*) continue ;; esac
+  [ -f "$_d/SKILL.md" ] || continue
+  SKILLS+=("$_name")
+done
 
 usage() {
   cat <<'USAGE'
@@ -112,9 +114,7 @@ target_dirs() {
 
 validate_sources() {
   [ -f "$SCRIPT_DIR/SKILL.md" ] || die "Root SKILL.md not found: $SCRIPT_DIR/SKILL.md"
-  for skill in "${SKILLS[@]}"; do
-    [ -f "$SCRIPT_DIR/skills/$skill/SKILL.md" ] || die "Skill missing SKILL.md: $SCRIPT_DIR/skills/$skill"
-  done
+  [ "${#SKILLS[@]}" -gt 0 ] || die "No skills discovered under $SCRIPT_DIR/skills/"
 }
 
 link_one() {
@@ -185,7 +185,9 @@ status_one() {
 
   if [ -L "$dst" ]; then
     current="$(readlink "$dst" || true)"
-    if [ "$current" = "$src" ]; then
+    if [ ! -e "$dst" ]; then
+      echo "  broken  $name -> $current (target missing)"
+    elif [ "$current" = "$src" ]; then
       echo "  ok      $name -> $current"
     else
       echo "  drift   $name -> $current (expected $src)"
