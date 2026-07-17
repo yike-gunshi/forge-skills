@@ -111,7 +111,7 @@ grep -rl "session:" "$_FUPAN_DIR/$_PROJECT" 2>/dev/null | head -3
 
 Workbench 定位是**浏览工具**，不再是复盘流程的门禁：
 - 用户想浏览历史复盘/账本时说"打开复盘工作台"再启动（`workbench/launcher.py`）
-- 阅览器改造方案见 TODO E2 子项 3（UI 草图确认后实施）
+- 阅览器为账本+文档双页结构（`/api/learnings` 提供账本数据），2026-07-04 改造完成
 
 ## 深度分析（可选路径）
 

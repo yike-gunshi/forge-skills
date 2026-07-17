@@ -58,14 +58,14 @@ PRD 已更新好，或需求非常明确：
 ### 场景 E：全自动交付
 
 ```
-/forge-deliver            → 9 个 Phase 全自动
-/forge-deliver --auto     → 前置沟通后完全自动
+/forge-dev --full         → 从需求一路编排到发布（review → ship → doc-release）
 ```
+> forge-deliver 已于 2026-07-04 退役并入 forge-dev。
 
 ### 场景 F：恢复中断的开发
 
 ```
-/forge-dev --resume       → 从 .do-dev/state.json 恢复
+/forge-dev --resume       → 从 .forge/dev-state.json 恢复
 ```
 
 ---

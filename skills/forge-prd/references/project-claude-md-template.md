@@ -18,7 +18,7 @@
 1. 读取 `.features/_registry.md`，了解所有活跃 feature 的 phase 和状态
 2. 读取当前 `git branch`，判断所在的工作上下文（main / feature 分支 / worktree）
 3. 如果用户描述的需求与某个活跃 feature 相关，SHALL 主动关联并告知用户当前进度
-4. 如果存在 `.deliver/state.json`，SHALL 读取并告知用户交付流水线的当前阶段
+4. 如果存在 `.forge/dev-state.json`，SHALL 读取并告知用户开发流水线的当前阶段
 
 ### 规范驱动规则
 

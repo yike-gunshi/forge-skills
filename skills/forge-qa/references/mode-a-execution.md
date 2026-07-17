@@ -394,7 +394,7 @@ test-spec 由 Claude 基于文档理解自动生成，但它是**结构化的、
 | V3 | {组件名} | padding | {值} | css_value |
 | ... | ... | ... | ... | ... |
 
-如果存在 Image 2 视觉稿、`.do-dev/visual-decision.md` 或 `.deliver/visual-decision.md`，在计划中单列「视觉意图参考」：说明会用真实浏览器截图对比信息层级、密度、主操作和空态/错态覆盖。Image 2 不作为 pass/fail 证据，pass/fail 只来自 Feature Spec、DESIGN.md、CSS 属性、行为断言和真实截图。
+如果存在 Image 2 视觉稿或 `.forge/visual-decision.md`（legacy 项目为 `.do-dev/visual-decision.md`、`.deliver/visual-decision.md`），在计划中单列「视觉意图参考」：说明会用真实浏览器截图对比信息层级、密度、主操作和空态/错态覆盖。Image 2 不作为 pass/fail 证据，pass/fail 只来自 Feature Spec、DESIGN.md、CSS 属性、行为断言和真实截图。
 
 ---
 

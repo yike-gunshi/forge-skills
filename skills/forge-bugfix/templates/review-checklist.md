@@ -160,7 +160,7 @@ _待填写_
 <!--
 forge-qa 规则：
 - 每个前端验证项必须有结论、断言和 Markdown 内嵌截图。
-- Codex 环境中优先使用 browser-use:browser 采集用户视角截图和 DOM 证据；若改用 Playwright/gstack/Computer Use，写明原因。
+- Codex 环境中优先使用 browser-use:browser 采集用户视角截图和 DOM 证据；若改用 Playwright/Computer Use，写明原因。
 - “每一步截图”指每个有意义的状态节点：打开页面、操作前、操作后、加载态、结果态、错误态。
 - 不需要对每次键入单个字符截图，除非 bug 与输入过程本身有关。
 - 截图优先用元素/区域裁剪；需要证明整体布局时才用全页。

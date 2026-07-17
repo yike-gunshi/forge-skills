@@ -55,7 +55,7 @@ last_updated: 2026-06-09
 | `.features/{feature-id}/feature-spec.md` | 单个功能的 Given/When/Then、验收清单和实现规格 | feature 完成后保留状态，根级 PRD 只吸收仍有效结论 |
 | `.features/{feature-id}/status.md` / `.features/_registry.md` | feature 状态 | forge-prd / forge-dev / forge-eng 管理 |
 | `.forge/dev-state.json` / `.forge/checkpoints/` / `.forge/visual-decision.md` | 开发流水线检查点和视觉决策索引 | forge-dev 管理（legacy：旧项目的 `.do-dev/`、`.deliver/` 只读迁移，不再写入） |
-| `.forge/active.md` / `.forge/backlog.md` | 多会话协调 | forge-bugfix / forge-status 管理 |
+| `.forge/active.md` | 多会话协调 | forge-bugfix / forge-status 管理 |
 | `docs/bugfix/backlog.md` | bug 任务池 | 当前任务入口，长期保留 |
 | `docs/bugfix/reviews/BF-{MMDD}-{N}.md` | 正在处理的 bug 验收报告 | `status: draft`；结案后归档到 raw |
 | `docs/plans/{YYYY-MM-DD}-{topic}.md` | 跨轮执行计划 | 只放仍可执行的计划 |

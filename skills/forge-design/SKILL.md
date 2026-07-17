@@ -313,14 +313,14 @@ description: |
 
 | 文件 | 内容 | 用途 |
 |------|------|------|
-| `data/colors.csv` | 99 种产品类型的完整配色方案 | 第1.4步配色决策 |
-| `data/typography.csv` | 57 组字体搭配（含 Google Fonts 链接） | 第1.5步字体决策 |
-| `data/styles.csv` | 50+ 种设计风格定义 | 第1.3步美学方向 |
+| `data/colors.csv` | 161 种产品类型的完整配色方案 | 第1.4步配色决策 |
+| `data/typography.csv` | 73 组字体搭配（含 Google Fonts 链接） | 第1.5步字体决策 |
+| `data/styles.csv` | 84 种设计风格定义 | 第1.3步美学方向 |
 | `data/ux-guidelines.csv` | 99 条 UX 规则（10类，含代码示例） | 第2步审计补充 |
 | `data/products.csv` | 161 种产品类型的设计属性 | 第1.1步产品定位 |
 | `data/ui-reasoning.csv` | 产品类型→设计决策映射 | 自动推荐设计方向 |
 | `data/charts.csv` | 25 种图表类型指南 | 数据可视化设计 |
-| `data/landing.csv` | 16 种落地页区块类型 | 落地页设计 |
+| `data/landing.csv` | 34 种落地页区块类型 | 落地页设计 |
 | `scripts/search.py` | 设计资源搜索引擎 | 按关键词搜索配色/字体/风格 |
 
 **搜索脚本用法：**

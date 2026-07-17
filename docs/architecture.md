@@ -7,7 +7,7 @@ Doc-Driven Dev 按职责分为四层，每层独立演进：
 ```
 ┌─────────────────────────────────────────────────────┐
 │                   调度层（Orchestration）              │
-│  forge-dev · forge-deliver                                │
+│  forge-dev（--full 覆盖端到端交付）                        │
 │  职责：读取 PRD → 收集偏好 → 技术调研 → 调度子技能      │
 │  上下文预算：~30%                                     │
 ├─────────────────────────────────────────────────────┤
@@ -125,16 +125,16 @@ project/.features/
 ### 3.3 调度器状态持久化
 
 ```
-project/.do-dev/
-├── state.json                    # 调度状态（阶段、进度、配置）
+project/.forge/
+├── dev-state.json                # 调度状态（阶段、进度、配置）
 ├── checkpoints/
 │   ├── design-done.patch         # 设计阶段完成后的代码状态
 │   ├── eng-done.patch            # 工程阶段完成后的完整 diff
 │   └── qa-done.patch             # QA 修复后的完整 diff
-└── delivery-report.md            # 最终交付报告
+└── visual-decision.md            # 视觉决策索引
 ```
 
-**恢复模式**：forge-dev 启动时加 `--resume`，从 `state.json` 恢复中断的流水线。
+**恢复模式**：forge-dev 启动时加 `--resume`，从 `dev-state.json` 恢复中断的流水线（legacy 项目的 `.do-dev/`、`.deliver/` 只读迁移）。
 
 ---
 
@@ -239,7 +239,7 @@ PRD 变更 ──→ [Gate 1: 需求确认] ──→ 调度建议 ──→ [Ga
 | forge-design | cn-plan-design | 12 条认知模式、80 项审计、A-F 评分 |
 | forge-eng | cn-plan-eng | 7 条工程思维、范围挑战、四章审查 |
 | forge-qa | cn-qa | 5 维度评分、浏览器测试、原子修复 |
-| forge-dev | forge-deliver | 状态管理、双模式、检查点机制 |
+| forge-dev | forge-deliver（已退役并入） | 状态管理、双模式、检查点机制 |
 
 **继承原则**：完整继承 → 不压缩成口号 → 适配文档驱动场景
 

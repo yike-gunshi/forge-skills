@@ -8,8 +8,36 @@
 
 ## [Unreleased]
 
-### Clarified
-- **Fupan 学习图交付契约**：明确知识模块图是“强尝试生成”步骤，不是所有运行环境都一定成功的硬依赖；最终回复必须报告“已生成 N 张 / 待生成 N 张”，不得把 prompt pack 占位描述成已生成图片。
+## [v2026.07.17] — 2026-07-17（外部对标审查 + 一致性修复）
+
+### Added
+- **外部对标审查报告**：用 Anthropic skill-creator 官方标准 + yao-meta-skill 方法论对全部 15 个 SKILL.md 做三路审查（官方合规、token 效率、内部一致性），报告归档 `docs/archive/skill-review-2026-07-17.md`；结构性改进项（_shared 提取、eng/ship/dev 二次瘦身、触发评估等）进 TODO 阶段 6 待逐项确认。
+
+### Fixed
+- **deliver 退役残留清零（docs 外圈）**：forge-user-guide（架构图、skill 清单第 12 节、FAQ、产出物表）、workflow-guide 场景 E、architecture 分层图/状态目录/对照表全部改为 `/forge-dev --full` 与 `.forge/` 口径；user-guide 第 12 节补上此前缺失的 forge-doc-policy。
+- **旧路径纠正**：forge-prd 的项目 CLAUDE.md 模板 `.deliver/state.json` → `.forge/dev-state.json`；forge-qa Mode A 视觉意图参考补上现行 `.forge/visual-decision.md`（旧目录标 legacy）。
+- **fupan v2 口径同步**：_shared/visual-decision-layer 生命周期表改为"默认不配图、用户点名才生成"；fupan SKILL.md 删除"待实施"过期措辞。
+- **数字与断链**：forge-design 数据资源表计数对齐 CSV 实测（colors 161 / typography 73 / styles 84 / landing 34）；user-guide 图片相对路径修复（`../assets/`）；doc-paths 删除幽灵路径 `.forge/backlog.md`；forge-prd 第 1 步重复编号"4."修复；bugfix review-checklist 残留 gstack 引用清除。
+- **README 重写**：删除不存在的 README_EN 链接，skill 数量口径统一（14 skill + 1 总入口），fupan 描述更新到 v2，仓库结构图补 `_shared/`。
+
+## [v2026.07.04] — 2026-07-04（体系大重构：只做减法和解耦）
+
+> 本条为补记。当时变更散落在 TODO.md 与 git log，未同步进 CHANGELOG。详细分析见 `docs/archive/skill-audit-2026-07.md` 与 `docs/optimization-plan-2026-07.md`。
+
+### Changed
+- **全面瘦身（上下文经济学）**：forge-bugfix 63KB → 骨架 12.6KB + 4 份阶段手册；forge-qa 64KB → 骨架 15.4KB + Mode A/B 手册；brainstorm/prd/design/dev/eng 中型瘦身各配 references；eng/dev 二次骨架化（Wave 执行、调度细则外移）；description 全部压缩到 2-4 行。
+- **forge-deliver 退役并入 forge-dev**：`--full` 尾段（review → ship → doc-release），状态目录统一 `.forge/`（旧 `.do-dev/`、`.deliver/` 只读迁移），归档 `_archive/2026-07-04-forge-deliver-retired/`。
+- **fupan v2 重设计（能力复利型）**：主产出改为 `learnings.jsonl` 账本（append-only/置信度/复发检测），一页纸 ≤60 行 + 每次 1 个深度小课；五章模板、流水账、强制配图、网页勾选门禁全部砍掉；回放钩子接入 bugfix P1 + eng 理解现状；Workbench 改造为账本+文档双页阅览器。
+- **gstack/browse 引擎引用全部移除**（qa/bugfix 两侧，`.gstack/` 报告目录名保留兼容存量）。
+- **上游增量融合**：Superpowers v5 四点 Spec 自审进 forge-prd；子代理模型路由进 forge-dev；frontend-design 新禁令 6 条 + 美学锚定法进 design/design-impl；ui-ux-pro-max 8 个 CSV 与上游核对一致。
+
+### Added
+- **init-project.sh 一键脚手架**（幂等、绝不覆盖）；/forge 决策树轻量车道置顶 + 空项目导向脚手架。
+- install.sh：skill 清单改自动发现（skills/ 下含 SKILL.md 的非 `_*` 目录），status 增加坏链检测，_shared 纳入 symlink。
+
+### Evidence
+- 端到端验收：`docs/d3-acceptance-2026-07.md`（接入 1 命令/0.03 秒/6 文件；bug 链路峰值 127KB → 53KB）。
+- 独立评审：Opus 4.8 评审 B- → 复验 B+（`docs/archive/skill-review-opus-2026-07.md`）。
 
 ## [v2026.04.27] — 2026-04-27（Fupan 复盘报告结构优化）
 

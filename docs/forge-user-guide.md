@@ -10,7 +10,7 @@ Forge 是一套**文档驱动的 AI 辅助开发工作流系统**。品牌名"Fo
 充分讨论 → 充分设计 → 高质量交付 → 知识沉淀
 ```
 
-Forge 由 **15 个核心 Skill + 1 个总入口** 组成，覆盖从灵感到上线的完整开发生命周期。每个 Skill 专注一个阶段，Skill 之间通过文档（PRD.md、DESIGN.md、ENGINEERING.md、QA.md）传递上下文，而非依赖会话历史。
+Forge 由 **14 个核心 Skill + 1 个总入口** 组成，覆盖从灵感到上线的完整开发生命周期。每个 Skill 专注一个阶段，Skill 之间通过文档（PRD.md、DESIGN.md、ENGINEERING.md、QA.md）传递上下文，而非依赖会话历史。
 
 ### 设计哲学
 
@@ -25,14 +25,14 @@ Forge 由 **15 个核心 Skill + 1 个总入口** 组成，覆盖从灵感到上
 
 ### 2.1 分层架构
 
-![Forge 分层架构](assets/forge-architecture.svg)
+![Forge 分层架构](../assets/forge-architecture.svg)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  用户层        /forge — 任何时候不知道下一步，打这个命令           │
 ├─────────────────────────────────────────────────────────────────┤
-│  探索层        brainstorm    prd       dev        deliver       │
-│  (讨论+规划)   4模式·6阶段   需求管理   调度器     端到端流水线    │
+│  探索层        brainstorm    prd       dev（--full 端到端）      │
+│  (讨论+规划)   4模式·6阶段   需求管理   调度器·可一路到发布       │
 ├─────────────────────────────────────────────────────────────────┤
 │  设计层        design（纯规划）          design-impl（纯实现）    │
 │  (规划+实现    分级门控·99条UX·          Token驱动·shadcn/ui·    │
@@ -40,7 +40,7 @@ Forge 由 **15 个核心 Skill + 1 个总入口** 组成，覆盖从灵感到上
 ├─────────────────────────────────────────────────────────────────┤
 │  工程层        eng（工程实现）            bugfix（Bug调查修复）   │
 │  (Worktree+    Worktree隔离·四级TDD·     6阶段·根因铁律·        │
-│   TDD+验证)    Wave并行·验证门控          三振出局·引擎内联      │
+│   TDD+验证)    Wave并行·验证门控          三振出局·双层验收      │
 ├─────────────────────────────────────────────────────────────────┤
 │  质量层        qa（纯验收·只测不修）      review（PR审查）        │
 ├─────────────────────────────────────────────────────────────────┤
@@ -54,7 +54,7 @@ Forge 由 **15 个核心 Skill + 1 个总入口** 组成，覆盖从灵感到上
 
 ### 2.2 完整工作流
 
-![Forge 完整工作流](assets/forge-workflow.svg)
+![Forge 完整工作流](../assets/forge-workflow.svg)
 
 ```
 用户有想法
@@ -125,7 +125,7 @@ forge-qa（纯验收·只测不修）
 
 ### 1. forge -- 总入口
 
-- **触发方式**: 说"forge"、"下一步"、"接下来做什么"、"继续"
+- **触发方式**: 说"forge"、"下一步"、"接下来做什么"
 - **核心流程**: 检测项目状态（文档、代码、分支、Worktree）→ 决策树判断 → 推荐下一步
 - **产出物**: 无文件产出，纯建议
 - **出口建议**: 根据状态推荐具体 Skill
@@ -171,8 +171,8 @@ forge-qa（纯验收·只测不修）
   5. 第 3 步: 分析与调度建议（判断需要哪些子 Skill）
   6. 第 4 步: Wave 并行调度子 Skill（独立上下文执行）
   7. 第 5 步: 汇总交付报告
-- **3 种模式**: 交互模式（默认）、自动模式（`--auto`）、恢复模式（`--resume`）
-- **产出物**: `docs/CONTEXT.md`、`docs/RESEARCH.md`、`.do-dev/state.json`、`.do-dev/delivery-report.md`
+- **4 种模式**: 交互模式（默认）、自动模式（`--auto`）、恢复模式（`--resume`）、全自动交付（`--full`：review → ship → doc-release，原 forge-deliver 已退役并入）
+- **产出物**: `docs/CONTEXT.md`、`docs/RESEARCH.md`、`.forge/dev-state.json`
 - **出口建议**: `/forge-review` 或 `/forge-ship` 或 `/forge-fupan`
 
 ### 5. forge-design -- 设计规划
@@ -224,7 +224,7 @@ forge-qa（纯验收·只测不修）
 - **触发方式**: 说"测试"、"QA"，或由 forge-dev 调度
 - **核心流程**: 读取 PRD + ENGINEERING.md → 测试计划 → 执行测试 → 生成报告
 - **铁律**: **只测不修** -- 发现 bug 记录到报告，由 forge-eng 修复
-- **三种测试引擎**: gstack/browse（无头浏览器截图+交互）、Playwright（E2E 脚本）、纯代码（静态分析）
+- **测试引擎**: Playwright（浏览器截图 + E2E 断言；Codex 环境优先 browser-use）、纯代码（静态分析）
 - **测试范围**: 端到端用户流程、跨模块集成、视觉回归+响应式、性能指标、验收标准逐项核对
 - **产出物**: `docs/QA.md`、QA CHANGELOG、测试报告
 - **出口建议**: 有问题回 `/forge-eng`，全部通过走 `/forge-review` 或 `/forge-ship`
@@ -232,15 +232,14 @@ forge-qa（纯验收·只测不修）
 ### 9. forge-bugfix -- Bug 调查修复
 
 - **触发方式**: 说"修这个 bug"、"这里有问题"、"排查一下"
-- **核心流程**: 6 阶段
-  1. P0: 环境探测（前置脚本自动执行，产出环境变量）
-  2. P1: 问题理解 + 上下文采集（强制读 PRD + ENGINEERING.md）
-  3. P2: 复现 + 根因追踪（引擎命令内联，模式检查清单内嵌）
-  4. P3: 假设验证（临时日志/断言 → 复现 → 三振出局）
-  5. P4: 实现修复（最小 diff → 原子提交 → 回归测试）
-  6. P5: 验证 + 报告（同引擎复现 → 截图对比 → 验收清单）
-- **铁律**: **不做根因分析，就不写修复代码。** 写任何修复代码前必须完成 P1-P3。
-- **产出物**: 修复代码、验收操作清单
+- **核心流程**: P0-P8 流水线
+  1. P0-P1（会话级）: 环境探测 + 问题理解（强制读 PRD/ENGINEERING/Bugfix 历史/Memory）
+  2. P2-P2.5: 范围推荐（一次修一个）+ 创建 Bug 修复验收报告 `docs/bugfix/reviews/BF-XX.md`
+  3. P3-P5: 独立 worktree 复现 → 根因追踪（5 Whys + 三振出局）→ TDD 驱动修复 + 原子提交
+  4. P6-P7: forge-qa Mode B 自动回归 + 用户最终验收（双层验收）
+  5. P8: 沉淀（backlog 归档 + BF 报告移入 archive/raw）
+- **铁律**: **不做根因分析，就不写修复代码**；没有用户最终结论不合并。
+- **产出物**: 修复代码、`docs/bugfix/reviews/BF-XX.md` 案卷
 - **出口建议**: `/forge-qa` → `/forge-ship`
 
 ### 10. forge-review -- PR 审查
@@ -257,14 +256,12 @@ forge-qa（纯验收·只测不修）
 - **产出物**: Git 提交、远程分支、PR
 - **出口建议**: `/forge-doc-release` → `/forge-fupan`
 
-### 12. forge-deliver -- 端到端交付流水线
+### 12. forge-doc-policy -- 文档治理规范
 
-- **触发方式**: 一句话描述想法，拿到完整交付
-- **核心流程**: 自动编排全流程：需求理解 → 产品审查 → 设计审查 → 工程方案 → 实现 → QA → 代码审查 → 发布 → 文档 → 验收报告
-- **两种模式**: 交互模式（关键节点暂停）、自动模式（`--auto`，前置沟通后全自动）
-- **支持恢复**: `--resume` 从检查点恢复
-- **产出物**: 完整交付产物（所有文档 + 代码 + PR）
-- **出口建议**: `/forge-fupan`
+- **触发方式**: 说"文档治理"、"文档放哪"，或 AI 准备创建任意 .md / 新目录前自查
+- **核心流程**: 提供当前真相源白名单（doc-paths.md）+ frontmatter schema + 新项目一键脚手架（init-project.sh）
+- **产出物**: 所有 forge-* skill 的文档落地路径以它的 doc-paths.md 为准
+- **备注**: 端到端交付请用 `/forge-dev --full`（原 forge-deliver 已于 2026-07-04 退役并入 forge-dev）
 
 ### 13. forge-doc-release -- 发布后文档更新
 
@@ -273,14 +270,13 @@ forge-qa（纯验收·只测不修）
 - **产出物**: 更新后的项目文档
 - **出口建议**: 合并 PR → `/forge-fupan`
 
-### 14. forge-fupan -- 复盘知识沉淀
+### 14. forge-fupan -- 复盘（v2 能力复利型）
 
 - **触发方式**: 说"复盘"、"总结知识"、"学习总结"
-- **核心流程**: 提取知识 → 诊断 AI 和用户双方表现 → 主动调研行业最佳实践 → 生成结构化复盘文档
-- **文档结构**: 项目概览 → 知识地图（含 5 个模块：问题还原、概念速查、实践归因、AI 表现诊断、最佳实践调研）→ 操作清单
-- **产出物**: `~/claudecode_workspace/复盘/{工作方向}/[任务标签] {日期}-{主题}.md`
+- **核心流程**: 教训落成账本条目（`记录/复盘/learnings.jsonl`，append-only + 置信度 + 复发检测）→ 下次开工由 bugfix/eng 自动回放 → 再复盘时检测复发/改进
+- **产出物**: ≤60 行一页纸 + 每次 1 个深度小课；Workbench 只是复盘阅览器（按需启动）
 - **出口建议**: 下一个迭代
-- **v6.0 额外职责**: Phase 5.0 自动清理本会话在 `.forge/active.md` 的登记
+- **额外职责**: 收尾时清理本会话在 `.forge/active.md` 的登记
 
 ### 15. forge-status -- 并行会话巡检（v6.0 新增）
 
@@ -346,7 +342,7 @@ forge-brainstorm（内容模式）→ 直接输出
 
 ### 5.1 分级门控（forge-design）
 
-![设计门控体系](assets/forge-design-gating.svg)
+![设计门控体系](../assets/forge-design-gating.svg)
 
 forge-design 使用三级门控系统，自动判断设计工作的深度：
 
@@ -363,7 +359,7 @@ forge-design 使用三级门控系统，自动判断设计工作的深度：
 
 ### 5.2 四级 TDD + Worktree + Verification（forge-eng）
 
-![forge-eng 三大机制](assets/forge-eng-internals.svg)
+![forge-eng 三大机制](../assets/forge-eng-internals.svg)
 
 forge-eng 根据文件类型自动判断 TDD 级别：
 
@@ -434,7 +430,7 @@ forge-brainstorm 内置严格的反谄媚机制：
 | forge-prd | `status.md`、`_registry.md` | `{项目}/.features/{id}/` |
 | forge-dev | `CONTEXT.md` | `{项目}/docs/` |
 | forge-dev | `RESEARCH.md` | `{项目}/docs/` |
-| forge-dev | `state.json`、`delivery-report.md` | `{项目}/.do-dev/` |
+| forge-dev | `dev-state.json`、`checkpoints/`、`visual-decision.md` | `{项目}/.forge/` |
 | forge-design | `DESIGN.md`、DESIGN CHANGELOG | `{项目}/docs/` |
 | forge-design-impl | 代码变更（样式/布局） | 项目源码 |
 | forge-eng | `ENGINEERING.md`、ENG CHANGELOG | `{项目}/docs/` |
@@ -454,8 +450,8 @@ forge-brainstorm 内置严格的反谄媚机制：
 
 | 工具 | 调用方 | 用途 |
 |------|--------|------|
-| gstack/browse | forge-qa、forge-bugfix | 无头浏览器截图 + 交互测试 |
-| Playwright | forge-qa、forge-bugfix | 自定义 E2E 测试脚本 |
+| Playwright | forge-qa、forge-bugfix | 浏览器截图 + E2E 测试脚本 |
+| browser-use:browser | forge-qa、forge-bugfix（Codex 环境） | 用户视角截图 + DOM 证据 |
 | WebSearch | forge-brainstorm、forge-dev | 行业调研、技术调研 |
 
 ### 独立工具（不在 Forge 流程内）
@@ -482,9 +478,9 @@ A: forge-qa 只报告不修。发现问题后，根据 QA 报告回到 `/forge-e
 
 A: Worktree 自动隔离。每个 forge-eng 会话创建独立的 `.worktrees/{feature}` 目录和分支，互不干扰。完成后可以选择 merge、PR、保留或丢弃。
 
-**Q: forge-dev 和 forge-deliver 有什么区别？**
+**Q: 想一步到位从需求到发布怎么办？**
 
-A: forge-dev 是开发调度器，负责 设计 → 工程 → QA 这三个阶段。forge-deliver 是端到端流水线，覆盖从需求理解到发布上线的完整流程（包含 forge-dev 的能力）。小功能用 forge-dev，想一步到位用 forge-deliver。
+A: 用 `/forge-dev --full`。它在 设计 → 工程 → QA 之后接上可选发布尾段（review → ship → doc-release）。原来的 forge-deliver 已于 2026-07-04 退役并入 forge-dev，归档在 `_archive/`。
 
 **Q: 轻量模式和完整模式怎么选？**
 
