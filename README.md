@@ -185,7 +185,7 @@ forge   ❯ 已修复。搜索代码库发现 3 处类似风险：
 | forge-status | `/forge-status` | 并行会话巡检与清理（扫 `.forge/active.md`，按硬信号判活/死，不用时间戳启发式） |
 | forge-doc-release | `/forge-doc-release` | 发布后文档同步（README/ARCHITECTURE/CHANGELOG 对齐已发布内容） |
 | forge-doc-policy | `/forge-doc-policy` | 文档治理规范（doc-paths.md 真相源白名单 + frontmatter schema + init-project.sh 脚手架） |
-| forge-fupan | `/forge-fupan` | 复盘 v2：教训落成账本（learnings.jsonl），开工自动回放，复盘检测复发；产出 ≤60 行一页纸 + 1 个深度小课 |
+| forge-fupan | `/forge-fupan` | 复盘 v3：Workbench 门禁（独立会话页确认知识点和深度）→ 调研产出复盘文档；账本（learnings.jsonl）作副产出，开工回放 + 复发检测 |
 
 ### 总入口
 
@@ -355,10 +355,10 @@ forge-skills/
 │   ├── forge-doc-release/          ←   发布后文档更新
 │   ├── forge-doc-policy/           ←   文档治理规范 + init 脚手架
 │   ├── forge-status/               ←   并行会话巡检
-│   └── forge-fupan/                ←   复盘（账本 + 一页纸）
+│   └── forge-fupan/                ←   复盘（Workbench 门禁 + 账本副产出）
 │       └── */references/           ←   各 skill 的阶段手册（按需加载）
 ├── tools/
-│   └── fupan-workbench/            ← 复盘阅览器应用（按需启动，不随 skill 加载）
+│   └── fupan-workbench/            ← 复盘工作台应用（复盘流程门禁 + 历史回看，不随 skill 加载）
 ├── evals/
 │   └── trigger-cases.md            ← 触发路由回归用例（改 description 后过一遍）
 ├── _archive/                       ← 退役 skill（含 forge-deliver）

@@ -30,6 +30,14 @@ HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
 
 
+def open_url(base_url, task_id=""):
+    """有 task_id 时直达该会话的独立页面，否则打开工作台首页。"""
+    url = base_url.rstrip("/")
+    if task_id:
+        url = "{}/session/{}".format(url, task_id)
+    webbrowser.open(url)
+
+
 def state_path(root):
     return Path(root).expanduser() / "server.json"
 
@@ -110,7 +118,7 @@ def start_service(args):
     current = existing_service(root)
     if current:
         if args.open:
-            webbrowser.open(current["url"])
+            open_url(current["url"], args.task_id)
         print(json.dumps({"ok": True, "reused": True, **current}, ensure_ascii=False))
         return 0
 
@@ -188,7 +196,7 @@ def start_service(args):
     }
     write_json(state_path(root), state)
     if args.open:
-        webbrowser.open(url)
+        open_url(url, args.task_id)
     print(json.dumps({"ok": True, "reused": False, **state, "health": health}, ensure_ascii=False))
     return 0
 
@@ -225,7 +233,11 @@ def submit_command(args):
 
 
 def consume_command(args):
-    task = mark_consumed(args.task_id, root=Path(args.home).expanduser() if args.home else None)
+    task = mark_consumed(
+        args.task_id,
+        root=Path(args.home).expanduser() if args.home else None,
+        review_path=args.review or None,
+    )
     print(json.dumps(task, ensure_ascii=False))
     return 0
 
@@ -270,6 +282,7 @@ def build_parser():
 
     consume = sub.add_parser("consume")
     consume.add_argument("--task-id", required=True)
+    consume.add_argument("--review", default="", help="生成的复盘文档绝对路径，用于任务页跳转。")
     consume.set_defaults(func=consume_command)
 
     fail = sub.add_parser("fail")

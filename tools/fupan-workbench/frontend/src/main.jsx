@@ -1,8 +1,13 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { marked } from 'marked';
 import './styles.css';
 
+const DEPTHS = [
+  { value: '了解', hint: '知道它是什么' },
+  { value: '表达', hint: '会用关键词指挥 AI' },
+  { value: '复现', hint: '能复述和自己做一遍' },
+];
 const SHANGHAI_TIME_ZONE = 'Asia/Shanghai';
 const SHANGHAI_DATE_FORMATTER = new Intl.DateTimeFormat('zh-CN', {
   timeZone: SHANGHAI_TIME_ZONE,
@@ -139,38 +144,368 @@ function renderMarkdown(content, headingItems) {
   return sanitize(marked.parse(content || '', { renderer }));
 }
 
+function normalizeQuoteItems(items = []) {
+  return items
+    .map((item) => {
+      if (typeof item === 'string') {
+        return { quote: item, issue: '', suggestion: '' };
+      }
+      return {
+        quote: item?.quote || item?.text || '',
+        issue: item?.issue || item?.reason || '',
+        suggestion: item?.suggestion || item?.better_prompt || '',
+      };
+    })
+    .filter((item) => item.quote);
+}
+
+const STATUS_LABELS = {
+  pending_selection: '待确认',
+  submitted: '生成中',
+  consumed: '已完成',
+  failed: '失败',
+};
+
+function StatusPill({ status, active }) {
+  const label = STATUS_LABELS[status] || status;
+  return <span className={`status status-${status || 'unknown'} ${active ? 'status-current' : ''}`}>{label}</span>;
+}
+
 function App() {
   const path = window.location.pathname;
-  const [tab, setTab] = useState('ledger');
 
   if (path.startsWith('/review/')) {
     return <ReviewDetail reviewId={decodeURIComponent(path.replace('/review/', ''))} />;
   }
+  if (path.startsWith('/session/')) {
+    return <SessionPage taskId={decodeURIComponent(path.replace('/session/', ''))} />;
+  }
+  return <Home />;
+}
+
+function Home() {
+  const [tab, setTab] = useState('sessions');
 
   return (
     <main className="app-shell">
-      <TopBar tab={tab} onTab={setTab} />
-      {tab === 'ledger' ? <LedgerSection /> : <ReviewsSection />}
+      <header className="topbar">
+        <div>
+          <p className="eyebrow">复盘工作台</p>
+          <h1>Fupan Workbench</h1>
+        </div>
+        <nav className="tab-bar" aria-label="页面切换">
+          <button className={`tab-button ${tab === 'sessions' ? 'tab-active' : ''}`} onClick={() => setTab('sessions')}>
+            🗂 复盘会话
+          </button>
+          <button className={`tab-button ${tab === 'ledger' ? 'tab-active' : ''}`} onClick={() => setTab('ledger')}>
+            📒 教训账本
+          </button>
+          <button className={`tab-button ${tab === 'reviews' ? 'tab-active' : ''}`} onClick={() => setTab('reviews')}>
+            📄 复盘文档
+          </button>
+        </nav>
+      </header>
+      {tab === 'sessions' && <SessionsSection />}
+      {tab === 'ledger' && <LedgerSection />}
+      {tab === 'reviews' && <ReviewsSection />}
     </main>
   );
 }
 
-function TopBar({ tab, onTab }) {
+function SessionsSection() {
+  const [tasks, setTasks] = useState(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let alive = true;
+    function load() {
+      api('/api/tasks')
+        .then((data) => alive && setTasks(data.tasks || []))
+        .catch((err) => alive && setError(err.message));
+    }
+    load();
+    const timer = setInterval(load, 5000);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
+  }, []);
+
+  if (error) return <div className="inline-error">会话列表读取失败：{error}</div>;
+  if (!tasks) return <EmptyState text="正在读取复盘会话。" />;
+
+  const open = tasks.filter((task) => task.status === 'pending_selection' || task.status === 'submitted');
+  const done = tasks.filter((task) => task.status !== 'pending_selection' && task.status !== 'submitted');
+
   return (
-    <header className="topbar">
-      <div>
-        <p className="eyebrow">复盘阅览器</p>
-        <h1>Fupan Workbench</h1>
+    <>
+      <section className="panel task-section">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">等待你确认或正在生成</p>
+            <h2>进行中</h2>
+          </div>
+          <span className="mono">{countLabel(open.length, '个会话')}</span>
+        </div>
+        {open.length ? <SessionList tasks={open} /> : <EmptyState text="没有进行中的复盘。在对话里说「复盘」就会出现新会话。" />}
+      </section>
+      <section className="panel history-section">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">全部历史会话</p>
+            <h2>历史 Workbench</h2>
+          </div>
+          <span className="mono">{countLabel(done.length, '个会话')}</span>
+        </div>
+        {done.length ? <SessionList tasks={done} /> : <EmptyState text="还没有历史复盘会话。" />}
+      </section>
+    </>
+  );
+}
+
+function SessionList({ tasks }) {
+  return (
+    <div className="task-queue">
+      {tasks.map((task) => (
+        <a className="queue-row" key={task.id} href={`/session/${encodeURIComponent(task.id)}`}>
+          <StatusPill status={task.status} active={task.active} />
+          <span className="queue-title">{task.summary || task.project || task.id}</span>
+          <span className="queue-project">{task.project}</span>
+          <span className="mono">{formatDate(task.created_at)}</span>
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function SessionPage({ taskId }) {
+  const [task, setTask] = useState(null);
+  const [error, setError] = useState('');
+  const taskRef = useRef(null);
+  taskRef.current = task;
+
+  const load = useCallback(() => {
+    api(`/api/tasks/${encodeURIComponent(taskId)}`)
+      .then((data) => {
+        setTask(data);
+        setError('');
+      })
+      .catch((err) => setError(err.message));
+  }, [taskId]);
+
+  useEffect(() => {
+    load();
+    const timer = setInterval(() => {
+      const status = taskRef.current?.status;
+      if (!status || status === 'pending_selection' || status === 'submitted') load();
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [load]);
+
+  if (error) {
+    return (
+      <main className="detail-shell">
+        <a className="back-link" href="/">返回工作台</a>
+        <div className="inline-error">会话读取失败：{error}</div>
+      </main>
+    );
+  }
+  if (!task) {
+    return (
+      <main className="detail-shell">
+        <a className="back-link" href="/">返回工作台</a>
+        <EmptyState text="正在读取复盘会话。" />
+      </main>
+    );
+  }
+
+  const quotes = normalizeQuoteItems(task.expression_issue_quotes || []);
+  const issueQuoteSet = new Set(quotes.map((item) => item.quote));
+  const contextQuestions = (task.user_questions || []).filter((question) => !issueQuoteSet.has(question));
+
+  return (
+    <main className="detail-shell">
+      <header className="detail-top">
+        <a className="back-link" href="/">返回工作台</a>
+        <span className="mono">{task.project} / {formatDate(task.created_at)}</span>
+      </header>
+      <section className="panel session-panel">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">复盘会话 {task.id}</p>
+            <h1>{task.summary || '待确认复盘'}</h1>
+          </div>
+          <StatusPill status={task.status} active={task.active} />
+        </div>
+        {(quotes.length > 0 || contextQuestions.length > 0) && (
+          <div className="question-box">
+            {quotes.length > 0 && (
+              <section className="quote-group quote-group-issue">
+                <p className="small-title">表达待优化原话</p>
+                <p className="quote-note">AI 从本次会话自行判断，把影响沟通效率的原话完整摘出来。</p>
+                <ul className="quote-list">
+                  {quotes.map((item, index) => (
+                    <li key={`${item.quote}-${index}`}>
+                      <blockquote>{item.quote}</blockquote>
+                      {item.issue && <p className="quote-meta">问题：{item.issue}</p>}
+                      {item.suggestion && <p className="quote-meta">下次可以说：{item.suggestion}</p>}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            {contextQuestions.length > 0 && (
+              <section className="quote-group">
+                <p className="small-title">{quotes.length ? '背景原话摘录' : '用户原话摘录'}</p>
+                {contextQuestions.map((question, index) => (
+                  <p className="quote-line" key={`${question}-${index}`}>{question}</p>
+                ))}
+              </section>
+            )}
+          </div>
+        )}
+        {task.status === 'pending_selection' && <TaskForm task={task} onSubmitted={setTask} />}
+        {task.status === 'submitted' && (
+          <>
+            <SelectionSummary task={task} />
+            <div className="waiting-note">已提交。AI 正在按你的选择调研写作，文档生成后这里会出现入口，页面会自动刷新。</div>
+          </>
+        )}
+        {task.status === 'consumed' && (
+          <>
+            <SelectionSummary task={task} />
+            {task.review_id ? (
+              <a className="button button-primary review-jump" href={`/review/${encodeURIComponent(task.review_id)}`}>
+                打开这次的复盘文档 →
+              </a>
+            ) : (
+              <div className="waiting-note">复盘文档已生成，但没有登记路径。可去「复盘文档」页按日期查找。</div>
+            )}
+          </>
+        )}
+        {task.status === 'failed' && (
+          <div className="inline-error">这次会话标记为失败：{task.error || '未记录原因'}。可以在对话里重新发起复盘。</div>
+        )}
+      </section>
+    </main>
+  );
+}
+
+function SelectionSummary({ task }) {
+  const chosen = (task.selection?.topics || []).filter((topic) => topic.selected !== false);
+  return (
+    <div className="selection-summary">
+      <p className="small-title">你的学习选择（{formatDate(task.selection?.submitted_at)} 提交）</p>
+      {chosen.length ? (
+        <ul className="selection-list">
+          {chosen.map((topic) => (
+            <li key={topic.id}>
+              <strong>{topic.title || topic.id}</strong>
+              <span className="mono">{topic.depth || '表达'}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="muted">这次没有选择知识点，只做复盘文档。</p>
+      )}
+      {task.selection?.feedback && <p className="quote-meta">补充反馈：{task.selection.feedback}</p>}
+    </div>
+  );
+}
+
+function TaskForm({ task, onSubmitted }) {
+  const initialTopics = useMemo(
+    () =>
+      (task.topics || []).map((topic) => ({
+        id: topic.id,
+        title: topic.title,
+        selected: topic.selected !== false,
+        depth: DEPTHS.some((item) => item.value === topic.depth) ? topic.depth : '表达',
+      })),
+    [task],
+  );
+  const [topics, setTopics] = useState(initialTopics);
+  const [feedback, setFeedback] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState('');
+  const selectedCount = topics.filter((topic) => topic.selected).length;
+
+  function updateTopic(id, patch) {
+    setTopics((current) => current.map((topic) => (topic.id === id ? { ...topic, ...patch } : topic)));
+  }
+
+  async function submit(event) {
+    event.preventDefault();
+    setMessage('');
+    setSubmitting(true);
+    try {
+      const updated = await api(`/api/tasks/${encodeURIComponent(task.id)}/selection`, {
+        method: 'POST',
+        body: JSON.stringify({ topics, feedback }),
+      });
+      onSubmitted(updated);
+    } catch (err) {
+      setMessage(`提交失败：${err.message}`);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form className="current-task" onSubmit={submit}>
+      <div className="topic-grid">
+        {(task.topics || []).map((topic) => {
+          const draft = topics.find((item) => item.id === topic.id) || {};
+          return (
+            <article className={`topic-card ${draft.selected ? 'topic-card-selected' : ''}`} key={topic.id}>
+              <label className="topic-check">
+                <input
+                  type="checkbox"
+                  checked={!!draft.selected}
+                  onChange={(event) => updateTopic(topic.id, { selected: event.target.checked })}
+                />
+                <span>{topic.title}</span>
+              </label>
+              <p>{topic.plain_explanation || '这个知识点需要你确认是否要学。'}</p>
+              <p className="muted">{topic.why_relevant || '它和本次复盘有关。'}</p>
+              <div className="topic-card-actions">
+                <div className="recommend">推荐：{topic.recommended_depth || '表达'}</div>
+                <div className="segmented" aria-label={`${topic.title} 学习深度`}>
+                  {DEPTHS.map((depth) => (
+                    <button
+                      type="button"
+                      key={depth.value}
+                      className={draft.depth === depth.value ? 'selected' : ''}
+                      disabled={!draft.selected}
+                      title={depth.hint}
+                      onClick={() => updateTopic(topic.id, { depth: depth.value })}
+                    >
+                      {depth.value}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </article>
+          );
+        })}
       </div>
-      <nav className="tab-bar" aria-label="页面切换">
-        <button className={`tab-button ${tab === 'ledger' ? 'tab-active' : ''}`} onClick={() => onTab('ledger')}>
-          📒 教训账本
+      <label className="feedback-label">
+        <span>补充反馈</span>
+        <textarea
+          rows="3"
+          value={feedback}
+          placeholder="例如：React 从零讲，不要假设我懂；API 限流我想学到能自己判断方案。"
+          onChange={(event) => setFeedback(event.target.value)}
+        />
+      </label>
+      {message && <div className="inline-error">{message}</div>}
+      <div className="form-footer">
+        <span className="muted">已选择 {selectedCount} 个知识点</span>
+        <button className="button button-primary" disabled={submitting} type="submit">
+          {submitting ? '提交中' : '提交学习选择'}
         </button>
-        <button className={`tab-button ${tab === 'reviews' ? 'tab-active' : ''}`} onClick={() => onTab('reviews')}>
-          📄 复盘文档
-        </button>
-      </nav>
-    </header>
+      </div>
+    </form>
   );
 }
 

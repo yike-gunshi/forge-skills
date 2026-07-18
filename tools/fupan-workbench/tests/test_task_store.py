@@ -93,6 +93,15 @@ class TaskStoreTest(unittest.TestCase):
         with self.assertRaises(TaskStateError):
             submit_selection("task-one", {"topics": []}, root=self.root)
 
+    def test_mark_consumed_records_review_path(self):
+        create_task({"id": "task-linked", "project": "forge-cookbook", "topics": []}, root=self.root)
+        submit_selection("task-linked", {"topics": [], "feedback": ""}, root=self.root)
+        consumed = mark_consumed("task-linked", root=self.root, review_path="~/claudecode_workspace/记录/复盘/forge-cookbook/2026-07-17-复盘.md")
+
+        self.assertEqual(consumed["status"], "consumed")
+        self.assertTrue(consumed["review_path"].endswith("记录/复盘/forge-cookbook/2026-07-17-复盘.md"))
+        self.assertNotIn("~", consumed["review_path"])
+
     def test_wait_for_submission_only_returns_requested_task(self):
         create_task({"id": "task-a", "project": "a", "topics": []}, root=self.root)
         create_task({"id": "task-b", "project": "b", "topics": []}, root=self.root)

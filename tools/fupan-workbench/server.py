@@ -9,7 +9,8 @@ CURRENT_DIR = Path(__file__).resolve().parent
 if str(CURRENT_DIR) not in sys.path:
     sys.path.insert(0, str(CURRENT_DIR))
 
-from review_index import ReviewIndex, default_review_root
+from review_index import ReviewIndex, default_review_root, safe_id_for_path
+from task_store import TaskStateError, list_tasks, read_task, submit_selection
 
 try:
     from __init__ import WORKBENCH_VERSION
@@ -44,6 +45,43 @@ def create_app(workbench_home=None, review_root=None, repo_path=None, skill_path
         }
 
     ledger_path = Path(review_root).expanduser() / "learnings.jsonl" if review_root else Path(default_review_root()) / "learnings.jsonl"
+
+    def attach_review_link(task):
+        """consume 时记录了 review_path 的任务，补一个前端可跳转的 review_id。"""
+        review_path = task.get("review_path")
+        if not review_path:
+            return task
+        try:
+            rel = Path(review_path).expanduser().resolve().relative_to(reviews.review_root.resolve())
+            task["review_id"] = safe_id_for_path(rel)
+        except (ValueError, OSError):
+            pass
+        return task
+
+    @app.get("/api/tasks")
+    def api_tasks():
+        tasks = [attach_review_link(task) for task in list_tasks(root=root, include_consumed=True)]
+        return {"tasks": tasks}
+
+    @app.get("/api/tasks/{task_id}")
+    def api_task(task_id):
+        try:
+            return attach_review_link(read_task(task_id, root=root))
+        except KeyError:
+            raise HTTPException(status_code=404, detail="task_not_found")
+        except TaskStateError as exc:
+            raise HTTPException(status_code=409, detail=str(exc))
+
+    @app.post("/api/tasks/{task_id}/selection")
+    def api_submit_selection(task_id, payload: dict):
+        try:
+            return submit_selection(task_id, payload, root=root)
+        except KeyError:
+            raise HTTPException(status_code=404, detail="task_not_found")
+        except TaskStateError as exc:
+            raise HTTPException(status_code=409, detail=str(exc))
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc))
 
     @app.get("/api/learnings")
     def api_learnings():

@@ -174,11 +174,13 @@ def submit_selection(task_id, selection, root=None):
     return task
 
 
-def mark_consumed(task_id, root=None):
+def mark_consumed(task_id, root=None, review_path=None):
     task = read_task(task_id, root)
     if task["status"] not in {"submitted", "consumed"}:
         raise TaskStateError("Task {} is {}, not submitted".format(task_id, task["status"]))
     task["status"] = "consumed"
+    if review_path:
+        task["review_path"] = str(Path(review_path).expanduser())
     task["updated_at"] = utc_now()
     atomic_write_json(task_path(task_id, root), task)
     return task
