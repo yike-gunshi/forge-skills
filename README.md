@@ -10,6 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-Skill-blueviolet)](https://claude.ai/code)
 [![Skills](https://img.shields.io/badge/Skills-14%2B1-blue)]()
+[![Release](https://img.shields.io/github/v/release/yike-gunshi/forge-skills?label=Release&color=green)](https://github.com/yike-gunshi/forge-skills/releases)
 
 [这是什么](#这是什么) · [快速开始](#快速开始) · [Skill 清单](#skill-清单) · [关键机制](#关键机制) · [安装](#安装) · [设计哲学](#设计哲学) · [文档导航](#文档导航)
 
@@ -311,6 +312,7 @@ cd forge-skills
 | [workflow-guide.md](docs/workflow-guide.md) | 工作流 — 场景选择、最佳实践、常见问题 |
 | [skills-reference.md](docs/skills-reference.md) | 技能手册 — 每个 Skill 的完整机制和产出 |
 | [glossary.md](docs/glossary.md) | 术语词典 — 关键概念中英对照 |
+| [releases/](docs/releases/) | 发布说明 — 各版本详细变更（最新：[v2026.07.17](docs/releases/v2026.07.17.md)） |
 | [openspec-research.md](docs/archive/openspec-research.md) | OpenSpec 调研 — Given/When/Then 思想来源 |
 
 <details>
